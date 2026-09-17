@@ -1,11 +1,16 @@
-# Local hygiene only.
-#
-# This directory is already ignored by the parent lg-workstreams repository via
-# its root .gitignore rule `/*/src/`. Nothing here is committed to Workstreams.
-# When the public Design System repository is cloned into this directory at
-# DS-E01.S1.T3, it brings its own .gitignore and this file becomes redundant.
-
+# OS
 .DS_Store
+
+# Editors / agents
 .cursor/
-target/
+.vscode/
+.idea/
+
+# Rust
+/target/
+
+# Node (adapter and fixture subtrees only)
 node_modules/
+
+# Build output
+/dist/

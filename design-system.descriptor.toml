@@ -1,0 +1,39 @@
+# Workspace descriptor — Design System local staging slot.
+# One read here says what this directory is, what authority governs it, and what
+# has deliberately not been decided yet.
+#
+# This is a staging descriptor, not a workspace descriptor in the sense used by
+# Build/src/workspaces/wfos/wfos.descriptor.toml. It declares no toolchain and no
+# runnable entrypoints because those are DS-E01.S1.T3 decisions.
+
+id = "design-system"
+kind = "workspace-staging"
+title = "Design System — Local Staging Workspace"
+status = "staging"
+summary = "Reserved local slot for Design System work; public source not yet created (DS-E01.S1.T3)."
+
+system_space = "luckgrid"
+domain = "design-system"
+layer = "application"
+system = "design-system"
+
+[paths]
+root = "Build/src/workspaces/design-system"
+planning_root = "Build/bin/design-system"
+state = "Build/bin/design-system/_process/STATE.md"
+
+[branch]
+durable = "lg/design-system-e01"
+
+# Deliberately absent until DS-E01.S1.T3:
+#   [native]      manifests / toolchain pins
+#   [entrypoints] setup, doctor, build, check commands
+#   version, license, rust-version, Cargo members, package names
+#   [capabilities].provides — this slot provides nothing yet
+
+[capabilities]
+requires = ["filesystem.read"]
+
+[policy]
+allow_git_push = false
+allow_secret_read = false

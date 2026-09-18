@@ -1,7 +1,7 @@
 # Design System
 
-A portable, web-platform-first design system: CSS-first, semantic-HTML-first,
-framework-agnostic, and independently versioned.
+A portable, multi-brand, web-platform-first design system: CSS-first,
+semantic-HTML-first, framework-agnostic, and independently versioned.
 
 > **Status: experimental bootstrap.** The canonical source workspace is being
 > established. There is no released CSS, no supported public CSS API, and no

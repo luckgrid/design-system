@@ -41,6 +41,20 @@ const SCAN_EXEMPT_PREFIX: &str = "scan-exempt:";
 /// output and Git internals rather than authored bootstrap content.
 const UNWALKED_DIRS: [&str; 2] = [".git", "target"];
 
+/// Names skipped when enumerating repository files for classification
+/// completeness. They mirror `.gitignore`: Git internals, build output, and
+/// editor/OS scratch that is never authored bootstrap source.
+const UNCLASSIFIED_SKIP: [&str; 8] = [
+    ".git",
+    "target",
+    "dist",
+    "node_modules",
+    ".cursor",
+    ".vscode",
+    ".idea",
+    ".DS_Store",
+];
+
 /// Workspace-lint opt-in that every Cargo member must declare so the root
 /// `[workspace.lints]` policy actually applies to it.
 const MEMBER_LINT_OPT_IN: &str = "workspace = true";
@@ -87,15 +101,18 @@ fn run(args: &[String]) -> Result<String, String> {
     let fixture = Path::new(&args[2]);
 
     let coverage = validate_manifest(&root, manifest)?;
+    let classified = validate_manifest_completeness(&root, manifest)?;
     validate_plain_fixture(&root, fixture)?;
     let members = validate_lint_inheritance(&root)?;
 
     Ok(format!(
         "validated {} bootstrap surfaces ({} files scanned, {} exempt), \
+{} repository file(s) confirmed classified, \
 {} workspace member(s) inheriting workspace lints, and plain fixture {}",
         coverage.surfaces,
         coverage.scanned,
         coverage.exempt,
+        classified,
         members,
         fixture.display()
     ))
@@ -159,6 +176,37 @@ fn validate_manifest(root: &Path, manifest: &Path) -> Result<Coverage, String> {
     }
 
     Ok(coverage)
+}
+
+/// Every repository file must be covered by some manifest row. Without this
+/// pass the inventory's exhaustiveness would only ever be a hand-maintained
+/// snapshot: a newly added file would be neither classified nor privacy-scanned
+/// while the bootstrap check stayed green. Returns the number of repository
+/// files confirmed classified.
+fn validate_manifest_completeness(root: &Path, manifest: &Path) -> Result<usize, String> {
+    validate_relative_path(manifest)?;
+    let root = canonical(root, "repository root")?;
+    let text = fs::read_to_string(root.join(manifest))
+        .map_err(|error| format!("read manifest {}: {error}", manifest.display()))?;
+    let classified: Vec<PathBuf> = parse_manifest(&text)?
+        .iter()
+        .map(|surface| root.join(&surface.path))
+        .collect();
+
+    let files = walk_with_skips(&root, &UNCLASSIFIED_SKIP)?;
+    for file in &files {
+        // A file row covers only itself; a directory row covers everything
+        // beneath it. Either way the file must be named by the inventory.
+        if !classified.iter().any(|entry| file.starts_with(entry)) {
+            return Err(format!(
+                "repository file {} is not classified in {}",
+                relative_to(&root, file).display(),
+                manifest.display()
+            ));
+        }
+    }
+
+    Ok(files.len())
 }
 
 fn parse_manifest(text: &str) -> Result<Vec<Surface>, String> {
@@ -226,6 +274,12 @@ fn parse_scan_exemption(line_number: usize, field: &str) -> Result<String, Strin
 
 /// Deterministic, sorted, depth-first file listing for a directory surface.
 fn walk_files(directory: &Path) -> Result<Vec<PathBuf>, String> {
+    walk_with_skips(directory, &UNWALKED_DIRS)
+}
+
+/// Deterministic, sorted, depth-first file listing that omits any entry whose
+/// file name appears in `skip`.
+fn walk_with_skips(directory: &Path, skip: &[&str]) -> Result<Vec<PathBuf>, String> {
     let mut entries: Vec<PathBuf> = fs::read_dir(directory)
         .map_err(|error| format!("read directory {}: {error}", directory.display()))?
         .map(|entry| {
@@ -243,11 +297,11 @@ fn walk_files(directory: &Path) -> Result<Vec<PathBuf>, String> {
             .and_then(|name| name.to_str())
             .unwrap_or_default()
             .to_owned();
+        if skip.contains(&name.as_str()) {
+            continue;
+        }
         if entry.is_dir() {
-            if UNWALKED_DIRS.contains(&name.as_str()) {
-                continue;
-            }
-            files.extend(walk_files(&entry)?);
+            files.extend(walk_with_skips(&entry, skip)?);
         } else if entry.is_file() {
             files.push(entry);
         }
@@ -576,6 +630,29 @@ mod tests {
             coverage.scanned
         );
         assert_eq!(coverage.exempt, 0);
+    }
+
+    /// Exhaustive classification must be machine-enforced, not asserted in
+    /// prose, so a newly added file cannot arrive unclassified and unscanned.
+    #[test]
+    fn every_repository_file_is_classified() {
+        let inventory = Path::new("bootstrap-surfaces.tsv");
+        let classified = validate_manifest_completeness(&repository_root(), inventory)
+            .expect("bootstrap inventory must classify every repository file");
+        let text = fs::read_to_string(repository_root().join(inventory))
+            .expect("read bootstrap inventory");
+        let surfaces = parse_manifest(&text).expect("parse bootstrap inventory");
+        assert_eq!(classified, surfaces.len());
+    }
+
+    #[test]
+    fn incomplete_inventory_is_rejected() {
+        let error = validate_manifest_completeness(
+            &repository_root(),
+            &boundary("rejected-incomplete.tsv"),
+        )
+        .expect_err("an inventory that omits repository files must be rejected");
+        assert!(error.contains("is not classified in"), "{error}");
     }
 
     #[test]

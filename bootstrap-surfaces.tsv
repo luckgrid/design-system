@@ -4,6 +4,9 @@
 # Every tracked file in this repository is classified here. Classification is a
 # compatibility statement, not a claim that a path is a build input.
 #
+# Completeness is machine-enforced: ds-check walks the repository and fails if any
+# file is missing from this inventory, so a new file cannot arrive unclassified.
+#
 # A third scan-exempt field opts only that exact file out of the private-reference
 # content scan and must state why. Directory-wide exemptions are rejected.
 # Exemptions exist only for files that must legitimately contain private-path
@@ -28,6 +31,7 @@ internal	fixtures/bootstrap-boundary/member-lints-inheriting.toml
 internal	fixtures/bootstrap-boundary/member-lints-missing.toml
 internal	fixtures/bootstrap-boundary/rejected-bad-exemption.tsv
 internal	fixtures/bootstrap-boundary/rejected-directory-exemption.tsv
+internal	fixtures/bootstrap-boundary/rejected-incomplete.tsv
 internal	fixtures/bootstrap-boundary/rejected-missing.tsv
 internal	fixtures/bootstrap-boundary/rejected-outside-root.tsv
 internal	fixtures/bootstrap-boundary/rejected-private-marker.tsv

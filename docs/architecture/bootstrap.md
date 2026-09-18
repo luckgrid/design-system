@@ -12,8 +12,10 @@ The compatibility inventory is `bootstrap-surfaces.tsv`. At T3 every listed
 surface is `internal`. The bootstrap intentionally exposes no
 `public-stable` surface and no supported portable CSS entrypoint.
 
-Every tracked path in this repository is classified there. Classification states
-a compatibility position; it does not claim a path is a build input.
+Every tracked path in this repository is classified there, and the checker
+enforces that rather than trusting it: it walks the repository and fails if any
+file is missing from the inventory. Classification states a compatibility
+position; it does not claim a path is a build input.
 
 The first frontend source seam is `packages/styles/`. DS-E01.S2 will
 define the first supported CSS contract; this directory's existence does not do
@@ -33,6 +35,8 @@ The checker validates:
 - every inventory row carries an explicit `internal`/`public-preview` class, and
   rejects `public-stable` while no compatibility contract owns it;
 - every listed path is relative, inside a permitted bootstrap root, and exists;
+- every file in the repository is covered by an inventory row, so a newly added
+  file cannot arrive unclassified and unscanned;
 - listed files contain no private planning/cross-repository path markers.
   Directory surfaces are walked, so this reaches every file beneath them;
 - every Cargo workspace member declares `[lints] workspace = true`, so the root
@@ -53,8 +57,8 @@ not perform.
 Pass/fail behavior is pinned by checked-in inputs under
 `fixtures/bootstrap-boundary/`, covering an accepted inventory, a walked
 directory surface, and rejected missing, out-of-root, private-path,
-private-marker-in-file, malformed-exemption, directory-wide-exemption, and
-non-lint-inheriting cases.
+private-marker-in-file, malformed-exemption, directory-wide-exemption,
+incomplete-inventory, and non-lint-inheriting cases.
 
 ## Release premise
 

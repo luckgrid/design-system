@@ -1,5 +1,6 @@
 # Compatibility class<TAB>repository-relative path[<TAB>scan-exempt:<reason>]
-# T3 exposes no public-stable surface. Every bootstrap path is internal.
+# No surface is public-stable. The only public-preview surface is the core CSS
+# entrypoint declared in exports.tsv; every other path is internal.
 #
 # Every tracked file in this repository is classified here. Classification is a
 # compatibility statement, not a claim that a path is a build input.
@@ -23,10 +24,13 @@ internal	README.md
 internal	SECURITY.md
 internal	WORKSTREAMS.md	scan-exempt:planning-provenance-pointer
 internal	apps/ds-check/Cargo.toml
+internal	apps/ds-check/src/css.rs
 internal	apps/ds-check/src/main.rs	scan-exempt:checker-owns-the-marker-constants
 internal	bootstrap-surfaces.tsv
 internal	design-system.descriptor.toml	scan-exempt:planning-provenance-metadata
 internal	docs/architecture/bootstrap.md
+internal	docs/architecture/css-entrypoint.md
+internal	exports.tsv
 internal	fixtures/bootstrap-boundary/accepted-directory.tsv
 internal	fixtures/bootstrap-boundary/accepted.tsv
 internal	fixtures/bootstrap-boundary/member-lints-inheriting.toml
@@ -38,8 +42,37 @@ internal	fixtures/bootstrap-boundary/rejected-missing.tsv
 internal	fixtures/bootstrap-boundary/rejected-outside-root.tsv
 internal	fixtures/bootstrap-boundary/rejected-private-marker.tsv
 internal	fixtures/bootstrap-boundary/rejected-private.tsv	scan-exempt:negative-fixture-carries-rejected-private-path
+internal	fixtures/layer-ownership/README.md
+internal	fixtures/layer-ownership/accepted-import-owned/components.css
+internal	fixtures/layer-ownership/accepted-import-owned/index.css
+internal	fixtures/layer-ownership/accepted-source-owned/index.css
+internal	fixtures/layer-ownership/accepted-source-owned/tokens.css
+internal	fixtures/layer-ownership/rejected-double-import/index.css
+internal	fixtures/layer-ownership/rejected-double-import/module.css
+internal	fixtures/layer-ownership/rejected-exact-duplicate/components.css
+internal	fixtures/layer-ownership/rejected-exact-duplicate/index.css
+internal	fixtures/layer-ownership/rejected-non-relative-import/index.css
+internal	fixtures/layer-ownership/rejected-non-relative-import/module.css
+internal	fixtures/layer-ownership/rejected-prefix-qualified/components.css
+internal	fixtures/layer-ownership/rejected-prefix-qualified/index.css
+internal	fixtures/layer-ownership/rejected-tailwind-directive/index.css
+internal	fixtures/layer-ownership/rejected-unlayered-rule/index.css
 internal	fixtures/plain-html/README.md
 internal	fixtures/plain-html/consumer.css
 internal	fixtures/plain-html/index.html
 internal	packages/styles/README.md
+public-preview	packages/styles/index.css
 internal	rust-toolchain.toml
+internal	tests/browser/package-lock.json
+internal	tests/browser/package.json
+internal	tests/browser/playwright.config.mjs
+internal	tests/browser/probes/blank.html
+internal	tests/browser/probes/consumer-layer.css
+internal	tests/browser/probes/consumer-unlayered.css
+internal	tests/browser/probes/ds-layers-reversed.css
+internal	tests/browser/server.mjs
+internal	tests/browser/specs/cascade.spec.mjs
+internal	tests/browser/specs/consumer-fixture.spec.mjs
+internal	tests/browser/specs/entrypoint.spec.mjs
+internal	tests/browser/specs/layer-ownership.spec.mjs
+internal	tests/browser/specs/support.mjs

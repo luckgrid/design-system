@@ -1,0 +1,5 @@
+@layer ds.tokens, ds.base, ds.layouts, ds.primitives, ds.components, ds.utilities;
+
+.probe {
+  color: rgb(255 0 0);
+}

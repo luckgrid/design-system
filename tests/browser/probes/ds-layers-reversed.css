@@ -1,0 +1,41 @@
+/*
+ * Harness-only probe. It writes one competing rule into each Design System
+ * layer, in reverse of the documented order and with specificity decreasing
+ * toward later layers, so only the entrypoint's published layer order can make
+ * ds.utilities win. Consumers never author rules into ds.* layers.
+ */
+@layer ds.utilities {
+  .probe {
+    color: rgb(6 0 0);
+  }
+}
+
+@layer ds.components {
+  p.probe {
+    color: rgb(5 0 0);
+  }
+}
+
+@layer ds.primitives {
+  main p.probe {
+    color: rgb(4 0 0);
+  }
+}
+
+@layer ds.layouts {
+  body main p.probe {
+    color: rgb(3 0 0);
+  }
+}
+
+@layer ds.base {
+  html body main p.probe {
+    color: rgb(2 0 0);
+  }
+}
+
+@layer ds.tokens {
+  html body main p#probe.probe {
+    color: rgb(1 0 0);
+  }
+}

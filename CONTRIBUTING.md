@@ -19,7 +19,21 @@ cargo test --workspace --all-features --locked
 cargo +1.98.1 check --workspace --all-targets --locked
 cargo run --locked -p design-system-check -- check \
   bootstrap-surfaces.tsv fixtures/plain-html
+cargo run --locked -p design-system-check -- layers \
+  exports.tsv bootstrap-surfaces.tsv fixtures/plain-html
 ```
+
+Browser contract tests need Node 20 or later and live only in `tests/browser/`.
+Node is not a root workspace tool:
+
+```sh
+cd tests/browser
+npm ci
+npx playwright install chromium firefox webkit
+npx playwright test
+```
+
+A browser check that is skipped or cannot run is not a pass.
 
 ## Pull requests
 
@@ -27,9 +41,11 @@ Keep changes bounded and explain compatibility impact for any surface that is
 classified beyond `internal`. Do not promote consumer-specific behavior into
 shared source without evidence from materially unlike consumers.
 
-The bootstrap does not yet define a supported CSS API. Changes to
-`packages/styles/` must preserve that boundary until the owning E01 task
-accepts a public contract.
+The only supported CSS surface is the `public-preview` `core.css` entrypoint
+declared in `exports.tsv`. Changes to it, to its layer order, or to what
+`exports.tsv` declares are compatibility changes and must say so. Other files in
+`packages/styles/` stay `internal` until an owning E01 task accepts a public
+contract for them.
 
 For vulnerabilities, follow [SECURITY.md](SECURITY.md) rather than publishing
 sensitive details in an issue.

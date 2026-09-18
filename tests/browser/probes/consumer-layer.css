@@ -1,0 +1,6 @@
+/* Harness-only consumer layer: a plain element selector, no !important. */
+@layer app {
+  p {
+    color: rgb(0 100 0);
+  }
+}

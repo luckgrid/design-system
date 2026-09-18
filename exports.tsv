@@ -1,0 +1,7 @@
+# Supported CSS exports: <class><TAB><export-name><TAB><repository-relative path>
+#
+# Each row declares one CSS artifact that consumers may load. The authored source
+# file is the artifact: there is no compiled or generated second copy.
+# The path must also be classified with the same class in bootstrap-surfaces.tsv.
+# Only public-preview is accepted until a reviewed contract earns public-stable.
+public-preview	core.css	packages/styles/index.css

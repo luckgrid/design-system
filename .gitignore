@@ -12,5 +12,9 @@
 # Node (adapter and fixture subtrees only)
 node_modules/
 
+# Playwright output (browser contract tests)
+/tests/browser/test-results/
+/tests/browser/playwright-report/
+
 # Build output
 /dist/

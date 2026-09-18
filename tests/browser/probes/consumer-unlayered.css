@@ -1,0 +1,4 @@
+/* Harness-only unlayered consumer rule. */
+p {
+  color: rgb(0 0 100);
+}

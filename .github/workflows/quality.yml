@@ -36,3 +36,27 @@ jobs:
 
       - name: Bootstrap boundary
         run: cargo +1.98.1 run --locked -p design-system-check -- check bootstrap-surfaces.tsv fixtures/plain-html
+
+      - name: CSS layer contract
+        run: cargo +1.98.1 run --locked -p design-system-check -- layers exports.tsv bootstrap-surfaces.tsv fixtures/plain-html
+
+  browser:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tests/browser
+    steps:
+      - name: Checkout exact source head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Install locked test dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Browser contract (Chromium, Firefox, WebKit)
+        run: npx playwright test

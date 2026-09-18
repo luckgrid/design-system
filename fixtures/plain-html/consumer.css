@@ -1,18 +1,27 @@
-:root {
-  color-scheme: light dark;
-  font-family: system-ui, sans-serif;
-}
+/*
+ * Consumer-owned stylesheet, loaded after the Design System core entrypoint.
+ * Declaring `app` after `ds` makes every rule here outrank every Design System
+ * layer through layer order alone, with plain element selectors.
+ */
+@layer app;
 
-body {
-  margin: 0;
-  padding: 2rem;
-}
+@layer app {
+  :root {
+    color-scheme: light dark;
+    font-family: system-ui, sans-serif;
+  }
 
-main {
-  max-inline-size: 48rem;
-  margin-inline: auto;
-}
+  body {
+    margin: 0;
+    padding: 2rem;
+  }
 
-button {
-  font: inherit;
+  main {
+    max-inline-size: 48rem;
+    margin-inline: auto;
+  }
+
+  button {
+    font: inherit;
+  }
 }

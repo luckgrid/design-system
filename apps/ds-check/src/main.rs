@@ -1,12 +1,15 @@
 #![forbid(unsafe_code)]
 
+mod css;
+
+use std::collections::BTreeSet;
 use std::env;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
-const ALLOWED_ROOTS: [&str; 15] = [
+const ALLOWED_ROOTS: [&str; 17] = [
     ".github",
     ".gitignore",
     "apps",
@@ -22,7 +25,19 @@ const ALLOWED_ROOTS: [&str; 15] = [
     "WORKSTREAMS.md",
     "bootstrap-surfaces.tsv",
     "design-system.descriptor.toml",
+    "exports.tsv",
+    "tests",
 ];
+
+/// The only compatibility class a CSS export may carry until a reviewed contract
+/// earns `public-stable`.
+const EXPORT_CLASS: &str = "public-preview";
+
+/// Directory that holds authored Design System stylesheet source.
+const STYLES_ROOT: &str = "packages/styles";
+
+/// The consumer fixture's own stylesheet, the only non-export link it may use.
+const FIXTURE_CONSUMER_STYLESHEET: &str = "./consumer.css";
 const FORBIDDEN_CONTENT_MARKERS: [&str; 6] = [
     "lg-workstreams",
     "Build/bin/",
@@ -36,10 +51,6 @@ const FORBIDDEN_CONTENT_MARKERS: [&str; 6] = [
 /// privacy-scanned. Every exemption must carry a reason so the exclusion is
 /// reviewable in the manifest instead of being inferred from a path's type.
 const SCAN_EXEMPT_PREFIX: &str = "scan-exempt:";
-
-/// Directories never walked when recursing a directory surface. They hold build
-/// output and Git internals rather than authored bootstrap content.
-const UNWALKED_DIRS: [&str; 2] = [".git", "target"];
 
 /// Workspace-lint opt-in that every Cargo member must declare so the root
 /// `[workspace.lints]` policy actually applies to it.
@@ -75,21 +86,37 @@ fn main() -> ExitCode {
     }
 }
 
+/// One declared CSS export from `exports.tsv`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Export {
+    class: String,
+    name: String,
+    path: PathBuf,
+}
+
+const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>";
+
 fn run(args: &[String]) -> Result<String, String> {
-    if args.len() != 3 || args[0] != "check" {
-        return Err(
-            "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>".to_owned(),
-        );
-    }
-
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
-    let manifest = Path::new(&args[1]);
-    let fixture = Path::new(&args[2]);
+    match args {
+        [command, manifest, fixture] if command == "check" => {
+            run_check(&root, Path::new(manifest), Path::new(fixture))
+        }
+        [command, exports, manifest, fixture] if command == "layers" => run_layers(
+            &root,
+            Path::new(exports),
+            Path::new(manifest),
+            Path::new(fixture),
+        ),
+        _ => Err(USAGE.to_owned()),
+    }
+}
 
-    let coverage = validate_manifest(&root, manifest)?;
-    let classified = validate_manifest_completeness(&root, manifest)?;
-    validate_plain_fixture(&root, fixture)?;
-    let members = validate_lint_inheritance(&root)?;
+fn run_check(root: &Path, manifest: &Path, fixture: &Path) -> Result<String, String> {
+    let coverage = validate_manifest(root, manifest)?;
+    let classified = validate_manifest_completeness(root, manifest)?;
+    validate_plain_fixture(root, fixture)?;
+    let members = validate_lint_inheritance(root)?;
 
     Ok(format!(
         "validated {} bootstrap surfaces ({} files scanned, {} exempt), \
@@ -143,7 +170,7 @@ fn validate_manifest(root: &Path, manifest: &Path) -> Result<Coverage, String> {
             ));
         }
         let files = if resolved.is_dir() {
-            walk_files(&resolved)?
+            walk_files(&root, &resolved)?
         } else {
             vec![resolved]
         };
@@ -298,42 +325,15 @@ fn parse_scan_exemption(line_number: usize, field: &str) -> Result<String, Strin
     Ok(reason.to_owned())
 }
 
-/// Deterministic, sorted, depth-first file listing for a directory surface.
-fn walk_files(directory: &Path) -> Result<Vec<PathBuf>, String> {
-    walk_with_skips(directory, &UNWALKED_DIRS)
-}
-
-/// Deterministic, sorted, depth-first file listing that omits any entry whose
-/// file name appears in `skip`.
-fn walk_with_skips(directory: &Path, skip: &[&str]) -> Result<Vec<PathBuf>, String> {
-    let mut entries: Vec<PathBuf> = fs::read_dir(directory)
-        .map_err(|error| format!("read directory {}: {error}", directory.display()))?
-        .map(|entry| {
-            entry.map(|entry| entry.path()).map_err(|error| {
-                format!("read directory entry in {}: {error}", directory.display())
-            })
-        })
-        .collect::<Result<Vec<PathBuf>, String>>()?;
-    entries.sort();
-
-    let mut files = Vec::new();
-    for entry in entries {
-        let name = entry
-            .file_name()
-            .and_then(|name| name.to_str())
-            .unwrap_or_default()
-            .to_owned();
-        if skip.contains(&name.as_str()) {
-            continue;
-        }
-        if entry.is_dir() {
-            files.extend(walk_with_skips(&entry, skip)?);
-        } else if entry.is_file() {
-            files.push(entry);
-        }
-    }
-
-    Ok(files)
+/// Sorted files beneath a directory surface. Like inventory completeness, this
+/// derives from Git's tracked-file set rather than a filesystem walk with a
+/// directory-name skip list, so a tracked file is never skipped and untracked
+/// build or editor output is never scanned.
+fn walk_files(root: &Path, directory: &Path) -> Result<Vec<PathBuf>, String> {
+    Ok(tracked_files(root)?
+        .into_iter()
+        .filter(|file| file.starts_with(directory))
+        .collect())
 }
 
 fn relative_to(root: &Path, file: &Path) -> PathBuf {
@@ -533,7 +533,7 @@ fn validate_plain_fixture(root: &Path, fixture: &Path) -> Result<(), String> {
         fs::read_to_string(&css).map_err(|error| format!("read {}: {error}", css.display()))?;
 
     if !html.contains("href=\"./consumer.css\"") {
-        return Err("plain fixture must load only its local ./consumer.css".to_owned());
+        return Err("plain fixture must load its local ./consumer.css".to_owned());
     }
 
     for marker in [
@@ -572,6 +572,208 @@ fn validate_plain_fixture(root: &Path, fixture: &Path) -> Result<(), String> {
     }
 
     Ok(())
+}
+
+/// Validate the supported CSS exports, their stylesheet graphs, and the plain
+/// consumer fixture's use of them.
+fn run_layers(
+    root: &Path,
+    exports_file: &Path,
+    manifest: &Path,
+    fixture: &Path,
+) -> Result<String, String> {
+    validate_relative_path(exports_file)?;
+    validate_relative_path(manifest)?;
+    let root = canonical(root, "repository root")?;
+
+    let exports_text = fs::read_to_string(root.join(exports_file))
+        .map_err(|error| format!("read exports {}: {error}", exports_file.display()))?;
+    let exports = parse_exports(&exports_text)?;
+    let manifest_text = fs::read_to_string(root.join(manifest))
+        .map_err(|error| format!("read manifest {}: {error}", manifest.display()))?;
+    let surfaces = parse_manifest(&manifest_text)?;
+    validate_export_classification(&exports, &surfaces, manifest)?;
+
+    let tracked = tracked_files(&root)?;
+    let mut reached = BTreeSet::new();
+    let mut owned = BTreeSet::new();
+    for export in &exports {
+        validate_entry_publishes_order(&root, export)?;
+        let graph = css::validate_graph(&root, &export.path, Path::new(STYLES_ROOT))?;
+        owned.extend(graph.owners.into_keys());
+        reached.extend(graph.stylesheets);
+    }
+    css::validate_reachability(&root, Path::new(STYLES_ROOT), &reached, &tracked)?;
+
+    validate_relative_path(fixture)?;
+    let index = root.join(fixture).join("index.html");
+    let html =
+        fs::read_to_string(&index).map_err(|error| format!("read {}: {error}", index.display()))?;
+    validate_fixture_links(&html, &exports)?;
+
+    Ok(format!(
+        "validated {} CSS export(s) ({} stylesheet(s) reached, {} owned layer(s)); \
+plain fixture {} loads only declared exports and its consumer stylesheet",
+        exports.len(),
+        reached.len(),
+        owned.len(),
+        fixture.display()
+    ))
+}
+
+fn parse_exports(text: &str) -> Result<Vec<Export>, String> {
+    let mut exports: Vec<Export> = Vec::new();
+
+    for (index, raw_line) in text.lines().enumerate() {
+        let line_number = index + 1;
+        let line = raw_line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+
+        let fields: Vec<&str> = line.split('\t').collect();
+        let [class, name, path] = fields.as_slice() else {
+            return Err(format!(
+                "exports line {line_number} must be <class><tab><export-name><tab><path>"
+            ));
+        };
+
+        if *class != EXPORT_CLASS {
+            return Err(format!(
+                "exports line {line_number} uses class '{class}'; CSS exports must be {EXPORT_CLASS} until a reviewed contract earns public-stable"
+            ));
+        }
+        if !name.ends_with(".css") || name.contains('/') {
+            return Err(format!(
+                "exports line {line_number} export name '{name}' must be a bare .css file name"
+            ));
+        }
+        let path = PathBuf::from(path);
+        validate_relative_path(&path)?;
+        if !path.starts_with(STYLES_ROOT) || path.extension().is_none_or(|ext| ext != "css") {
+            return Err(format!(
+                "exports line {line_number} path {} must be a .css file under {STYLES_ROOT}/",
+                path.display()
+            ));
+        }
+        if exports
+            .iter()
+            .any(|export| export.name == *name || export.path == path)
+        {
+            return Err(format!(
+                "exports line {line_number} duplicates an export name or path"
+            ));
+        }
+
+        exports.push(Export {
+            class: (*class).to_owned(),
+            name: (*name).to_owned(),
+            path,
+        });
+    }
+
+    if exports.is_empty() {
+        return Err("exports declare no supported CSS entrypoint".to_owned());
+    }
+    Ok(exports)
+}
+
+/// Every export must be classified with the same class in the compatibility
+/// inventory, and every classified public stylesheet must be exported.
+fn validate_export_classification(
+    exports: &[Export],
+    surfaces: &[Surface],
+    manifest: &Path,
+) -> Result<(), String> {
+    for export in exports {
+        let classified = surfaces
+            .iter()
+            .any(|surface| surface.path == export.path && surface.class == export.class);
+        if !classified {
+            return Err(format!(
+                "export {} ({}) is not classified {} in {}",
+                export.name,
+                export.path.display(),
+                export.class,
+                manifest.display()
+            ));
+        }
+    }
+
+    for surface in surfaces {
+        let is_stylesheet = surface.path.extension().is_some_and(|ext| ext == "css");
+        if surface.class != "internal"
+            && is_stylesheet
+            && !exports.iter().any(|export| export.path == surface.path)
+        {
+            return Err(format!(
+                "{} is classified {} but is not a declared export",
+                surface.path.display(),
+                surface.class
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// An entrypoint must publish its layer order before any populated rule or
+/// import, so consumer layers declared afterwards sort after it.
+fn validate_entry_publishes_order(root: &Path, export: &Export) -> Result<(), String> {
+    let source = fs::read_to_string(root.join(&export.path))
+        .map_err(|error| format!("read export {}: {error}", export.path.display()))?;
+    let nodes = css::parse(&source)
+        .map_err(|error| format!("export {}: {error}", export.path.display()))?;
+    let first = nodes
+        .iter()
+        .find(|node| !matches!(node, css::Node::Statement { name, .. } if name == "charset"));
+    match first {
+        Some(css::Node::Statement { name, .. }) if name == "layer" => Ok(()),
+        _ => Err(format!(
+            "export {} must begin with an @layer order statement",
+            export.path.display()
+        )),
+    }
+}
+
+/// The consumer fixture may load only declared exports, at their public path,
+/// followed by its own consumer stylesheet.
+fn validate_fixture_links(html: &str, exports: &[Export]) -> Result<(), String> {
+    let lowered = html.to_ascii_lowercase();
+    if lowered.contains("<style") || lowered.contains("style=") {
+        return Err("plain fixture must not carry inline styles".to_owned());
+    }
+
+    let hrefs: Vec<&str> = html
+        .split("href=\"")
+        .skip(1)
+        .map(|rest| rest.split('"').next().unwrap_or_default())
+        .collect();
+    let mut last_export = None;
+    let mut consumer = None;
+
+    for (position, href) in hrefs.iter().enumerate() {
+        if *href == FIXTURE_CONSUMER_STYLESHEET {
+            consumer = Some(position);
+            continue;
+        }
+        let declared = href
+            .strip_prefix('/')
+            .is_some_and(|path| exports.iter().any(|export| export.path == Path::new(path)));
+        if !declared {
+            return Err(format!(
+                "plain fixture links '{href}', which is neither a declared export path nor {FIXTURE_CONSUMER_STYLESHEET}"
+            ));
+        }
+        last_export = Some(position);
+    }
+
+    match (last_export, consumer) {
+        (Some(export), Some(consumer)) if export < consumer => Ok(()),
+        (None, _) => Err("plain fixture must load a declared Design System export".to_owned()),
+        _ => Err(format!(
+            "plain fixture must load {FIXTURE_CONSUMER_STYLESHEET} after the Design System export"
+        )),
+    }
 }
 
 fn canonical(path: &Path, label: &str) -> Result<PathBuf, String> {
@@ -716,6 +918,105 @@ mod tests {
             fs::read_to_string(repository_root().join(boundary("member-lints-inheriting.toml")))
                 .expect("read fixture");
         assert!(member_inherits_workspace_lints(&manifest));
+    }
+
+    fn export(path: &str) -> Export {
+        Export {
+            class: EXPORT_CLASS.to_owned(),
+            name: "core.css".to_owned(),
+            path: PathBuf::from(path),
+        }
+    }
+
+    /// The repository's own exports, inventory, and consumer fixture satisfy the
+    /// layer contract end to end.
+    #[test]
+    fn repository_layer_contract_passes() {
+        let output = run_layers(
+            &repository_root(),
+            Path::new("exports.tsv"),
+            Path::new("bootstrap-surfaces.tsv"),
+            Path::new("fixtures/plain-html"),
+        )
+        .expect("repository layer contract");
+        assert!(output.starts_with("validated 1 CSS export(s)"), "{output}");
+    }
+
+    #[test]
+    fn exports_reject_unearned_or_internal_classes() {
+        let stable = parse_exports("public-stable\tcore.css\tpackages/styles/index.css")
+            .expect_err("public-stable export");
+        assert!(stable.contains("must be public-preview"), "{stable}");
+        let internal = parse_exports("internal\tcore.css\tpackages/styles/index.css")
+            .expect_err("internal export");
+        assert!(internal.contains("must be public-preview"), "{internal}");
+    }
+
+    #[test]
+    fn exports_must_be_stylesheets_under_the_styles_root() {
+        let outside = parse_exports("public-preview\tcore.css\tfixtures/plain-html/consumer.css")
+            .expect_err("export outside styles root");
+        assert!(outside.contains("under packages/styles/"), "{outside}");
+        let duplicate = parse_exports(
+            "public-preview\tcore.css\tpackages/styles/index.css\npublic-preview\tcore.css\tpackages/styles/other.css",
+        )
+        .expect_err("duplicate export name");
+        assert!(duplicate.contains("duplicates"), "{duplicate}");
+        assert!(parse_exports("# comment only").is_err());
+    }
+
+    #[test]
+    fn exports_and_inventory_classes_must_agree() {
+        let exports = vec![export("packages/styles/index.css")];
+        let internal = parse_manifest("internal\tpackages/styles/index.css").expect("manifest");
+        let error = validate_export_classification(&exports, &internal, Path::new("m.tsv"))
+            .expect_err("export classified internal");
+        assert!(
+            error.contains("is not classified public-preview"),
+            "{error}"
+        );
+
+        let extra = parse_manifest(
+            "public-preview\tpackages/styles/index.css\npublic-preview\tpackages/styles/extra.css",
+        )
+        .expect("manifest");
+        let error = validate_export_classification(&exports, &extra, Path::new("m.tsv"))
+            .expect_err("public stylesheet without export");
+        assert!(error.contains("is not a declared export"), "{error}");
+    }
+
+    #[test]
+    fn fixture_links_only_declared_exports_then_consumer_css() {
+        let exports = vec![export("packages/styles/index.css")];
+        let valid = r#"<link rel="stylesheet" href="/packages/styles/index.css"><link rel="stylesheet" href="./consumer.css">"#;
+        validate_fixture_links(valid, &exports).expect("declared export then consumer");
+
+        let private = r#"<link href="/packages/styles/internal.css"><link href="./consumer.css">"#;
+        let error = validate_fixture_links(private, &exports).expect_err("undeclared path");
+        assert!(error.contains("neither a declared export"), "{error}");
+
+        let reversed = r#"<link href="./consumer.css"><link href="/packages/styles/index.css">"#;
+        let error = validate_fixture_links(reversed, &exports).expect_err("consumer first");
+        assert!(error.contains("after the Design System export"), "{error}");
+
+        let inline = r#"<link href="/packages/styles/index.css"><style>a{}</style><link href="./consumer.css">"#;
+        assert!(validate_fixture_links(inline, &exports).is_err());
+    }
+
+    /// Directory surfaces are walked from Git's tracked-file set, so the walk and
+    /// inventory completeness share one authority.
+    #[test]
+    fn directory_walk_uses_tracked_files() {
+        let root = repository_root().canonicalize().expect("root");
+        let directory = root.join("fixtures/plain-html");
+        let walked = walk_files(&root, &directory).expect("walk");
+        let tracked: Vec<PathBuf> = tracked_files(&root)
+            .expect("tracked")
+            .into_iter()
+            .filter(|file| file.starts_with(&directory))
+            .collect();
+        assert_eq!(walked, tracked);
+        assert!(walked.iter().all(|file| file.starts_with(&directory)));
     }
 
     #[test]

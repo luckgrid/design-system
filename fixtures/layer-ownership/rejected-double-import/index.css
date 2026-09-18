@@ -1,0 +1,4 @@
+@layer ds.tokens, ds.base, ds.layouts, ds.primitives, ds.components, ds.utilities;
+
+@import "./module.css" layer(ds.base);
+@import "./module.css" layer(ds.utilities);

@@ -6,7 +6,7 @@ id = "design-system"
 kind = "workspace-source"
 title = "Design System"
 status = "experimental"
-summary = "Portable web-platform-first design system; experimental Rust-first source bootstrap in progress."
+summary = "Portable web-platform-first design system; experimental, with a public-preview core CSS entrypoint."
 
 system_space = "luckgrid"
 domain = "design-system"
@@ -40,13 +40,16 @@ members = ["apps/ds-check"]
 
 [entrypoints]
 check = "cargo run --locked -p design-system-check -- check bootstrap-surfaces.tsv fixtures/plain-html"
+layers = "cargo run --locked -p design-system-check -- layers exports.tsv bootstrap-surfaces.tsv fixtures/plain-html"
+browser = "npx playwright test (run in tests/browser)"
+core_css = "packages/styles/index.css"
 
 # The repository remains intentionally unlicensed during pre-release
 # development. Public visibility is not a license grant. A license must be
 # selected and added before the first supported release candidate.
 
 [capabilities]
-provides = ["bootstrap-boundary-check"]
+provides = ["bootstrap-boundary-check", "css-layer-contract-check", "core-css-entrypoint"]
 requires = ["filesystem.read"]
 
 [policy]

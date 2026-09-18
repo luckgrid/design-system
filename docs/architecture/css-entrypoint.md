@@ -11,8 +11,9 @@ what may still change.
 | `core.css` | `packages/styles/index.css` | `public-preview` |
 
 `exports.tsv` declares the export, and `bootstrap-surfaces.tsv` classifies the
-same path. `ds-check layers` fails if the two disagree, or if a public
-stylesheet is not exported.
+same path exactly once. `ds-check` rejects duplicate/aliased inventory paths;
+`ds-check layers` fails if export and inventory classes disagree, or if a
+public stylesheet is not exported.
 
 The authored source file *is* the artifact. There is no compiled or generated
 copy, and no Tailwind, framework, JavaScript, or Rust is needed to use it. A

@@ -1,1 +1,0 @@
-S031 adversarial inventory-completeness probe.

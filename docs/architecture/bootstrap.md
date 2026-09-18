@@ -13,8 +13,10 @@ surface is `internal`. The bootstrap intentionally exposes no
 `public-stable` surface and no supported portable CSS entrypoint.
 
 Every tracked path in this repository is classified there, and the checker
-enforces that rather than trusting it: it walks the repository and fails if any
-file is missing from the inventory. Classification states a compatibility
+enforces that rather than trusting it: it reads Git's exact tracked-file set
+with `git ls-files` and fails if any tracked file is missing from the inventory.
+This avoids both build/editor output and false exclusions caused by approximating
+`.gitignore` with directory-name skips. Classification states a compatibility
 position; it does not claim a path is a build input.
 
 The first frontend source seam is `packages/styles/`. DS-E01.S2 will
@@ -35,8 +37,9 @@ The checker validates:
 - every inventory row carries an explicit `internal`/`public-preview` class, and
   rejects `public-stable` while no compatibility contract owns it;
 - every listed path is relative, inside a permitted bootstrap root, and exists;
-- every file in the repository is covered by an inventory row, so a newly added
-  file cannot arrive unclassified and unscanned;
+- every Git-tracked file is covered by an inventory row, so a newly added
+  tracked file cannot arrive unclassified and unscanned, even under an
+  ignored-looking nested directory name;
 - listed files contain no private planning/cross-repository path markers.
   Directory surfaces are walked, so this reaches every file beneath them;
 - every Cargo workspace member declares `[lints] workspace = true`, so the root

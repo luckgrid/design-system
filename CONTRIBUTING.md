@@ -21,6 +21,10 @@ cargo run --locked -p design-system-check -- check \
   bootstrap-surfaces.tsv fixtures/plain-html
 ```
 
+## Program references
+
+Use the complete program identifier when durable documentation refers to a story or task, for example `DS-E01.S1.T3`. Prefer the durable task/story name when it reads more clearly. Do not use bare references such as `T3`, `S2.T1`, or `S2` outside a table or list whose parent identifier is explicit in the same entry.
+
 ## Pull requests
 
 Keep changes bounded and explain compatibility impact for any surface that is

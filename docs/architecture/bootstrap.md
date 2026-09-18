@@ -8,7 +8,7 @@ boundaries; it is not a runtime requirement for CSS consumers.
 
 ## Current bootstrap surfaces
 
-The compatibility inventory is `bootstrap-surfaces.tsv`. At T3 every listed
+The compatibility inventory is `bootstrap-surfaces.tsv`. At `DS-E01.S1.T3` every listed
 surface is `internal`. The bootstrap intentionally exposes no
 `public-stable` surface and no supported portable CSS entrypoint.
 

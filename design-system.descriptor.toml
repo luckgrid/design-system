@@ -5,8 +5,8 @@
 id = "design-system"
 kind = "workspace-source"
 title = "Design System"
-status = "bootstrap"
-summary = "Portable web-platform-first design system; repository bootstrapped, implementation not started."
+status = "experimental"
+summary = "Portable web-platform-first design system; experimental Rust-first source bootstrap in progress."
 
 system_space = "luckgrid"
 domain = "design-system"
@@ -24,25 +24,29 @@ root = "Build/src/workspaces/design-system"
 planning_root = "Build/bin/design-system"
 state = "Build/bin/design-system/_process/STATE.md"
 
-# planning_root and state are paths within luckgrid/lg-workstreams (private),
-# not within this repository.
+# root, planning_root, and state are Workstreams-side paths within the private
+# luckgrid/lg-workstreams repository; they are provenance metadata, not source
+# paths or build dependencies of this public repository.
 
 [branch]
-durable = "lg/design-system-e01"
+durable = "main"
+feature_prefix = "ds/"
 
-# Deliberately absent until the source-decisions/bootstrap task:
-#   [native]      manifests / toolchain pins
-#   [entrypoints] setup, doctor, build, check commands
-#   version, rust-version, Cargo members, package names
-#   [capabilities].provides — this repository publishes nothing yet
-#
-# license is deliberately NOT in that list. It is not bootstrap-deferred. The
-# repository is intentionally unlicensed during pre-release development, and
-# public visibility is not a license grant. A license must be selected and a
-# LICENSE file added before the first supported release candidate — separately
-# from, and later than, the source-decisions/bootstrap task.
+[native]
+workspace = "Cargo.toml"
+toolchain = "rust-toolchain.toml"
+rust_version = "1.98.1"
+members = ["apps/ds-check"]
+
+[entrypoints]
+check = "cargo run --locked -p design-system-check -- check bootstrap-surfaces.tsv fixtures/plain-html"
+
+# The repository remains intentionally unlicensed during pre-release
+# development. Public visibility is not a license grant. A license must be
+# selected and added before the first supported release candidate.
 
 [capabilities]
+provides = ["bootstrap-boundary-check"]
 requires = ["filesystem.read"]
 
 [policy]

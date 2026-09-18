@@ -3,93 +3,93 @@
 A portable, web-platform-first design system: CSS-first, semantic-HTML-first,
 framework-agnostic, and independently versioned.
 
-> **Status: pre-implementation.** This repository has just been bootstrapped.
-> There is no released CSS, no public API, and no supported artifact yet. Nothing
-> here is stable. See [Current status](#current-status).
+> **Status: experimental bootstrap.** The canonical source workspace is being
+> established. There is no released CSS, no supported public CSS API, and no
+> `public-stable` surface yet.
 
 ## What this is
 
-A standalone, independently versioned design system **intended to become open
-source**, consumed as published artifacts rather than by forking or reaching into
-source paths. It is not open source yet — see [License](#license). Its first
-implementation horizon is frontend-focused:
+The Design System is a standalone product intended to become open source and to
+be consumed through published artifacts rather than source reach-through.
 
-- portable CSS core with an explicit cascade/layer contract;
-- semantic and classless base styling for ordinary HTML before specialized hooks;
-- reference and semantic token layers, with a consumer-themeable contract;
-- base primitives and semantic UI primitives, kept distinct;
-- bounded fluid spacing and type where interpolation is genuinely intended;
-- container-first responsiveness for reusable modules;
-- native HTML/CSS interaction before shared JavaScript, where the accepted
-  browser and accessibility policy permits it.
+Its first implementation horizon is frontend-focused:
 
-Rust and Cargo are the workspace and contributor-tooling substrate. **Consuming
-the released CSS will not require Rust**, Cargo, or this repository's toolchain.
+- portable CSS with an explicit cascade/layer contract;
+- semantic and classless base styling before specialized hooks;
+- reference and semantic tokens with consumer-owned theme overrides;
+- base primitives and semantic UI primitives kept distinct;
+- bounded fluid spacing/type and container-first reusable-module responsiveness;
+- native HTML/CSS interaction before shared JavaScript where compatibility and
+  accessibility evidence permits it.
 
-## What this is not
+Rust and Cargo are the contributor-workspace and validation substrate.
+**Consuming released frontend CSS will not require Rust or Cargo.**
 
-- Not a component framework for any specific UI runtime. No React, Solid, or Vue
-  runtime is required to consume the core styles.
-- Not a Tailwind plugin. Tailwind is an optional adapter, neither required nor
-  forbidden.
-- Not a backend or service framework. Runtime, storage, auth, and domain APIs
-  belong to the systems that own them.
-- Not a general-purpose UI kit lifted from one product. Shared abstractions are
-  promoted only after evidence from genuinely unlike consumers.
+## Current bootstrap
 
-## Current status
+The T3 bootstrap establishes:
 
-The repository exists; the implementation does not. In order:
+- a Rust 2024 / resolver-3 Cargo workspace pinned to Rust 1.98.1;
+- one contributor tool, `ds-check`, for bootstrap/source-boundary validation;
+- the future frontend source root at `packages/styles/`;
+- a self-contained plain HTML fixture;
+- explicit bootstrap compatibility classification in
+  `bootstrap-surfaces.tsv`;
+- least-privilege GitHub Actions quality checks.
 
-1. inventory and behavioral verification of the existing implementation evidence;
-2. consumer, browser, and compatibility inventory;
-3. source decisions and workspace bootstrap — exact Cargo members, crate and
-   package names, MSRV, and release topology;
-4. the portable token, theme, cascade, and classless-base core;
-5. layouts, primitives, scoping, migration comparison, and refinement.
+Every listed bootstrap surface is currently **`internal`**. The frontend
+directory contains no supported CSS entrypoint yet. DS-E01.S2 owns the first
+portable CSS/token/theme/cascade contract.
 
-Until step 3 lands, this repository deliberately declares no Cargo manifest, no
-toolchain pin, and no package names. Those are decisions with long compatibility
-consequences, and they are made once, with evidence.
+## Contributor checks
 
-Licensing is tracked separately and is not part of step 3 — see
-[License](#license).
+From the repository root:
+
+```sh
+cargo fmt --all --check
+cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+cargo test --workspace --all-features --locked
+cargo +1.98.1 check --workspace --all-targets --locked
+cargo run --locked -p design-system-check -- check \
+  bootstrap-surfaces.tsv fixtures/plain-html
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contributor workflow and
+[SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## Stability
 
-Public visibility does not make every path public API. When surfaces begin to
-exist they are classified explicitly:
+Repository paths are not API by default.
 
 | Class | Meaning |
 |---|---|
-| `public-stable` | Supported. Compatibility impact is recorded for changes. |
-| `public-preview` | Published, still moving. May change without a major bump. |
-| `internal` | Not API. May change or disappear at any time. |
+| `public-stable` | Supported compatibility surface. None exists yet. |
+| `public-preview` | Deliberately exposed but still moving. None is required by T3. |
+| `internal` | Not API; may change or disappear. All current bootstrap surfaces use this class. |
 
-Nothing is `public-stable` today. Repository creation implies no stability
-promise.
+Product maturity and compatibility classification are separate. Experimental
+project maturity does not make an internal path public.
+
+## What this is not
+
+- Not a component framework for React, Solid, Vue, or another UI runtime.
+- Not a Tailwind plugin. Tailwind may later exist as an optional adapter.
+- Not a backend/service framework.
+- Not a general-purpose UI kit copied from one consumer.
+- Not yet a supported CSS package or release artifact.
 
 ## License
 
-**This repository is currently unlicensed.** It is public and readable, but under
-default copyright that means all rights are reserved — it is not yet open source,
-and it is not safe to copy, modify, or redistribute.
+**This repository is currently unlicensed.** It is public and readable, but
+default copyright applies: public visibility is not permission to copy, modify,
+or redistribute the source.
 
-Open-sourcing it is the intent. The choice is deliberately deferred rather than
-made in passing, because it is effectively irreversible once consumers exist, and
-because nothing here is yet consumable. Public visibility is not a license grant,
-and it does not become one by the repository staying public.
-
-A license will be selected and a `LICENSE` file added before the first supported
-release candidate — not as part of the workspace bootstrap above. Until it lands,
-please treat the repository as read-only.
-
-## Contributing
-
-Contribution and security-reporting terms are not yet published. They are part of
-the same bootstrap step.
+Open-source licensing is intended but deliberately deferred until before the
+first supported release candidate. No `LICENSE` file is added by the T3
+bootstrap.
 
 ## Provenance
 
-Planning and specification authority for this project lives outside this
-repository. See [`WORKSTREAMS.md`](WORKSTREAMS.md).
+Planning/specification provenance is described in
+[WORKSTREAMS.md](WORKSTREAMS.md). That file is human/process metadata only and
+is not required to build, test, or eventually consume this repository.

@@ -1,0 +1,7 @@
+# Boundary fixture: a Cargo member manifest that does NOT opt into the root
+# workspace lint policy, so the root lints would silently not apply.
+# Not a workspace member; read as text by ds-check tests.
+
+[package]
+name = "fixture-missing-lints"
+version.workspace = true

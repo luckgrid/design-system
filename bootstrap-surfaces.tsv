@@ -1,0 +1,45 @@
+# Compatibility class<TAB>repository-relative path[<TAB>scan-exempt:<reason>]
+# T3 exposes no public-stable surface. Every bootstrap path is internal.
+#
+# Every tracked file in this repository is classified here. Classification is a
+# compatibility statement, not a claim that a path is a build input.
+#
+# Completeness is machine-enforced against Git's tracked-file set (`git ls-files`):
+# ds-check fails if any tracked file is missing from this inventory, so ignored or
+# generated filesystem entries do not need classification and tracked files cannot
+# hide under ignored-looking directory names.
+#
+# A third scan-exempt field opts only that exact file out of the private-reference
+# content scan and must state why. Directory-wide exemptions are rejected.
+# Exemptions exist only for files that must legitimately contain private-path
+# literals: the checker's marker constants, one negative fixture, and the two
+# deliberate planning-provenance pointers.
+internal	.github/workflows/quality.yml
+internal	.gitignore
+internal	CONTRIBUTING.md
+internal	Cargo.lock
+internal	Cargo.toml
+internal	README.md
+internal	SECURITY.md
+internal	WORKSTREAMS.md	scan-exempt:planning-provenance-pointer
+internal	apps/ds-check/Cargo.toml
+internal	apps/ds-check/src/main.rs	scan-exempt:checker-owns-the-marker-constants
+internal	bootstrap-surfaces.tsv
+internal	design-system.descriptor.toml	scan-exempt:planning-provenance-metadata
+internal	docs/architecture/bootstrap.md
+internal	fixtures/bootstrap-boundary/accepted-directory.tsv
+internal	fixtures/bootstrap-boundary/accepted.tsv
+internal	fixtures/bootstrap-boundary/member-lints-inheriting.toml
+internal	fixtures/bootstrap-boundary/member-lints-missing.toml
+internal	fixtures/bootstrap-boundary/rejected-bad-exemption.tsv
+internal	fixtures/bootstrap-boundary/rejected-directory-exemption.tsv
+internal	fixtures/bootstrap-boundary/rejected-incomplete.tsv
+internal	fixtures/bootstrap-boundary/rejected-missing.tsv
+internal	fixtures/bootstrap-boundary/rejected-outside-root.tsv
+internal	fixtures/bootstrap-boundary/rejected-private-marker.tsv
+internal	fixtures/bootstrap-boundary/rejected-private.tsv	scan-exempt:negative-fixture-carries-rejected-private-path
+internal	fixtures/plain-html/README.md
+internal	fixtures/plain-html/consumer.css
+internal	fixtures/plain-html/index.html
+internal	packages/styles/README.md
+internal	rust-toolchain.toml

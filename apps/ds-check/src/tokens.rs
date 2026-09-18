@@ -380,10 +380,11 @@ fn validate_reference(declaration: &Declaration, row: &Row) -> Result<bool, Stri
     }
     match row.value_type.as_str() {
         "color" => {
+            // Relative color syntax always begins its arguments with `from`.
             let is_oklch = lower.starts_with("oklch(")
                 && lower.ends_with(')')
                 && !lower["oklch(".len()..].contains('(')
-                && !lower.contains(" from ");
+                && !lower.contains("from");
             if !is_oklch {
                 return Err(format!(
                     "reference color {name} must be one plain oklch() value; relative color syntax and other functions are not used in the required floor"
@@ -832,6 +833,11 @@ public-preview\t--ds-leading-body\tnumber
     fn reference_colors_are_plain_oklch() {
         rejected(
             &REFERENCE.replace("oklch(12% 0 0)", "oklch(from white calc(l - 0.1) c h)"),
+            SEMANTIC,
+            "one plain oklch()",
+        );
+        rejected(
+            &REFERENCE.replace("oklch(12% 0 0)", "oklch(from red l c h)"),
             SEMANTIC,
             "one plain oklch()",
         );

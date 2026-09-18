@@ -1,0 +1,35 @@
+name: quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install Rust 1.98.1
+        run: rustup toolchain install 1.98.1 --profile minimal --component rustfmt --component clippy
+
+      - name: Format
+        run: cargo +1.98.1 fmt --all --check
+
+      - name: Clippy
+        run: cargo +1.98.1 clippy --workspace --all-targets --all-features --locked -- -D warnings
+
+      - name: Test
+        run: cargo +1.98.1 test --workspace --all-features --locked
+
+      - name: MSRV check
+        run: cargo +1.98.1 check --workspace --all-targets --locked
+
+      - name: Bootstrap boundary
+        run: cargo +1.98.1 run --locked -p design-system-check -- check bootstrap-surfaces.tsv fixtures/plain-html

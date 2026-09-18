@@ -294,6 +294,14 @@ fn parse_manifest(text: &str) -> Result<Vec<Surface>, String> {
         if path.trim().is_empty() {
             return Err(format!("manifest line {line_number} has an empty path"));
         }
+        let path = PathBuf::from(path);
+        validate_relative_path(&path)?;
+        if surfaces.iter().any(|surface| surface.path == path) {
+            return Err(format!(
+                "manifest line {line_number} duplicates path {}",
+                path.display()
+            ));
+        }
 
         let scan_exempt = match exempt_field {
             None => None,
@@ -302,7 +310,7 @@ fn parse_manifest(text: &str) -> Result<Vec<Surface>, String> {
 
         surfaces.push(Surface {
             class: class.to_owned(),
-            path: PathBuf::from(path),
+            path,
             scan_exempt,
         });
     }
@@ -871,6 +879,21 @@ mod tests {
             .expect("read bootstrap inventory");
         let surfaces = parse_manifest(&text).expect("parse bootstrap inventory");
         assert_eq!(classified, surfaces.len());
+    }
+
+    #[test]
+    fn manifest_rejects_duplicate_paths_and_aliases() {
+        let duplicate = parse_manifest(
+            "internal\tpackages/styles/index.css\npublic-preview\tpackages/styles/index.css",
+        )
+        .expect_err("duplicate manifest path must be rejected");
+        assert!(duplicate.contains("duplicates path"), "{duplicate}");
+
+        let alias = parse_manifest(
+            "internal\tpackages/styles/index.css\npublic-preview\t./packages/styles/index.css",
+        )
+        .expect_err("dot-segment alias must be rejected");
+        assert!(alias.contains("forbidden component"), "{alias}");
     }
 
     #[test]

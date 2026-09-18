@@ -33,8 +33,14 @@ durable = "lg/design-system-e01"
 # Deliberately absent until the source-decisions/bootstrap task:
 #   [native]      manifests / toolchain pins
 #   [entrypoints] setup, doctor, build, check commands
-#   version, license, rust-version, Cargo members, package names
+#   version, rust-version, Cargo members, package names
 #   [capabilities].provides — this repository publishes nothing yet
+#
+# license is deliberately NOT in that list. It is not bootstrap-deferred. The
+# repository is intentionally unlicensed during pre-release development, and
+# public visibility is not a license grant. A license must be selected and a
+# LICENSE file added before the first supported release candidate — separately
+# from, and later than, the source-decisions/bootstrap task.
 
 [capabilities]
 requires = ["filesystem.read"]

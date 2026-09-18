@@ -9,9 +9,10 @@ framework-agnostic, and independently versioned.
 
 ## What this is
 
-A standalone, independently versioned open-source design system, intended to be
-consumed as published artifacts rather than by forking or reaching into source
-paths. Its first implementation horizon is frontend-focused:
+A standalone, independently versioned design system **intended to become open
+source**, consumed as published artifacts rather than by forking or reaching into
+source paths. It is not open source yet — see [License](#license). Its first
+implementation horizon is frontend-focused:
 
 - portable CSS core with an explicit cascade/layer contract;
 - semantic and classless base styling for ordinary HTML before specialized hooks;

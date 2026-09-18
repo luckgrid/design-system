@@ -1,0 +1,9 @@
+# Boundary fixture: a Cargo member manifest that correctly opts into the root
+# workspace lint policy. Not a workspace member; read as text by ds-check tests.
+
+[package]
+name = "fixture-inheriting"
+version.workspace = true
+
+[lints]
+workspace = true

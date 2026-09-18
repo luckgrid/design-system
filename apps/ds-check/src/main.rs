@@ -294,8 +294,7 @@ fn parse_manifest(text: &str) -> Result<Vec<Surface>, String> {
         if path.trim().is_empty() {
             return Err(format!("manifest line {line_number} has an empty path"));
         }
-        let path = PathBuf::from(path);
-        validate_relative_path(&path)?;
+        let path = normalize_relative_path(Path::new(path))?;
         if surfaces.iter().any(|surface| surface.path == path) {
             return Err(format!(
                 "manifest line {line_number} duplicates path {}",
@@ -346,6 +345,22 @@ fn walk_files(root: &Path, directory: &Path) -> Result<Vec<PathBuf>, String> {
 
 fn relative_to(root: &Path, file: &Path) -> PathBuf {
     file.strip_prefix(root).unwrap_or(file).to_path_buf()
+}
+
+fn normalize_relative_path(path: &Path) -> Result<PathBuf, String> {
+    validate_relative_path(path)?;
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::Normal(value) => normalized.push(value),
+            Component::CurDir => {}
+            Component::ParentDir | Component::RootDir | Component::Prefix(_) => unreachable!(),
+        }
+    }
+    if normalized.as_os_str().is_empty() {
+        return Err("path must contain a normal relative component".to_owned());
+    }
+    Ok(normalized)
 }
 
 fn validate_relative_path(path: &Path) -> Result<(), String> {
@@ -893,7 +908,7 @@ mod tests {
             "internal\tpackages/styles/index.css\npublic-preview\t./packages/styles/index.css",
         )
         .expect_err("dot-segment alias must be rejected");
-        assert!(alias.contains("forbidden component"), "{alias}");
+        assert!(alias.contains("duplicates path"), "{alias}");
     }
 
     #[test]

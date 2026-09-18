@@ -3,7 +3,7 @@
 This directory is the authored shared styles source boundary for the Design
 System.
 
-At the T3 bootstrap it contains **no supported Design System CSS entrypoint**.
+At the `DS-E01.S1.T3` bootstrap it contains **no supported Design System CSS entrypoint**.
 Its contents are classified `internal`. DS-E01.S2 owns the first portable CSS
 entrypoint, cascade/layer contract, token/theme surface, and classless base.
 

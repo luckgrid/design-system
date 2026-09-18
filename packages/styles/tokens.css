@@ -1,0 +1,17 @@
+/*
+ * Design System tokens.
+ *
+ * Imported by the core entrypoint into `ds.tokens`. The two tiers are kept in
+ * separate stylesheets and local sub-layers so their roles stay distinct:
+ *
+ *   reference  raw, scheme-neutral values (`--ds-ref-*`), internal
+ *   semantic   brand-neutral roles (`--ds-*`), the public-preview mapping seam
+ *
+ * Semantic roles are assigned only from reference values, other semantic roles,
+ * or fixed literals whose value is the role's meaning. Every declared property
+ * is classified in tokens.tsv.
+ */
+@layer reference, semantic;
+
+@import "./tokens/reference.css" layer(reference);
+@import "./tokens/semantic.css" layer(semantic);

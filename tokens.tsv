@@ -1,0 +1,82 @@
+# Token compatibility inventory: <class><TAB><custom property><TAB><value type>
+#
+# Every custom property declared by the Design System token stylesheets appears
+# here exactly once, and nothing else does. `ds-check tokens` enforces both
+# directions against the stylesheets reached from exports.tsv.
+#
+# Classes:
+#   internal        --ds-ref-* reference values. Not an override seam; they may
+#                   change or disappear without a compatibility event.
+#   public-preview  --ds-* semantic roles. The documented mapping seam for
+#                   consumer brands and themes. No role is public-stable yet.
+#
+# Value types name what a valid assignment must produce where the role is used:
+# color, font-family, length, number.
+
+internal	--ds-ref-gray-100	color
+internal	--ds-ref-gray-96	color
+internal	--ds-ref-gray-72	color
+internal	--ds-ref-gray-60	color
+internal	--ds-ref-gray-52	color
+internal	--ds-ref-gray-44	color
+internal	--ds-ref-gray-20	color
+internal	--ds-ref-gray-12	color
+internal	--ds-ref-blue-93	color
+internal	--ds-ref-blue-72	color
+internal	--ds-ref-blue-54	color
+internal	--ds-ref-blue-30	color
+internal	--ds-ref-red-72	color
+internal	--ds-ref-red-52	color
+internal	--ds-ref-font-sans	font-family
+internal	--ds-ref-font-mono	font-family
+internal	--ds-ref-space-6-12	length
+internal	--ds-ref-space-8-16	length
+internal	--ds-ref-space-16-32	length
+internal	--ds-ref-space-24-96	length
+internal	--ds-ref-space-48-144	length
+internal	--ds-ref-text-12-16	length
+internal	--ds-ref-text-16-22	length
+internal	--ds-ref-text-18-24	length
+internal	--ds-ref-text-20-26	length
+internal	--ds-ref-text-24-32	length
+internal	--ds-ref-text-28-36	length
+internal	--ds-ref-text-32-40	length
+internal	--ds-ref-text-36-44	length
+public-preview	--ds-color-canvas	color
+public-preview	--ds-color-surface	color
+public-preview	--ds-color-text	color
+public-preview	--ds-color-text-muted	color
+public-preview	--ds-color-border	color
+public-preview	--ds-color-accent	color
+public-preview	--ds-color-on-accent	color
+public-preview	--ds-color-critical	color
+public-preview	--ds-color-highlight	color
+public-preview	--ds-color-focus	color
+public-preview	--ds-font-body	font-family
+public-preview	--ds-font-heading	font-family
+public-preview	--ds-font-code	font-family
+public-preview	--ds-text-small	length
+public-preview	--ds-text-body	length
+public-preview	--ds-text-lead	length
+public-preview	--ds-text-heading-1	length
+public-preview	--ds-text-heading-2	length
+public-preview	--ds-text-heading-3	length
+public-preview	--ds-text-heading-4	length
+public-preview	--ds-text-heading-5	length
+public-preview	--ds-text-heading-6	length
+public-preview	--ds-leading-body	number
+public-preview	--ds-leading-heading	number
+public-preview	--ds-weight-body	number
+public-preview	--ds-weight-strong	number
+public-preview	--ds-weight-heading	number
+public-preview	--ds-space-control-block	length
+public-preview	--ds-space-control-inline	length
+public-preview	--ds-space-flow	length
+public-preview	--ds-space-gutter	length
+public-preview	--ds-space-section	length
+public-preview	--ds-border-width	length
+public-preview	--ds-radius-control	length
+public-preview	--ds-focus-width	length
+public-preview	--ds-focus-offset	length
+public-preview	--ds-size-target-min	length
+public-preview	--ds-size-measure	length

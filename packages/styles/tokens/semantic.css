@@ -1,0 +1,66 @@
+/*
+ * Semantic tier: brand-neutral roles. Every property here is public-preview.
+ *
+ * A consumer brand maps its own values into these roles from a layer declared
+ * after `ds` (for example `@layer app`). Do not override `--ds-ref-*` values.
+ *
+ * Color roles that model a light/dark pair use light-dark() over two reference
+ * values. light-dark() resolves against the used `color-scheme` of the element
+ * that consumes the role. This stylesheet does not set `color-scheme`; the
+ * theme contract selects it.
+ *
+ * Fixed roles are deliberately not fluid: border and focus geometry, minimum
+ * target size, content measure, radius, line height, and weight keep one value
+ * at every viewport so interaction and accessibility guarantees do not drift.
+ */
+:root {
+  /* Color. */
+  --ds-color-canvas: light-dark(var(--ds-ref-gray-100), var(--ds-ref-gray-12));
+  --ds-color-surface: light-dark(var(--ds-ref-gray-96), var(--ds-ref-gray-20));
+  --ds-color-text: light-dark(var(--ds-ref-gray-12), var(--ds-ref-gray-96));
+  --ds-color-text-muted: light-dark(var(--ds-ref-gray-44), var(--ds-ref-gray-72));
+  --ds-color-border: light-dark(var(--ds-ref-gray-60), var(--ds-ref-gray-52));
+  --ds-color-accent: light-dark(var(--ds-ref-blue-54), var(--ds-ref-blue-72));
+  --ds-color-on-accent: light-dark(var(--ds-ref-gray-100), var(--ds-ref-gray-12));
+  --ds-color-critical: light-dark(var(--ds-ref-red-52), var(--ds-ref-red-72));
+  --ds-color-highlight: light-dark(var(--ds-ref-blue-93), var(--ds-ref-blue-30));
+  --ds-color-focus: var(--ds-color-accent);
+
+  /* Font families. */
+  --ds-font-body: var(--ds-ref-font-sans);
+  --ds-font-heading: var(--ds-font-body);
+  --ds-font-code: var(--ds-ref-font-mono);
+
+  /* Fluid type sizes. */
+  --ds-text-small: var(--ds-ref-text-12-16);
+  --ds-text-body: var(--ds-ref-text-16-22);
+  --ds-text-lead: var(--ds-ref-text-18-24);
+  --ds-text-heading-1: var(--ds-ref-text-36-44);
+  --ds-text-heading-2: var(--ds-ref-text-32-40);
+  --ds-text-heading-3: var(--ds-ref-text-28-36);
+  --ds-text-heading-4: var(--ds-ref-text-24-32);
+  --ds-text-heading-5: var(--ds-ref-text-20-26);
+  --ds-text-heading-6: var(--ds-ref-text-18-24);
+
+  /* Fixed type metrics. */
+  --ds-leading-body: 1.5;
+  --ds-leading-heading: 1.333;
+  --ds-weight-body: 400;
+  --ds-weight-strong: 700;
+  --ds-weight-heading: 700;
+
+  /* Fluid space. */
+  --ds-space-control-block: var(--ds-ref-space-6-12);
+  --ds-space-control-inline: var(--ds-ref-space-8-16);
+  --ds-space-flow: var(--ds-ref-space-16-32);
+  --ds-space-gutter: var(--ds-ref-space-24-96);
+  --ds-space-section: var(--ds-ref-space-48-144);
+
+  /* Fixed geometry. */
+  --ds-border-width: 1px;
+  --ds-radius-control: 0.375rem;
+  --ds-focus-width: 2px;
+  --ds-focus-offset: 2px;
+  --ds-size-target-min: 2.75rem;
+  --ds-size-measure: 65ch;
+}

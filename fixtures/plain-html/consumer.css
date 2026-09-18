@@ -8,12 +8,14 @@
 @layer app {
   :root {
     color-scheme: light dark;
-    font-family: system-ui, sans-serif;
+    font-family: var(--ds-font-body);
   }
 
   body {
     margin: 0;
     padding: 2rem;
+    background-color: var(--ds-color-canvas);
+    color: var(--ds-color-text);
   }
 
   main {

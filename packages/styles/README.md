@@ -12,4 +12,10 @@ when it is declared in `exports.tsv`, not because it appears in this public
 directory. `ds-check layers` enforces the layer-ownership rules on every
 stylesheet reached from an export.
 
+`tokens.css` and `tokens/` hold the token authority. The stylesheet files are
+`internal`; the custom properties they declare are classified one by one in
+`tokens.tsv`, where semantic roles are `public-preview` and `--ds-ref-*`
+reference values are `internal`. See
+[`docs/architecture/tokens.md`](/docs/architecture/tokens.md).
+
 Do not copy Luna CSS here wholesale.

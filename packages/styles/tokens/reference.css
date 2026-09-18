@@ -1,0 +1,57 @@
+/*
+ * Reference tier: raw, scheme-neutral values.
+ *
+ * Every property here is internal. Consumers do not override reference values;
+ * a brand maps its own values into the semantic roles instead.
+ *
+ * - Colors are single OKLCH values, never light/dark pairs. The semantic tier
+ *   pairs them with light-dark().
+ * - Fluid values are bounded clamp() formulas that interpolate linearly between
+ *   a 30rem (480px) and a 160rem (2560px) viewport. The name records the bounds
+ *   in pixels at the default root size: `--ds-ref-space-16-32` is 16px at or
+ *   below 480px, 32px at or above 2560px.
+ */
+:root {
+  /* Achromatic ramp, named by OKLCH lightness. */
+  --ds-ref-gray-100: oklch(100% 0 0);
+  --ds-ref-gray-96: oklch(96% 0 0);
+  --ds-ref-gray-72: oklch(72% 0 0);
+  --ds-ref-gray-60: oklch(60% 0 0);
+  --ds-ref-gray-52: oklch(52% 0 0);
+  --ds-ref-gray-44: oklch(44% 0 0);
+  --ds-ref-gray-20: oklch(20% 0 0);
+  --ds-ref-gray-12: oklch(12% 0 0);
+
+  /* Chromatic values, named by hue family and OKLCH lightness. */
+  --ds-ref-blue-93: oklch(93% 0.03 258);
+  --ds-ref-blue-72: oklch(72% 0.14 258);
+  --ds-ref-blue-54: oklch(54% 0.2 258);
+  --ds-ref-blue-30: oklch(30% 0.08 258);
+  --ds-ref-red-72: oklch(72% 0.15 28);
+  --ds-ref-red-52: oklch(52% 0.2 28);
+
+  /* Font stacks: platform fonts only, no downloaded or brand typefaces. */
+  --ds-ref-font-sans:
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --ds-ref-font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+
+  /* Fluid space. */
+  --ds-ref-space-6-12: clamp(0.375rem, 0.2885rem + 0.2885vw, 0.75rem);
+  --ds-ref-space-8-16: clamp(0.5rem, 0.3846rem + 0.3846vw, 1rem);
+  --ds-ref-space-16-32: clamp(1rem, 0.7692rem + 0.7692vw, 2rem);
+  --ds-ref-space-24-96: clamp(1.5rem, 0.4615rem + 3.4615vw, 6rem);
+  --ds-ref-space-48-144: clamp(3rem, 1.6154rem + 4.6154vw, 9rem);
+
+  /* Fluid type. Each maximum stays within 2.5x its minimum. */
+  --ds-ref-text-12-16: clamp(0.75rem, 0.6923rem + 0.1923vw, 1rem);
+  --ds-ref-text-16-22: clamp(1rem, 0.9135rem + 0.2885vw, 1.375rem);
+  --ds-ref-text-18-24: clamp(1.125rem, 1.0385rem + 0.2885vw, 1.5rem);
+  --ds-ref-text-20-26: clamp(1.25rem, 1.1635rem + 0.2885vw, 1.625rem);
+  --ds-ref-text-24-32: clamp(1.5rem, 1.3846rem + 0.3846vw, 2rem);
+  --ds-ref-text-28-36: clamp(1.75rem, 1.6346rem + 0.3846vw, 2.25rem);
+  --ds-ref-text-32-40: clamp(2rem, 1.8846rem + 0.3846vw, 2.5rem);
+  --ds-ref-text-36-44: clamp(2.25rem, 2.1346rem + 0.3846vw, 2.75rem);
+}

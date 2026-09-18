@@ -41,15 +41,17 @@ members = ["apps/ds-check"]
 [entrypoints]
 check = "cargo run --locked -p design-system-check -- check bootstrap-surfaces.tsv fixtures/plain-html"
 layers = "cargo run --locked -p design-system-check -- layers exports.tsv bootstrap-surfaces.tsv fixtures/plain-html"
+tokens = "cargo run --locked -p design-system-check -- tokens tokens.tsv exports.tsv docs/architecture/tokens.md fixtures/plain-html tests/browser/probes"
 browser = "npx playwright test (run in tests/browser)"
 core_css = "packages/styles/index.css"
+token_inventory = "tokens.tsv"
 
 # The repository remains intentionally unlicensed during pre-release
 # development. Public visibility is not a license grant. A license must be
 # selected and added before the first supported release candidate.
 
 [capabilities]
-provides = ["bootstrap-boundary-check", "css-layer-contract-check", "core-css-entrypoint"]
+provides = ["bootstrap-boundary-check", "css-layer-contract-check", "token-authority-check", "core-css-entrypoint", "semantic-tokens"]
 requires = ["filesystem.read"]
 
 [policy]

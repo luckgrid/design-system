@@ -21,6 +21,9 @@ cargo run --locked -p design-system-check -- check \
   bootstrap-surfaces.tsv fixtures/plain-html
 cargo run --locked -p design-system-check -- layers \
   exports.tsv bootstrap-surfaces.tsv fixtures/plain-html
+cargo run --locked -p design-system-check -- tokens \
+  tokens.tsv exports.tsv docs/architecture/tokens.md \
+  fixtures/plain-html tests/browser/probes
 ```
 
 Browser contract tests need Node 20 or later and live only in `tests/browser/`.
@@ -41,9 +44,12 @@ Keep changes bounded and explain compatibility impact for any surface that is
 classified beyond `internal`. Do not promote consumer-specific behavior into
 shared source without evidence from materially unlike consumers.
 
-The only supported CSS surface is the `public-preview` `core.css` entrypoint
-declared in `exports.tsv`. Changes to it, to its layer order, or to what
-`exports.tsv` declares are compatibility changes and must say so. Other files in
+The supported CSS surfaces are the `public-preview` `core.css` entrypoint
+declared in `exports.tsv` and the `public-preview` semantic token roles in
+`tokens.tsv`. Changes to the entrypoint, its layer order, what `exports.tsv`
+declares, or a public role's name, meaning, value type, or alias relationship
+are compatibility changes and must say so. Reference tokens (`--ds-ref-*`) are
+internal. Other files in
 `packages/styles/` stay `internal` until an owning E01 task accepts a public
 contract for them.
 

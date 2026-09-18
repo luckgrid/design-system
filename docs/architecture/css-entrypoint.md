@@ -43,9 +43,10 @@ rules:
 | order of `ds.tokens` … `ds.utilities` | `public-preview` | Documented precedence: a later child outranks an earlier one. Do not author rules into these layers. |
 | anything nested below a `ds.*` child | `internal` | No compatibility promise. |
 
-Later tasks populate these layers with tokens, the theme contract, and the
-classless base. This entrypoint defines no tokens, theme, or element styles, and
-it adds no `ds.reset` layer; reset behavior belongs to the base. Adding a new
+The entrypoint imports the token authority, `tokens.css`, into `ds.tokens`; see
+[`tokens.md`](tokens.md). Later tasks populate the other layers with the theme
+contract and the classless base. The entrypoint itself holds only the order
+statement and that import. It adds no `ds.reset` layer; reset behavior belongs to the base. Adding a new
 `ds.*` child later is a reviewed public-preview change.
 
 ## Overriding
@@ -87,6 +88,11 @@ export:
   `@layer base, variants;`, which nest as `P.base` and `P.variants`;
 - a source-owned public layer has exactly one owning stylesheet;
 - every rule sits inside a named layer, and anonymous layers are rejected;
+- at a stylesheet's own top level, every layer it names sits under `ds`
+  (`ds` or `ds.*`), so Design System source cannot create a sibling layer that
+  outranks or undercuts the documented order;
+- no declaration uses a `!` priority such as `!important`: consumer layers win
+  by order alone, and an important Design System declaration would invert that;
 - Tailwind directives such as `@tailwind`, `@theme`, `@apply`, and `@utility` are
   rejected, because the core must be correct as plain browser CSS;
 - the scanner tokenizes like a browser: a string may not contain an unescaped

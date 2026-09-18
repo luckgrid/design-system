@@ -43,13 +43,16 @@ The repository exists; the implementation does not. In order:
 1. inventory and behavioral verification of the existing implementation evidence;
 2. consumer, browser, and compatibility inventory;
 3. source decisions and workspace bootstrap — exact Cargo members, crate and
-   package names, MSRV, license, and release topology;
+   package names, MSRV, and release topology;
 4. the portable token, theme, cascade, and classless-base core;
 5. layouts, primitives, scoping, migration comparison, and refinement.
 
-Until step 3 lands, this repository deliberately declares no license file, no
-Cargo manifest, no toolchain pin, and no package names. Those are decisions with
-long compatibility consequences, and they are made once, with evidence.
+Until step 3 lands, this repository deliberately declares no Cargo manifest, no
+toolchain pin, and no package names. Those are decisions with long compatibility
+consequences, and they are made once, with evidence.
+
+Licensing is tracked separately and is not part of step 3 — see
+[License](#license).
 
 ## Stability
 
@@ -71,12 +74,14 @@ promise.
 default copyright that means all rights are reserved — it is not yet open source,
 and it is not safe to copy, modify, or redistribute.
 
-Open-sourcing it is the intent. Licensing is deliberately part of the source
-decisions step above rather than a choice made in passing, because it is
-effectively irreversible once consumers exist. A `LICENSE` file will land with
-that step, and this section will say so.
+Open-sourcing it is the intent. The choice is deliberately deferred rather than
+made in passing, because it is effectively irreversible once consumers exist, and
+because nothing here is yet consumable. Public visibility is not a license grant,
+and it does not become one by the repository staying public.
 
-Until then, please treat the repository as read-only.
+A license will be selected and a `LICENSE` file added before the first supported
+release candidate — not as part of the workspace bootstrap above. Until it lands,
+please treat the repository as read-only.
 
 ## Contributing
 

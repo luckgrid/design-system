@@ -40,5 +40,8 @@ durable = "lg/design-system-e01"
 requires = ["filesystem.read"]
 
 [policy]
-allow_git_push = false
+# Normal repository changes use feature branches and pull requests; main is not
+# developed on directly. Mirrors the Workstreams E01 branch/PR workflow rule.
+allow_git_push = true
+allow_direct_main_push = false
 allow_secret_read = false

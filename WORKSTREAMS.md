@@ -39,15 +39,24 @@ That is recorded on the Build side, not papered over:
 
 ```text
 session:   Build/bin/design-system/_process/sessions/
-             2026-09-17-s019-public-source-repository-creation.md
+             2026-09-17-s019-public-shell-and-license-clarification.md
 decision:  Build/bin/design-system/_process/decisions/
              2026-09-17-out-of-sequence-public-repository-creation.md
 ```
 
+Both records land on the planning repository through `lg-workstreams#134`. They
+therefore do **not** resolve at the `planning_revision` pinned above, which is an
+earlier `main` commit. The pin advances to the post-merge `main` revision once
+that pull request merges, at which point both paths resolve.
+
 The override settled exactly two things — this repository's identity and its
-public visibility. License, Cargo members, crate and package names, MSRV, release
-topology, artifact topology, API classification, and the Luna `packages/ds`
-end-state all remain unmade `S1.T3` decisions.
+public visibility. Cargo members, crate and package names, MSRV, release topology,
+artifact topology, API classification, and the Luna `packages/ds` end-state all
+remain unmade `S1.T3` decisions.
+
+The project license is deliberately **not** one of them. It is deferred past that
+step to the first supported release candidate, so this repository stays public and
+intentionally unlicensed in the meantime.
 
 ## Authority and update rule
 

@@ -131,8 +131,14 @@ fn validate_manifest(root: &Path, manifest: &Path) -> Result<Coverage, String> {
             ));
         }
 
-        // Directory surfaces are walked, not skipped. A surface that is not
-        // scanned must say so in the manifest.
+        // Directory surfaces are walked, not skipped. Scan exemptions are
+        // deliberately file-scoped so a new file cannot silently inherit one.
+        if resolved.is_dir() && surface.scan_exempt.is_some() {
+            return Err(format!(
+                "directory surface {} cannot be scan-exempt; classify exempt files individually",
+                surface.path.display()
+            ));
+        }
         let files = if resolved.is_dir() {
             walk_files(&resolved)?
         } else {
@@ -548,6 +554,14 @@ mod tests {
     #[test]
     fn rejected_bad_exemption_boundary_fixture_fails() {
         assert!(reject("rejected-bad-exemption.tsv").contains(SCAN_EXEMPT_PREFIX));
+    }
+
+    #[test]
+    fn directory_surface_cannot_be_scan_exempt() {
+        assert!(
+            reject("rejected-directory-exemption.tsv")
+                .contains("directory surface fixtures/plain-html cannot be scan-exempt")
+        );
     }
 
     /// A directory surface must be walked, so a marker anywhere beneath an

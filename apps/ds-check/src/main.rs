@@ -95,9 +95,8 @@ fn validate_manifest(root: &Path, manifest: &Path) -> Result<usize, String> {
         }
 
         if resolved.is_file() {
-            let content = fs::read_to_string(&resolved).map_err(|error| {
-                format!("read surface {}: {error}", surface.path.display())
-            })?;
+            let content = fs::read_to_string(&resolved)
+                .map_err(|error| format!("read surface {}: {error}", surface.path.display()))?;
             scan_supported_content(&surface.path, &content)?;
         }
     }
@@ -115,9 +114,9 @@ fn parse_manifest(text: &str) -> Result<Vec<Surface>, String> {
             continue;
         }
 
-        let (class, path) = line.split_once('\t').ok_or_else(|| {
-            format!("manifest line {line_number} must be <class><tab><path>")
-        })?;
+        let (class, path) = line
+            .split_once('\t')
+            .ok_or_else(|| format!("manifest line {line_number} must be <class><tab><path>"))?;
 
         if !ALLOWED_CLASSES.contains(&class) {
             return Err(format!(
@@ -139,7 +138,10 @@ fn parse_manifest(text: &str) -> Result<Vec<Surface>, String> {
 
 fn validate_relative_path(path: &Path) -> Result<(), String> {
     if path.as_os_str().is_empty() || path.is_absolute() {
-        return Err(format!("path must be non-empty and relative: {}", path.display()));
+        return Err(format!(
+            "path must be non-empty and relative: {}",
+            path.display()
+        ));
     }
 
     for component in path.components() {
@@ -211,10 +213,10 @@ fn validate_plain_fixture(root: &Path, fixture: &Path) -> Result<(), String> {
         }
     }
 
-    let html = fs::read_to_string(&index)
-        .map_err(|error| format!("read {}: {error}", index.display()))?;
-    let stylesheet = fs::read_to_string(&css)
-        .map_err(|error| format!("read {}: {error}", css.display()))?;
+    let html =
+        fs::read_to_string(&index).map_err(|error| format!("read {}: {error}", index.display()))?;
+    let stylesheet =
+        fs::read_to_string(&css).map_err(|error| format!("read {}: {error}", css.display()))?;
 
     if !html.contains("href=\"./consumer.css\"") {
         return Err("plain fixture must load only its local ./consumer.css".to_owned());
@@ -232,12 +234,19 @@ fn validate_plain_fixture(root: &Path, fixture: &Path) -> Result<(), String> {
         "lg-workstreams",
         "Build/",
     ] {
-        if html.to_ascii_lowercase().contains(&marker.to_ascii_lowercase()) {
-            return Err(format!("plain fixture HTML contains forbidden marker '{marker}'"));
+        if html
+            .to_ascii_lowercase()
+            .contains(&marker.to_ascii_lowercase())
+        {
+            return Err(format!(
+                "plain fixture HTML contains forbidden marker '{marker}'"
+            ));
         }
     }
 
-    for marker in ["@import", "tailwind", "http://", "https://", "@luna/", "url("] {
+    for marker in [
+        "@import", "tailwind", "http://", "https://", "@luna/", "url(",
+    ] {
         if stylesheet
             .to_ascii_lowercase()
             .contains(&marker.to_ascii_lowercase())
@@ -267,10 +276,8 @@ mod tests {
     #[test]
     fn accepted_boundary_fixture_passes() {
         let root = repository_root();
-        let result = validate_manifest(
-            &root,
-            Path::new("fixtures/bootstrap-boundary/accepted.tsv"),
-        );
+        let result =
+            validate_manifest(&root, Path::new("fixtures/bootstrap-boundary/accepted.tsv"));
         assert_eq!(result.expect("accepted boundary fixture"), 1);
     }
 

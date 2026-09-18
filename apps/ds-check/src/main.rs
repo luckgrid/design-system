@@ -263,7 +263,7 @@ fn tracked_files(root: &Path) -> Result<Vec<PathBuf>, String> {
 }
 
 fn parse_manifest(text: &str) -> Result<Vec<Surface>, String> {
-    let mut surfaces = Vec::new();
+    let mut surfaces: Vec<Surface> = Vec::new();
 
     for (index, raw_line) in text.lines().enumerate() {
         let line_number = index + 1;

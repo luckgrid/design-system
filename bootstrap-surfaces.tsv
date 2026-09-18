@@ -1,16 +1,28 @@
-# Compatibility class<TAB>repository-relative path.
+# Compatibility class<TAB>repository-relative path[<TAB>scan-exempt:<reason>]
 # T3 exposes no public-stable surface. Every bootstrap path is internal.
+#
+# Every tracked path in this repository is classified here. Classification is a
+# compatibility statement, not a claim that a path is a build input.
+#
+# A third scan-exempt field opts a surface out of the private-reference content
+# scan and must state why. Exemptions exist only for files that must legitimately
+# contain private-path literals: the checker's own marker constants, the negative
+# boundary fixtures, and the deliberate planning-provenance pointers.
 internal	Cargo.toml
 internal	Cargo.lock
 internal	rust-toolchain.toml
+internal	.gitignore
 internal	README.md
 internal	CONTRIBUTING.md
 internal	SECURITY.md
-internal	apps/ds-check
+internal	bootstrap-surfaces.tsv
+internal	WORKSTREAMS.md	scan-exempt:planning-provenance-pointer
+internal	design-system.descriptor.toml	scan-exempt:planning-provenance-metadata
+internal	apps/ds-check	scan-exempt:checker-owns-the-marker-constants
 internal	packages/styles/README.md
 internal	fixtures/plain-html/index.html
 internal	fixtures/plain-html/consumer.css
 internal	fixtures/plain-html/README.md
-internal	fixtures/bootstrap-boundary
+internal	fixtures/bootstrap-boundary	scan-exempt:negative-fixtures-carry-rejected-content
 internal	docs/architecture/bootstrap.md
 internal	.github/workflows/quality.yml

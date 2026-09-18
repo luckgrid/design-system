@@ -8,7 +8,9 @@ Public visibility is not permission to reuse or redistribute the source.
 Install Rust 1.98.1 with `rustfmt` and `clippy`, or let `rustup` honor
 `rust-toolchain.toml`.
 
-Run the bootstrap quality checks from the repository root:
+Run the bootstrap quality checks from the repository root of a Git checkout.
+The bootstrap inventory completeness check uses `git ls-files` as the tracked
+source authority:
 
 ```sh
 cargo fmt --all --check

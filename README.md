@@ -31,7 +31,7 @@ The T3 bootstrap establishes:
 
 - a Rust 2024 / resolver-3 Cargo workspace pinned to Rust 1.98.1;
 - one contributor tool, `ds-check`, for bootstrap/source-boundary validation;
-- the future frontend source root at `packages/frontend/css/`;
+- the future frontend source root at `packages/styles/`;
 - a self-contained plain HTML fixture;
 - explicit bootstrap compatibility classification in
   `bootstrap-surfaces.tsv`;

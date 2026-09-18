@@ -68,6 +68,12 @@ order alone. A plain element selector in `app` beats a more specific selector in
 any `ds.*` layer, so normal extension never needs higher specificity or
 `!important`. The browser suite checks this in Chromium, Firefox, and WebKit.
 
+Do not name `ds.*` child layers from consumer stylesheets. Besides writing into
+layers the consumer does not own, it is not load-order safe: Chromium has been
+observed to keep a later stylesheet's `ds.*` child order when that stylesheet
+finishes loading before the entrypoint's imports. Layers declared after `ds`,
+such as `app`, are not affected.
+
 Unlayered consumer CSS also outranks every layer. That is supported, but a named
 consumer layer is the recommended extension path because it keeps the
 consumer's own precedence explicit.

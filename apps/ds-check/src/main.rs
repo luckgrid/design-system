@@ -300,7 +300,7 @@ mod tests {
 
     #[test]
     fn public_stable_is_not_a_bootstrap_class() {
-        let error = parse_manifest("public-stable\tpackages/frontend/css/README.md")
+        let error = parse_manifest("public-stable\tpackages/styles/README.md")
             .expect_err("public-stable must not be accepted at T3");
         assert!(error.contains("unsupported class"));
     }

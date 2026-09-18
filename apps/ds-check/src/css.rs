@@ -376,6 +376,11 @@ fn reject_tailwind(file: &str, name: &str) -> Result<(), String> {
 /// would otherwise hide inside them.
 fn reject_nested_directives(file: &str, body: &str) -> Result<(), String> {
     let body = &blank_strings(body);
+    if has_escaped_at_rule(body) {
+        return Err(format!(
+            "stylesheet {file} uses an escaped at-rule name; write at-rule names literally"
+        ));
+    }
     for name in TAILWIND_AT_RULES {
         if contains_at_rule(body, name) {
             return Err(format!(
@@ -414,7 +419,11 @@ fn blank_strings(body: &str) -> String {
                 }
             }
             None => {
-                if c == '"' || c == '\'' {
+                if escaped {
+                    escaped = false;
+                } else if c == '\\' {
+                    escaped = true;
+                } else if c == '"' || c == '\'' {
                     quote = Some(c);
                 }
                 out.push(c);
@@ -422,6 +431,24 @@ fn blank_strings(body: &str) -> String {
         }
     }
     out
+}
+
+/// Whether any at-keyword's name contains a CSS escape, which the literal
+/// name checks below would otherwise miss (`@l\61yer`, `@\61pply`).
+fn has_escaped_at_rule(body: &str) -> bool {
+    body.match_indices('@').any(|(index, _)| {
+        // `\@` is an escaped code point inside a selector, not an at-keyword.
+        let escaping = body[..index]
+            .chars()
+            .rev()
+            .take_while(|c| *c == '\\')
+            .count();
+        escaping % 2 == 0
+            && body[index + 1..]
+                .chars()
+                .find(|c| !(c.is_ascii_alphanumeric() || *c == '-' || *c == '_'))
+                == Some('\\')
+    })
 }
 
 fn contains_at_rule(body: &str, name: &str) -> bool {
@@ -525,6 +552,11 @@ fn display(root: &Path, file: &Path) -> String {
         .to_string()
 }
 
+/// CSS newlines end a string token, so a string must not span one unescaped.
+fn is_newline(c: char) -> bool {
+    matches!(c, '\n' | '\r' | '\u{c}')
+}
+
 /// Replace comments with a space, leaving strings intact.
 fn strip_comments(source: &str) -> Result<String, String> {
     let chars: Vec<char> = source.chars().collect();
@@ -535,6 +567,11 @@ fn strip_comments(source: &str) -> Result<String, String> {
     while index < chars.len() {
         let c = chars[index];
         if let Some(open) = quote {
+            if is_newline(c) {
+                return Err(
+                    "unterminated string: a string may not contain an unescaped newline".to_owned(),
+                );
+            }
             out.push(c);
             if c == '\\' {
                 if let Some(next) = chars.get(index + 1) {
@@ -553,6 +590,15 @@ fn strip_comments(source: &str) -> Result<String, String> {
             quote = Some(c);
             out.push(c);
             index += 1;
+            continue;
+        }
+        if c == '\\' {
+            // An escaped code point is part of an identifier, never structure.
+            out.push(c);
+            if let Some(next) = chars.get(index + 1) {
+                out.push(*next);
+            }
+            index += 2;
             continue;
         }
         if c == '/' && chars.get(index + 1) == Some(&'*') {
@@ -596,6 +642,11 @@ fn parse_nodes(chars: &[char]) -> Result<Vec<Node>, String> {
             let name_len = at_rule
                 .find(|c: char| !(c.is_ascii_alphanumeric() || c == '-' || c == '_'))
                 .unwrap_or(at_rule.len());
+            if at_rule[name_len..].starts_with('\\') {
+                return Err(format!(
+                    "at-rule name uses a CSS escape; write it literally: `{prelude}`"
+                ));
+            }
             let name = at_rule[..name_len].to_ascii_lowercase();
             if name.is_empty() {
                 return Err(format!("at-rule without a name: `{prelude}`"));
@@ -659,6 +710,10 @@ fn scan_prelude(chars: &[char], start: usize) -> Result<(usize, char), String> {
             }
         } else {
             match c {
+                '\\' => {
+                    index += 2;
+                    continue;
+                }
                 '"' | '\'' => quote = Some(c),
                 '(' => parens += 1,
                 ')' => {
@@ -696,6 +751,10 @@ fn matching_brace(chars: &[char], open: usize) -> Result<usize, String> {
             }
         } else {
             match c {
+                '\\' => {
+                    index += 2;
+                    continue;
+                }
                 '"' | '\'' => quote = Some(c),
                 '{' => depth += 1,
                 '}' => {
@@ -884,6 +943,57 @@ mod tests {
         file_check(&source, None).expect("comments and strings are inert");
         assert!(parse("a { color: red;").is_err());
         assert!(parse("/* open").is_err());
+    }
+
+    /// A browser ends a string at an unescaped newline, so a scanner that let
+    /// the string continue would hide rules the browser places outside the layer.
+    #[test]
+    fn strings_may_not_span_an_unescaped_newline() {
+        let hidden =
+            "@layer ds.base { a { content: \"\n} } #probe { color: red } q { content: \"; } }";
+        let error = parse(hidden).expect_err("newline inside a string");
+        assert!(error.contains("unescaped newline"), "{error}");
+        for newline in ["\r", "\u{c}"] {
+            let source = format!("@layer ds.base {{ a {{ content: \"{newline}\"; }} }}");
+            assert!(parse(&source).is_err(), "{newline:?}");
+        }
+        file_check("@layer ds.base { a { content: \"line\\\nbreak\"; } }", None)
+            .expect("an escaped newline continues the string");
+    }
+
+    /// An escaped brace is an identifier code point in the browser, so it must
+    /// not open or close a block in the scanner either.
+    #[test]
+    fn escaped_braces_are_not_structural() {
+        let hidden = "@layer ds.base { .a\\{ } #probe { color: red } }";
+        assert!(
+            parse(hidden).is_err(),
+            "escaped brace must not balance a block"
+        );
+        file_check(
+            "@layer ds.utilities { .sm\\:flex, .w-1\\/2, .x\\{ { color: red; } }",
+            None,
+        )
+        .expect("escaped selector code points stay inside the layer");
+        file_check(
+            "@layer ds.utilities { .card { &.\\@md\\:flex { color: red; } } }",
+            None,
+        )
+        .expect("an escaped @ in a selector is not an at-rule");
+        let nodes = parse("@layer ds.base { .x\\} { color: red; } }").expect("escaped close");
+        assert_eq!(nodes.len(), 1);
+    }
+
+    #[test]
+    fn escaped_at_rule_names_are_rejected() {
+        let top = parse("@l\\61yer ds.base { a { color: red; } }").expect_err("escaped layer");
+        assert!(top.contains("CSS escape"), "{top}");
+        let nested = file_check("@layer ds.base { a { @\\61pply text-red; } }", None)
+            .expect_err("escaped nested apply");
+        assert!(nested.contains("escaped at-rule name"), "{nested}");
+        let layer = file_check("@layer ds.base { a { @l\\61yer x { color: red; } } }", None)
+            .expect_err("escaped nested layer");
+        assert!(layer.contains("escaped at-rule name"), "{layer}");
     }
 
     #[test]

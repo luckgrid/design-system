@@ -29,6 +29,8 @@ const FLUID_MAX_VIEWPORT_REM: f64 = 160.0;
 const TEXT_MAX_RATIO: f64 = 2.5;
 /// Allowed rounding error when a clamp() formula is checked against its bounds.
 const FORMULA_TOLERANCE_REM: f64 = 0.001;
+/// Small conversion tolerance for colors on an sRGB gamut boundary.
+const SRGB_GAMUT_TOLERANCE: f64 = 0.00001;
 
 /// One `tokens.tsv` row.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -390,6 +392,7 @@ fn validate_reference(declaration: &Declaration, row: &Row) -> Result<bool, Stri
                     "reference color {name} must be one plain oklch() value; relative color syntax and other functions are not used in the required floor"
                 ));
             }
+            validate_srgb_gamut(name, value)?;
             Ok(false)
         }
         "length" if lower.contains("clamp(") => {
@@ -401,6 +404,58 @@ fn validate_reference(declaration: &Declaration, row: &Row) -> Result<bool, Stri
         )),
         _ => Ok(false),
     }
+}
+
+/// Verify that a plain OKLCH reference remains representable in sRGB without
+/// relying on browser gamut mapping.
+fn validate_srgb_gamut(name: &str, value: &str) -> Result<(), String> {
+    let components = value
+        .strip_prefix("oklch(")
+        .and_then(|rest| rest.strip_suffix(')'))
+        .map(|inner| inner.split_whitespace().collect::<Vec<_>>())
+        .ok_or_else(|| format!("reference color {name} is not a plain oklch() value"))?;
+    let [lightness, chroma, hue] = components.as_slice() else {
+        return Err(format!(
+            "reference color {name} must have exactly three OKLCH components"
+        ));
+    };
+    let lightness = lightness
+        .strip_suffix('%')
+        .and_then(|number| number.parse::<f64>().ok())
+        .filter(|number| number.is_finite())
+        .ok_or_else(|| format!("reference color {name} has an invalid OKLCH lightness"))?
+        / 100.0;
+    let chroma = chroma
+        .parse::<f64>()
+        .ok()
+        .filter(|number| number.is_finite() && *number >= 0.0)
+        .ok_or_else(|| format!("reference color {name} has an invalid OKLCH chroma"))?;
+    let hue = hue
+        .parse::<f64>()
+        .ok()
+        .filter(|number| number.is_finite())
+        .ok_or_else(|| format!("reference color {name} has an invalid OKLCH hue"))?;
+
+    let hue = hue.to_radians();
+    let a = chroma * hue.cos();
+    let b = chroma * hue.sin();
+    let l = (lightness + 0.3963377774 * a + 0.2158037573 * b).powi(3);
+    let m = (lightness - 0.1055613458 * a - 0.0638541728 * b).powi(3);
+    let s = (lightness - 0.0894841775 * a - 1.291485548 * b).powi(3);
+    let channels = [
+        4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+        -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+        -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
+    ];
+    if channels
+        .iter()
+        .any(|channel| *channel < -SRGB_GAMUT_TOLERANCE || *channel > 1.0 + SRGB_GAMUT_TOLERANCE)
+    {
+        return Err(format!(
+            "reference color {name} is outside the sRGB gamut; use an in-gamut OKLCH value"
+        ));
+    }
+    Ok(())
 }
 
 /// A fluid reference must be `clamp(<rem>, <rem> + <vw>, <rem>)`, interpolate
@@ -850,6 +905,15 @@ public-preview\t--ds-leading-body\tnumber
             &REFERENCE.replace("oklch(12% 0 0)", "var(--ds-ref-gray-100)"),
             SEMANTIC,
             "raw literals",
+        );
+    }
+
+    #[test]
+    fn reference_colors_must_stay_inside_srgb_gamut() {
+        rejected(
+            &REFERENCE.replace("oklch(12% 0 0)", "oklch(54% 0.2 258)"),
+            SEMANTIC,
+            "sRGB gamut",
         );
     }
 

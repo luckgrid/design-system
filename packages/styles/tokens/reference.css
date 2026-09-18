@@ -25,7 +25,7 @@
   /* Chromatic values, named by hue family and OKLCH lightness. */
   --ds-ref-blue-93: oklch(93% 0.03 258);
   --ds-ref-blue-72: oklch(72% 0.14 258);
-  --ds-ref-blue-54: oklch(54% 0.2 258);
+  --ds-ref-blue-54: oklch(54% 0.199 258);
   --ds-ref-blue-30: oklch(30% 0.08 258);
   --ds-ref-red-72: oklch(72% 0.15 28);
   --ds-ref-red-52: oklch(52% 0.2 28);

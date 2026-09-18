@@ -40,18 +40,21 @@ The checker validates:
 - the plain fixture stays local, framework-free, Tailwind-free, network-free, and
   free of any browser-runtime Rust requirement.
 
-A surface is exempted from the privacy content scan only through an explicit
-`scan-exempt:<reason>` field in the inventory. That exists for the files which
-must legitimately contain such literals — the checker's own marker constants,
-the negative boundary fixtures, and the deliberate planning-provenance pointers
-(`WORKSTREAMS.md`, `design-system.descriptor.toml`). The command reports how
-many files were scanned and how many were exempt, so its output never implies
-coverage it did not perform.
+A file is exempted from the privacy content scan only through an explicit
+`scan-exempt:<reason>` field in the inventory. Directory-wide exemptions are
+rejected so newly added files cannot silently inherit an exclusion. The only
+exempt files are the checker's marker-owning `src/main.rs`, the one negative
+fixture that literally carries a rejected private path, and the two deliberate
+planning-provenance pointers (`WORKSTREAMS.md`,
+`design-system.descriptor.toml`). The command reports how many files were
+scanned and how many were exempt, so its output never implies coverage it did
+not perform.
 
 Pass/fail behavior is pinned by checked-in inputs under
 `fixtures/bootstrap-boundary/`, covering an accepted inventory, a walked
 directory surface, and rejected missing, out-of-root, private-path,
-private-marker-in-file, malformed-exemption, and non-lint-inheriting cases.
+private-marker-in-file, malformed-exemption, directory-wide-exemption, and
+non-lint-inheriting cases.
 
 ## Release premise
 

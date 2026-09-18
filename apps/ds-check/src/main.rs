@@ -2,7 +2,7 @@
 
 mod css;
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
@@ -148,6 +148,9 @@ fn validate_manifest(root: &Path, manifest: &Path) -> Result<Coverage, String> {
         ..Coverage::default()
     };
 
+    // Lexical checks cannot see symlink or case aliases, so every file a row
+    // covers is also keyed by its resolved path.
+    let mut classified: BTreeMap<PathBuf, &Path> = BTreeMap::new();
     for surface in &surfaces {
         validate_relative_path(&surface.path)?;
         validate_allowed_root(&surface.path)?;
@@ -176,6 +179,15 @@ fn validate_manifest(root: &Path, manifest: &Path) -> Result<Coverage, String> {
         };
 
         for file in files {
+            let resolved = canonical(&file, &format!("surface file {}", file.display()))?;
+            if let Some(other) = classified.insert(resolved, &surface.path) {
+                return Err(format!(
+                    "{} is classified by both {} and {}; classify each file exactly once",
+                    relative_to(&root, &file).display(),
+                    other.display(),
+                    surface.path.display()
+                ));
+            }
             if surface.scan_exempt.is_some() {
                 coverage.exempt += 1;
                 continue;
@@ -299,6 +311,16 @@ fn parse_manifest(text: &str) -> Result<Vec<Surface>, String> {
             return Err(format!(
                 "manifest line {line_number} duplicates path {}",
                 path.display()
+            ));
+        }
+        if let Some(other) = surfaces
+            .iter()
+            .find(|surface| surface.path.starts_with(&path) || path.starts_with(&surface.path))
+        {
+            return Err(format!(
+                "manifest line {line_number} path {} overlaps the row for {}; classify each file exactly once",
+                path.display(),
+                other.path.display()
             ));
         }
 
@@ -909,6 +931,43 @@ mod tests {
         )
         .expect_err("dot-segment alias must be rejected");
         assert!(alias.contains("duplicates path"), "{alias}");
+    }
+
+    /// A directory row and a row beneath it would classify the same file twice,
+    /// possibly with conflicting classes.
+    #[test]
+    fn manifest_rejects_overlapping_rows() {
+        for manifest in [
+            "internal\tpackages\npublic-preview\tpackages/styles/index.css",
+            "public-preview\tpackages/styles/index.css\ninternal\tpackages/styles",
+            "internal\tpackages/styles/\ninternal\t./packages/styles/index.css",
+        ] {
+            let error = parse_manifest(manifest).expect_err("overlapping rows");
+            assert!(error.contains("overlaps the row for"), "{error}");
+        }
+        parse_manifest("internal\tpackages/styles-extra\ninternal\tpackages/styles")
+            .expect("sibling names that share a prefix are distinct paths");
+    }
+
+    /// Rows that resolve to the same file through a different spelling, such as
+    /// a symlink, must not carry two classifications.
+    #[test]
+    fn manifest_rejects_rows_resolving_to_the_same_file() {
+        // A throwaway root keeps the symlink out of the tracked source tree.
+        let root = repository_root().join("target/ds-check-alias-probe");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("docs")).expect("scratch root");
+        fs::write(root.join("README.md"), "readme\n").expect("write file");
+        std::os::unix::fs::symlink("../README.md", root.join("docs/alias.md")).expect("symlink");
+        fs::write(
+            root.join("aliased.tsv"),
+            "public-preview\tREADME.md\ninternal\tdocs/alias.md\n",
+        )
+        .expect("write manifest");
+        let result = validate_manifest(&root, Path::new("aliased.tsv"));
+        let _ = fs::remove_dir_all(&root);
+        let error = result.expect_err("aliased rows");
+        assert!(error.contains("is classified by both"), "{error}");
     }
 
     #[test]

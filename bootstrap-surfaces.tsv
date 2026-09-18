@@ -6,13 +6,11 @@ internal	rust-toolchain.toml
 internal	README.md
 internal	CONTRIBUTING.md
 internal	SECURITY.md
-internal	apps/ds-check/Cargo.toml
-internal	apps/ds-check/src/main.rs
+internal	apps/ds-check
 internal	packages/frontend/css/README.md
 internal	fixtures/plain-html/index.html
 internal	fixtures/plain-html/consumer.css
 internal	fixtures/plain-html/README.md
-internal	fixtures/bootstrap-boundary/accepted.tsv
-internal	fixtures/bootstrap-boundary/rejected-private.tsv
+internal	fixtures/bootstrap-boundary
 internal	docs/architecture/bootstrap.md
 internal	.github/workflows/quality.yml

@@ -4,8 +4,10 @@
 # Every tracked file in this repository is classified here. Classification is a
 # compatibility statement, not a claim that a path is a build input.
 #
-# Completeness is machine-enforced: ds-check walks the repository and fails if any
-# file is missing from this inventory, so a new file cannot arrive unclassified.
+# Completeness is machine-enforced against Git's tracked-file set (`git ls-files`):
+# ds-check fails if any tracked file is missing from this inventory, so ignored or
+# generated filesystem entries do not need classification and tracked files cannot
+# hide under ignored-looking directory names.
 #
 # A third scan-exempt field opts only that exact file out of the private-reference
 # content scan and must state why. Directory-wide exemptions are rejected.

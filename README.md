@@ -30,7 +30,7 @@ The repository currently provides:
 
 - a Rust 2024 / resolver-3 Cargo workspace pinned to Rust 1.98.1;
 - one contributor tool, `ds-check`, for source-boundary, CSS layer-contract,
-  and token-authority validation;
+  token-authority, and theme-contract validation;
 - the first portable CSS entrypoint, `core.css` at `packages/styles/index.css`
   (`public-preview`), which publishes the shared cascade layer order; see
   [`docs/architecture/css-entrypoint.md`](docs/architecture/css-entrypoint.md);
@@ -38,13 +38,19 @@ The repository currently provides:
   internal reference values and `public-preview` semantic roles, classified per
   property in `tokens.tsv`; see
   [`docs/architecture/tokens.md`](docs/architecture/tokens.md);
+- the theme contract in the same layer: the default follows the user's
+  light/dark preference, and `data-ds-scheme="light"` or `"dark"` on `<html>`
+  selects one explicitly, classified in `theme.tsv`; see
+  [`docs/architecture/theme.md`](docs/architecture/theme.md);
+- a brand theme fixture that maps one fictional consumer brand into the public
+  semantic roles;
 - a plain HTML consumer fixture that loads only that export;
 - browser contract tests in Chromium, Firefox, and WebKit under `tests/browser/`;
 - explicit compatibility classification in `bootstrap-surfaces.tsv`;
 - least-privilege GitHub Actions quality checks.
 
-The entrypoint does not yet define a theme (`color-scheme` selection) or element
-styles. Later DS-E01.S2 work adds those.
+The entrypoint does not yet define element styles. Later DS-E01.S2 work adds
+the classless base.
 
 ## Contributor checks
 
@@ -61,7 +67,10 @@ cargo run --locked -p design-system-check -- layers \
   exports.tsv bootstrap-surfaces.tsv fixtures/plain-html
 cargo run --locked -p design-system-check -- tokens \
   tokens.tsv exports.tsv docs/architecture/tokens.md \
-  fixtures/plain-html tests/browser/probes
+  fixtures/plain-html fixtures/brand-theme tests/browser/probes
+cargo run --locked -p design-system-check -- theme \
+  theme.tsv exports.tsv docs/architecture/theme.md \
+  fixtures tests/browser/probes
 (cd tests/browser && npm ci && npx playwright install chromium firefox webkit && npx playwright test)
 ```
 
@@ -78,7 +87,7 @@ Repository paths are not API by default.
 | Class | Meaning |
 |---|---|
 | `public-stable` | Supported compatibility surface. None exists yet. |
-| `public-preview` | Deliberately exposed but still moving. Currently the `core.css` entrypoint, its layer order, and the semantic token roles in `tokens.tsv`. |
+| `public-preview` | Deliberately exposed but still moving. Currently the `core.css` entrypoint, its layer order, the semantic token roles in `tokens.tsv`, and the theme default and `data-ds-scheme` hook in `theme.tsv`. |
 | `internal` | Not API; may change or disappear. Every other path uses this class. |
 
 Product maturity and compatibility classification are separate. Experimental

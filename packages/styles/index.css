@@ -12,8 +12,9 @@
  * Only the top-level `ds` layer is a consumer target. The order of its children
  * is documented precedence; consumers do not author rules into them.
  *
- * `ds.tokens` is populated by tokens.css (see tokens.tsv for the classified
- * custom properties). Theme and the classless base populate later layers.
+ * `ds.tokens` is populated by tokens.css: the classified custom properties (see
+ * tokens.tsv) and the theme contract that selects their color scheme (see
+ * theme.tsv). The classless base populates a later layer.
  * This entrypoint itself contains no rules: only the order and its imports.
  */
 @layer ds.tokens, ds.base, ds.layouts, ds.primitives, ds.components, ds.utilities;

@@ -6,8 +6,12 @@
 @layer app;
 
 @layer app {
+  /*
+   * No `color-scheme` here: the Design System theme selects it, and the
+   * `data-ds-scheme` hook on <html> switches it. A root `color-scheme` in this
+   * layer would outrank the theme and disable the hook.
+   */
   :root {
-    color-scheme: light dark;
     font-family: var(--ds-font-body);
   }
 

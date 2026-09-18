@@ -58,6 +58,7 @@ const FIXED_LENGTHS = PUBLIC.filter(
 
 const VIEWPORTS = [320, 480, 1520, 2560, 3200];
 const BRAND_PROBE = "/tests/browser/probes/brand-mapping.css";
+const THEME_SHEET = "/packages/styles/tokens/theme.css";
 
 /** Resolve CSS values on throwaway elements inside the loaded page. */
 async function resolve(page, requests) {
@@ -107,7 +108,10 @@ test.describe("token authority", () => {
   });
 
   test("declared tokens are exactly the inventory, on :root, in their tier's layer", async ({ page }) => {
-    const rules = await publishedRules(page, CORE_EXPORT);
+    // The theme stylesheet sets only color-scheme; theme.spec.mjs covers it.
+    const rules = (await publishedRules(page, CORE_EXPORT)).filter(
+      (rule) => rule.sheet !== THEME_SHEET,
+    );
     const declared = [];
     for (const rule of rules) {
       expect(rule.selector).toBe(":root");
@@ -155,13 +159,14 @@ test.describe("token authority", () => {
     }
   });
 
-  test("the tokens set no color-scheme; the default resolves light even under a dark preference", async ({ page }) => {
-    await page.emulateMedia({ colorScheme: "dark" });
-    const scheme = await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme);
-    expect(scheme).toBe("normal");
-    for (const { name, light } of PAIRS) {
-      const [role, expected] = await resolve(page, [color(`var(${name})`), color(`var(${light})`)]);
-      expect(role, name).toBe(expected);
+  test("the token tiers set no color-scheme; only the theme stylesheet selects it", async ({ page }) => {
+    const rules = await publishedRules(page, CORE_EXPORT);
+    const schemeRules = rules.filter((rule) => rule.properties.includes("color-scheme"));
+    expect(schemeRules.length).toBeGreaterThan(0);
+    for (const rule of schemeRules) {
+      expect(rule.sheet, rule.selector).toBe(THEME_SHEET);
+      expect(rule.layer, rule.selector).toBe("ds.tokens.theme");
+      expect(rule.properties, rule.selector).toEqual(["color-scheme"]);
     }
   });
 

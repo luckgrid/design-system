@@ -10,8 +10,13 @@
  * Semantic roles are assigned only from reference values, other semantic roles,
  * or fixed literals whose value is the role's meaning. Every declared property
  * is classified in tokens.tsv.
+ *
+ * A third sub-layer, `theme`, selects the `color-scheme` those roles resolve
+ * against. It declares no token. Its default and its one public hook are
+ * classified in theme.tsv.
  */
-@layer reference, semantic;
+@layer reference, semantic, theme;
 
 @import "./tokens/reference.css" layer(reference);
 @import "./tokens/semantic.css" layer(semantic);
+@import "./tokens/theme.css" layer(theme);

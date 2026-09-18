@@ -16,6 +16,7 @@ const root = path.resolve(here, "..", "..");
 const port = Number(process.env.DS_BROWSER_PORT ?? 4173);
 
 const servedDirectories = [
+  "fixtures/brand-theme/",
   "fixtures/plain-html/",
   "fixtures/layer-ownership/",
   "tests/browser/probes/",

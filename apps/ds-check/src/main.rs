@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod css;
+mod theme;
 mod tokens;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -10,7 +11,7 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
-const ALLOWED_ROOTS: [&str; 18] = [
+const ALLOWED_ROOTS: [&str; 19] = [
     ".github",
     ".gitignore",
     "apps",
@@ -28,6 +29,7 @@ const ALLOWED_ROOTS: [&str; 18] = [
     "design-system.descriptor.toml",
     "exports.tsv",
     "tests",
+    "theme.tsv",
     "tokens.tsv",
 ];
 
@@ -96,7 +98,7 @@ struct Export {
     path: PathBuf,
 }
 
-const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...";
+const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...";
 
 fn run(args: &[String]) -> Result<String, String> {
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
@@ -115,6 +117,18 @@ fn run(args: &[String]) -> Result<String, String> {
         {
             let consumers: Vec<PathBuf> = consumers.iter().map(PathBuf::from).collect();
             run_tokens(
+                &root,
+                Path::new(inventory),
+                Path::new(exports),
+                Path::new(document),
+                &consumers,
+            )
+        }
+        [command, inventory, exports, document, consumers @ ..]
+            if command == "theme" && !consumers.is_empty() =>
+        {
+            let consumers: Vec<PathBuf> = consumers.iter().map(PathBuf::from).collect();
+            run_theme(
                 &root,
                 Path::new(inventory),
                 Path::new(exports),
@@ -757,6 +771,81 @@ token document {} names every public role and no internal value; \
     ))
 }
 
+/// Validate the theme contract reached from the declared exports against the
+/// `theme.tsv` inventory, the public theme document, and the consumer
+/// stylesheets that style under it.
+fn run_theme(
+    root: &Path,
+    inventory: &Path,
+    exports_file: &Path,
+    document: &Path,
+    consumers: &[PathBuf],
+) -> Result<String, String> {
+    validate_relative_path(inventory)?;
+    validate_relative_path(exports_file)?;
+    validate_relative_path(document)?;
+    let root = canonical(root, "repository root")?;
+
+    let inventory_text = fs::read_to_string(root.join(inventory))
+        .map_err(|error| format!("read theme inventory {}: {error}", inventory.display()))?;
+    let manifest = theme::parse_manifest(&inventory_text)?;
+
+    let exports_text = fs::read_to_string(root.join(exports_file))
+        .map_err(|error| format!("read exports {}: {error}", exports_file.display()))?;
+    let mut reached = BTreeSet::new();
+    for export in parse_exports(&exports_text)? {
+        let graph = css::validate_graph(&root, &export.path, Path::new(STYLES_ROOT))?;
+        reached.extend(graph.stylesheets);
+    }
+    let mut stylesheets = Vec::new();
+    for file in &reached {
+        let source = fs::read_to_string(file)
+            .map_err(|error| format!("read stylesheet {}: {error}", file.display()))?;
+        stylesheets.push((relative_to(&root, file).display().to_string(), source));
+    }
+    let summary = theme::validate_stylesheets(&stylesheets, &manifest)?;
+
+    let document_text = fs::read_to_string(root.join(document))
+        .map_err(|error| format!("read theme document {}: {error}", document.display()))?;
+    theme::validate_document(&document_text, &manifest)
+        .map_err(|error| format!("{}: {error}", document.display()))?;
+
+    let tracked = tracked_files(&root)?;
+    let mut consumer_files = 0;
+    for directory in consumers {
+        validate_relative_path(directory)?;
+        let prefix = root.join(directory);
+        for file in tracked.iter().filter(|file| {
+            file.starts_with(&prefix)
+                && file.extension().is_some_and(|extension| extension == "css")
+        }) {
+            let shown = relative_to(&root, file).display().to_string();
+            let source = fs::read_to_string(file)
+                .map_err(|error| format!("read consumer stylesheet {shown}: {error}"))?;
+            theme::validate_consumer(&shown, &source, &manifest)?;
+            consumer_files += 1;
+        }
+    }
+    if consumer_files == 0 {
+        return Err("no tracked consumer stylesheet was found to check".to_owned());
+    }
+
+    Ok(format!(
+        "validated theme contract in {}: default color-scheme `{}`, one root hook [{}] with {} value(s) ({}); \
+{} Design System stylesheet(s) set no other color-scheme, assign no token from the theme, and use no alias hook; \
+theme document {} names the default, hook, and values; \
+{} consumer stylesheet(s) use no alias hook and leave the root color-scheme to the hook",
+        theme::THEME_FILE,
+        manifest.default,
+        manifest.attribute,
+        summary.hook_values,
+        manifest.values.join(", "),
+        summary.stylesheets,
+        document.display(),
+        consumer_files
+    ))
+}
+
 fn parse_exports(text: &str) -> Result<Vec<Export>, String> {
     let mut exports: Vec<Export> = Vec::new();
 
@@ -1128,6 +1217,27 @@ mod tests {
         )
         .expect("repository layer contract");
         assert!(output.starts_with("validated 1 CSS export(s)"), "{output}");
+    }
+
+    /// The repository's own theme inventory, stylesheets, document, and
+    /// consumer fixtures satisfy the theme contract end to end.
+    #[test]
+    fn repository_theme_contract_passes() {
+        let output = run_theme(
+            &repository_root(),
+            Path::new("theme.tsv"),
+            Path::new("exports.tsv"),
+            Path::new("docs/architecture/theme.md"),
+            &[
+                PathBuf::from("fixtures"),
+                PathBuf::from("tests/browser/probes"),
+            ],
+        )
+        .expect("repository theme contract");
+        assert!(
+            output.starts_with("validated theme contract in packages/styles/tokens/theme.css"),
+            "{output}"
+        );
     }
 
     #[test]

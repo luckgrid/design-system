@@ -138,7 +138,7 @@ fn collect(file: &str, nodes: &[Node], found: &mut Vec<Declaration>) -> Result<(
 }
 
 /// Split a declaration block into `(name, value)` pairs.
-fn split_declarations(file: &str, body: &str) -> Result<Vec<(String, String)>, String> {
+pub(crate) fn split_declarations(file: &str, body: &str) -> Result<Vec<(String, String)>, String> {
     let mut pairs = Vec::new();
     let mut current = String::new();
     let mut quote: Option<char> = None;

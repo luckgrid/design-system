@@ -3,7 +3,7 @@
 use std::env;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
-use std::process::ExitCode;
+use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
 const ALLOWED_ROOTS: [&str; 15] = [
@@ -40,20 +40,6 @@ const SCAN_EXEMPT_PREFIX: &str = "scan-exempt:";
 /// Directories never walked when recursing a directory surface. They hold build
 /// output and Git internals rather than authored bootstrap content.
 const UNWALKED_DIRS: [&str; 2] = [".git", "target"];
-
-/// Names skipped when enumerating repository files for classification
-/// completeness. They mirror `.gitignore`: Git internals, build output, and
-/// editor/OS scratch that is never authored bootstrap source.
-const UNCLASSIFIED_SKIP: [&str; 8] = [
-    ".git",
-    "target",
-    "dist",
-    "node_modules",
-    ".cursor",
-    ".vscode",
-    ".idea",
-    ".DS_Store",
-];
 
 /// Workspace-lint opt-in that every Cargo member must declare so the root
 /// `[workspace.lints]` policy actually applies to it.
@@ -178,7 +164,7 @@ fn validate_manifest(root: &Path, manifest: &Path) -> Result<Coverage, String> {
     Ok(coverage)
 }
 
-/// Every repository file must be covered by some manifest row. Without this
+/// Every tracked repository file must be covered by some manifest row. Without this
 /// pass the inventory's exhaustiveness would only ever be a hand-maintained
 /// snapshot: a newly added file would be neither classified nor privacy-scanned
 /// while the bootstrap check stayed green. Returns the number of repository
@@ -188,18 +174,27 @@ fn validate_manifest_completeness(root: &Path, manifest: &Path) -> Result<usize,
     let root = canonical(root, "repository root")?;
     let text = fs::read_to_string(root.join(manifest))
         .map_err(|error| format!("read manifest {}: {error}", manifest.display()))?;
-    let classified: Vec<PathBuf> = parse_manifest(&text)?
+    let surfaces = parse_manifest(&text)?;
+    let classified: Vec<(PathBuf, bool)> = surfaces
         .iter()
-        .map(|surface| root.join(&surface.path))
+        .map(|surface| {
+            let path = root.join(&surface.path);
+            let is_directory = path.is_dir();
+            (path, is_directory)
+        })
         .collect();
 
-    let files = walk_with_skips(&root, &UNCLASSIFIED_SKIP)?;
+    let files = tracked_files(&root)?;
     for file in &files {
         // A file row covers only itself; a directory row covers everything
-        // beneath it. Either way the file must be named by the inventory.
-        if !classified.iter().any(|entry| file.starts_with(entry)) {
+        // beneath it. Trackedness comes from Git rather than a filesystem skip
+        // list, so a force-tracked file cannot hide under an ignored-looking
+        // directory name such as `target` or `dist`.
+        if !classified.iter().any(|(entry, is_directory)| {
+            file == entry || (*is_directory && file.starts_with(entry))
+        }) {
             return Err(format!(
-                "repository file {} is not classified in {}",
+                "tracked repository file {} is not classified in {}",
                 relative_to(&root, file).display(),
                 manifest.display()
             ));
@@ -207,6 +202,37 @@ fn validate_manifest_completeness(root: &Path, manifest: &Path) -> Result<usize,
     }
 
     Ok(files.len())
+}
+
+/// Return the exact tracked-file set from the repository index. The bootstrap
+/// contract is about tracked source, not transient build/editor output, so Git
+/// is the authority rather than an approximation of `.gitignore` semantics.
+fn tracked_files(root: &Path) -> Result<Vec<PathBuf>, String> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(root)
+        .args(["ls-files", "-z"])
+        .output()
+        .map_err(|error| format!("run git ls-files: {error}"))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!(
+            "git ls-files failed with status {}: {}",
+            output.status,
+            stderr.trim()
+        ));
+    }
+
+    let stdout = String::from_utf8(output.stdout)
+        .map_err(|error| format!("decode git ls-files output as UTF-8: {error}"))?;
+    let mut files: Vec<PathBuf> = stdout
+        .split('\0')
+        .filter(|path| !path.is_empty())
+        .map(|path| root.join(path))
+        .collect();
+    files.sort();
+    Ok(files)
 }
 
 fn parse_manifest(text: &str) -> Result<Vec<Surface>, String> {

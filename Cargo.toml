@@ -1,0 +1,13 @@
+[workspace]
+resolver = "3"
+members = ["apps/ds-check"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.98.1"
+repository = "https://github.com/luckgrid/design-system"
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "forbid"

@@ -31,9 +31,9 @@ bootstrapped against.
 ## Sequence note
 
 This repository was created ahead of its place in the program sequence. Creation
-belongs to `DS-E01.S1.T3`, which requires accepted `S1.T1`/`S1.T2` evidence as
-input; at creation time T1 was implemented but still review-pending and T2 had
-not started. The repository was created by owner decision regardless.
+belongs to `DS-E01.S1.T3`, which requires accepted `DS-E01.S1.T1`/`DS-E01.S1.T2` evidence as
+input; at creation time `DS-E01.S1.T1` was implemented but still review-pending and
+`DS-E01.S1.T2` had not started. The repository was created by owner decision regardless.
 
 That is recorded on the Build side, not papered over:
 
@@ -52,7 +52,7 @@ that pull request merges, at which point both paths resolve.
 The override settled exactly two things — this repository's identity and its
 public visibility. Cargo members, crate and package names, MSRV, release topology,
 artifact topology, API classification, and the Luna `packages/ds` end-state all
-remain unmade `S1.T3` decisions.
+remain unmade `DS-E01.S1.T3` decisions.
 
 The project license is deliberately **not** one of them. It is deferred past that
 step to the first supported release candidate, so this repository stays public and

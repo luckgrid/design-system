@@ -12,7 +12,7 @@ The compatibility inventory is `bootstrap-surfaces.tsv`. At T3 every listed
 surface is `internal`. The bootstrap intentionally exposes no
 `public-stable` surface and no supported portable CSS entrypoint.
 
-The first frontend source seam is `packages/frontend/css/`. DS-E01.S2 will
+The first frontend source seam is `packages/styles/`. DS-E01.S2 will
 define the first supported CSS contract; this directory's existence does not do
 so early.
 

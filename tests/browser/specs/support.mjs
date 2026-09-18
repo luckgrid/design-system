@@ -13,6 +13,14 @@ export const DS_LAYER_ORDER = [
 
 export const CORE_EXPORT = "/packages/styles/index.css";
 
+/** The core export and every stylesheet it imports: the published CSS. */
+export const PUBLISHED_STYLESHEETS = [
+  CORE_EXPORT,
+  "/packages/styles/tokens.css",
+  "/packages/styles/tokens/reference.css",
+  "/packages/styles/tokens/semantic.css",
+];
+
 // Every test fails on any non-2xx response, failed request, console error, or
 // page error. Browsers may probe for a favicon on their own; that request is not
 // made by the page under test and is the only one ignored.
@@ -68,4 +76,37 @@ export async function loadStylesheets(page, hrefs) {
 
 export async function probeColor(page) {
   return page.locator("#probe").evaluate((element) => getComputedStyle(element).color);
+}
+
+/**
+ * Every style rule the stylesheet at `href` publishes, following its imports,
+ * with the full cascade layer each rule lands in and the properties it declares.
+ */
+export async function publishedRules(page, href) {
+  return page.evaluate((target) => {
+    const join = (parent, name) => (parent && name ? `${parent}.${name}` : parent || name || "");
+    const found = [];
+    const walk = (rules, layer, sheetHref) => {
+      for (const rule of rules) {
+        const kind = rule.constructor.name;
+        if (kind === "CSSImportRule") {
+          walk(rule.styleSheet.cssRules, join(layer, rule.layerName), rule.styleSheet.href);
+        } else if (kind === "CSSLayerBlockRule") {
+          walk(rule.cssRules, join(layer, rule.name), sheetHref);
+        } else if (kind === "CSSStyleRule") {
+          found.push({
+            sheet: new URL(sheetHref).pathname,
+            layer,
+            selector: rule.selectorText,
+            properties: [...rule.style],
+          });
+        } else if (rule.cssRules) {
+          walk(rule.cssRules, layer, sheetHref);
+        }
+      }
+    };
+    const sheet = [...document.styleSheets].find((candidate) => candidate.href?.endsWith(target));
+    walk(sheet.cssRules, "", sheet.href);
+    return found;
+  }, href);
 }

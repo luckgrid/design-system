@@ -1,7 +1,8 @@
 // Allowlist static server for the browser contract tests.
 //
 // It answers only what a consumer could legitimately load: the declared CSS
-// exports from exports.tsv, the public fixtures, and harness-only probes. Every
+// exports from exports.tsv, the stylesheets those exports import, the public
+// fixtures, and harness-only probes. Every
 // other path is 404, so a fixture that reaches for a private or undeclared path
 // fails the run instead of loading silently.
 
@@ -36,7 +37,33 @@ export function declaredExports() {
     });
 }
 
-const exportPaths = new Set(declaredExports().map((entry) => entry.path));
+// An export is published with the stylesheets it imports. ds-check confines
+// every Design System import to a quoted "./" path below the importing file, so
+// follow exactly that form and nothing else.
+const IMPORT = /@import\s+"\.\/([^"]+)"/g;
+
+export function publishedStylesheets() {
+  const published = new Set();
+  const pending = declaredExports().map((entry) => entry.path);
+  while (pending.length > 0) {
+    const relative = pending.pop();
+    if (published.has(relative)) {
+      continue;
+    }
+    published.add(relative);
+    const source = readFileSync(path.join(root, relative), "utf8");
+    for (const [, target] of source.matchAll(IMPORT)) {
+      const imported = path.posix.join(path.posix.dirname(relative), target);
+      if (!imported.startsWith(path.posix.dirname(relative) + "/")) {
+        throw new Error(`import ${target} in ${relative} leaves its directory`);
+      }
+      pending.push(imported);
+    }
+  }
+  return published;
+}
+
+const exportPaths = publishedStylesheets();
 
 function allowed(relative) {
   if (exportPaths.has(relative)) {

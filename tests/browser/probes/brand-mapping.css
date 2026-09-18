@@ -1,0 +1,19 @@
+/*
+ * Harness-only consumer brand mapping. The brand keeps its own palette and font
+ * in its own custom properties and maps them into public semantic roles from a
+ * layer declared after `ds`. It overrides no reference value and uses no
+ * !important.
+ */
+@layer app {
+  :root {
+    --brand-violet-45: oklch(45% 0.2 300);
+    --brand-violet-80: oklch(80% 0.1 300);
+    --brand-paper: oklch(98% 0.01 90);
+    --brand-ink: oklch(22% 0.02 90);
+
+    --ds-color-accent: light-dark(var(--brand-violet-45), var(--brand-violet-80));
+    --ds-color-canvas: light-dark(var(--brand-paper), var(--brand-ink));
+    --ds-font-body: "Brand Probe Sans", serif;
+    --ds-radius-control: 0px;
+  }
+}

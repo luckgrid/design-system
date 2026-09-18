@@ -3,9 +3,11 @@
 # entrypoint declared in exports.tsv; every other path is internal.
 #
 # Every tracked file in this repository is classified here exactly once.
-# Duplicate paths and dot-segment aliases are rejected so one source path cannot
-# carry conflicting compatibility classes. Classification is a compatibility
-# statement, not a claim that a path is a build input.
+# Duplicate paths, dot-segment aliases, a directory row that overlaps another
+# row, and rows that resolve to the same file (for example through a symlink) are
+# rejected so one source file cannot carry conflicting compatibility classes.
+# Classification is a compatibility statement, not a claim that a path is a build
+# input.
 #
 # Completeness is machine-enforced against Git's tracked-file set (`git ls-files`):
 # ds-check fails if any tracked file is missing from this inventory, so ignored or

@@ -11,7 +11,8 @@ what may still change.
 | `core.css` | `packages/styles/index.css` | `public-preview` |
 
 `exports.tsv` declares the export, and `bootstrap-surfaces.tsv` classifies the
-same path exactly once. `ds-check` rejects duplicate/aliased inventory paths;
+same path exactly once. `ds-check` rejects duplicate or aliased inventory paths,
+overlapping directory rows, and rows that resolve to the same file;
 `ds-check layers` fails if export and inventory classes disagree, or if a
 public stylesheet is not exported.
 
@@ -87,7 +88,11 @@ export:
 - a source-owned public layer has exactly one owning stylesheet;
 - every rule sits inside a named layer, and anonymous layers are rejected;
 - Tailwind directives such as `@tailwind`, `@theme`, `@apply`, and `@utility` are
-  rejected, because the core must be correct as plain browser CSS.
+  rejected, because the core must be correct as plain browser CSS;
+- the scanner tokenizes like a browser: a string may not contain an unescaped
+  newline, an escaped code point such as `\{` is never structure, and at-rule
+  names must be written without escapes. Otherwise a rule the scanner saw inside
+  a layer could land outside it in the browser.
 
 The checked-in cases under `fixtures/layer-ownership/` cover these rules. The
 browser suite also shows why the prefix rule exists: a prefix-qualified

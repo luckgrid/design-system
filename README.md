@@ -27,7 +27,7 @@ Rust and Cargo are the contributor-workspace and validation substrate.
 
 ## Current bootstrap
 
-The T3 bootstrap establishes:
+The DS-E01.S1.T3 bootstrap establishes:
 
 - a Rust 2024 / resolver-3 Cargo workspace pinned to Rust 1.98.1;
 - one contributor tool, `ds-check`, for bootstrap/source-boundary validation;
@@ -64,7 +64,7 @@ Repository paths are not API by default.
 | Class | Meaning |
 |---|---|
 | `public-stable` | Supported compatibility surface. None exists yet. |
-| `public-preview` | Deliberately exposed but still moving. None is required by T3. |
+| `public-preview` | Deliberately exposed but still moving. None is required by DS-E01.S1.T3. |
 | `internal` | Not API; may change or disappear. All current bootstrap surfaces use this class. |
 
 Product maturity and compatibility classification are separate. Experimental
@@ -85,7 +85,7 @@ default copyright applies: public visibility is not permission to copy, modify,
 or redistribute the source.
 
 Open-source licensing is intended but deliberately deferred until before the
-first supported release candidate. No `LICENSE` file is added by the T3
+first supported release candidate. No `LICENSE` file is added by the DS-E01.S1.T3
 bootstrap.
 
 ## Provenance

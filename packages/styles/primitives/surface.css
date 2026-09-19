@@ -1,0 +1,16 @@
+/*
+ * Surface (base primitive): a bounded region set off from the canvas by the
+ * surface color, a border, a radius, and inner padding. It owns no state, no
+ * element semantics, and no arrangement of its children: put a layout hook on
+ * the same element, or inside it, to arrange its content.
+ */
+:where(.ds-surface) {
+  padding-block: var(--ds-space-flow);
+  padding-inline: var(--ds-space-flow);
+  border-width: var(--ds-border-width);
+  border-style: solid;
+  border-color: var(--ds-color-border);
+  border-radius: var(--ds-radius-control);
+  background-color: var(--ds-color-surface);
+  color: var(--ds-color-text);
+}

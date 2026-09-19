@@ -1,0 +1,8 @@
+/* Harness-only unlayered consumer rules over the primitives. */
+a {
+  color: rgb(4, 5, 6);
+}
+
+article {
+  border-color: rgb(4, 5, 6);
+}

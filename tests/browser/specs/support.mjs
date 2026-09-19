@@ -29,6 +29,9 @@ export const PUBLISHED_STYLESHEETS = [
   "/packages/styles/layouts/stack.css",
   "/packages/styles/layouts/cluster.css",
   "/packages/styles/layouts/grid.css",
+  "/packages/styles/primitives.css",
+  "/packages/styles/primitives/surface.css",
+  "/packages/styles/primitives/action.css",
 ];
 
 // Every test fails on any non-2xx response, failed request, console error, or

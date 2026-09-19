@@ -23,7 +23,8 @@ cargo run --locked -p design-system-check -- layers \
   exports.tsv bootstrap-surfaces.tsv fixtures/plain-html
 cargo run --locked -p design-system-check -- tokens \
   tokens.tsv exports.tsv docs/architecture/tokens.md \
-  fixtures/plain-html fixtures/brand-theme fixtures/layouts tests/browser/probes
+  fixtures/plain-html fixtures/brand-theme fixtures/layouts fixtures/primitives \
+  tests/browser/probes
 cargo run --locked -p design-system-check -- theme \
   theme.tsv exports.tsv docs/architecture/theme.md \
   fixtures tests/browser/probes
@@ -31,6 +32,9 @@ cargo run --locked -p design-system-check -- base \
   base.tsv exports.tsv docs/architecture/base.md fixtures/plain-html
 cargo run --locked -p design-system-check -- layout \
   layouts.tsv exports.tsv docs/architecture/layouts.md fixtures/layouts
+cargo run --locked -p design-system-check -- primitive \
+  primitives.tsv layouts.tsv exports.tsv docs/architecture/primitives.md \
+  fixtures/primitives
 ```
 
 Browser contract tests need Node 20 or later and live only in `tests/browser/`.
@@ -61,7 +65,7 @@ shared source without evidence from materially unlike consumers.
 The supported CSS surfaces are the `public-preview` `core.css` entrypoint
 declared in `exports.tsv`, the `public-preview` semantic token roles in
 `tokens.tsv`, the theme default and hook in `theme.tsv`, the classless base
-defaults in `base.tsv`, and the layout hooks in `layouts.tsv`. Changes to the entrypoint, its layer order, what `exports.tsv`
+defaults in `base.tsv`, the layout hooks in `layouts.tsv`, and the primitive hooks and states in `primitives.tsv`. Changes to the entrypoint, its layer order, what `exports.tsv`
 declares, or a public role's name, meaning, value type, or alias relationship
 are compatibility changes and must say so. So are changes to a base default or
 to a layout hook or its documented contract. Reference tokens (`--ds-ref-*`) are

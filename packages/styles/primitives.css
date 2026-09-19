@@ -1,0 +1,24 @@
+/*
+ * Primitives.
+ *
+ * Imported by the core entrypoint into `ds.primitives`. A primitive is one
+ * opt-in class hook with a documented contract; primitives.tsv classifies each
+ * one as a base primitive or a UI primitive, with its variants and native
+ * states, and lists the candidates that were not promoted. Every module follows
+ * the same rules, which `ds-check primitive` enforces:
+ *
+ *   - each selector is one zero-specificity `:where()` written exactly as the
+ *     inventory derives it, so any consumer rule wins;
+ *   - a base primitive has one rule, owns no state, and declares no layout
+ *     property, so it composes with any layout on the same element;
+ *   - a UI primitive styles its state through native and ARIA selectors only,
+ *     never a `data-*` state hook, and never removes the focus outline;
+ *   - no media query, container query, or custom property is declared; values
+ *     bind to public semantic roles.
+ *
+ * The modules sit in internal sub-layers in this order.
+ */
+@layer surface, action;
+
+@import "./primitives/surface.css" layer(surface);
+@import "./primitives/action.css" layer(action);

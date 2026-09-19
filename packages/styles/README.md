@@ -36,4 +36,12 @@ The hooks are classified in `layouts.tsv`, which also records the candidates
 that stay consumer-owned, deferred, or rejected. See
 [`docs/architecture/layouts.md`](/docs/architecture/layouts.md).
 
+`primitives.css` and `primitives/` are the primitives in `ds.primitives`: the
+`surface` base primitive (`.ds-surface`) and the `action` UI primitive
+(`.ds-action` with its variants), each under a zero-specificity `:where()`.
+The hooks, variants, and native states are classified in `primitives.tsv`,
+which also records the candidates that stay consumer-owned, deferred, or
+rejected. See
+[`docs/architecture/primitives.md`](/docs/architecture/primitives.md).
+
 Do not copy Luna CSS here wholesale.

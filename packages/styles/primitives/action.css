@@ -56,9 +56,11 @@
 
 /*
  * Current: the link or control for the current page, step, or item. The weight
- * is the non-colour cue, so the state survives forced-colors mode.
+ * is the non-colour cue, so the state survives forced-colors mode. An empty
+ * value is the ARIA default, `false`, and `false` matches in any case, so
+ * neither is styled as current.
  */
-:where(.ds-action[aria-current]:not([aria-current="false"])) {
+:where(.ds-action[aria-current]:not([aria-current=""], [aria-current="false" i])) {
   border-color: var(--ds-color-accent);
   background-color: var(--ds-color-highlight);
   color: var(--ds-color-text);

@@ -53,13 +53,15 @@ const REASONS: [(&str, &[&str]); 3] = [
 
 /// The native and ARIA states a UI primitive may style. Each is a state name,
 /// the element its selector requires (empty for any element), the selector
-/// suffix after the hook, and the token the document must name.
+/// suffix after the hook, and the token the document must name. An empty
+/// `aria-current` is the ARIA default, `false`, and `false` matches in any
+/// case, so the current state excludes both.
 const STATES: [(&str, &str, &str, &str); 4] = [
     ("hover", "", ":hover", ":hover"),
     (
         "current",
         "",
-        "[aria-current]:not([aria-current=\"false\"])",
+        "[aria-current]:not([aria-current=\"\"], [aria-current=\"false\" i])",
         "[aria-current]",
     ),
     ("disabled", "", ":disabled", ":disabled"),
@@ -152,11 +154,11 @@ pub struct Primitive {
 }
 
 impl Primitive {
-    fn hook(&self) -> String {
+    pub(crate) fn hook(&self) -> String {
         format!("{HOOK_PREFIX}{}", self.name)
     }
 
-    fn variant_hook(&self, variant: &str) -> String {
+    pub(crate) fn variant_hook(&self, variant: &str) -> String {
         format!("{HOOK_PREFIX}{}-{variant}", self.name)
     }
 
@@ -650,20 +652,20 @@ fn backticked_one(cell: &str) -> Option<String> {
 
 /// One start tag: its lowercase name and attributes.
 #[derive(Debug)]
-struct Tag {
-    name: String,
+pub(crate) struct Tag {
+    pub(crate) name: String,
     attributes: Vec<(String, Option<String>)>,
 }
 
 impl Tag {
-    fn attribute(&self, name: &str) -> Option<Option<&str>> {
+    pub(crate) fn attribute(&self, name: &str) -> Option<Option<&str>> {
         self.attributes
             .iter()
             .find(|(attribute, _)| attribute == name)
             .map(|(_, value)| value.as_deref())
     }
 
-    fn classes(&self) -> Vec<&str> {
+    pub(crate) fn classes(&self) -> Vec<&str> {
         match self.attribute("class") {
             Some(Some(value)) => value.split_whitespace().collect(),
             _ => Vec::new(),
@@ -673,7 +675,7 @@ impl Tag {
 
 /// Every start tag in `html`, which is lowercase. Comments, doctypes, and end
 /// tags are skipped. A `class` value must be quoted.
-fn start_tags(html: &str) -> Result<Vec<Tag>, String> {
+pub(crate) fn start_tags(html: &str) -> Result<Vec<Tag>, String> {
     let bytes = html.as_bytes();
     let mut tags = Vec::new();
     let mut index = 0;
@@ -682,7 +684,7 @@ fn start_tags(html: &str) -> Result<Vec<Tag>, String> {
         if html[index..].starts_with("!--") {
             let end = html[index..]
                 .find("-->")
-                .ok_or("the primitives fixture has an unterminated comment")?;
+                .ok_or("the fixture has an unterminated comment")?;
             index += end + 3;
             continue;
         }
@@ -706,10 +708,7 @@ fn start_tags(html: &str) -> Result<Vec<Tag>, String> {
             }
             match bytes.get(index) {
                 None => {
-                    return Err(format!(
-                        "the primitives fixture has an unterminated <{}>",
-                        tag.name
-                    ));
+                    return Err(format!("the fixture has an unterminated <{}>", tag.name));
                 }
                 Some(b'>') => {
                     index += 1;
@@ -740,7 +739,7 @@ fn start_tags(html: &str) -> Result<Vec<Tag>, String> {
                 match bytes.get(index) {
                     Some(quote @ (b'"' | b'\'')) => {
                         let close = html[index + 1..].find(*quote as char).ok_or_else(|| {
-                            format!("the primitives fixture has an unterminated `{name}` value")
+                            format!("the fixture has an unterminated `{name}` value")
                         })?;
                         let value = html[index + 1..index + 1 + close].to_owned();
                         index += close + 2;
@@ -748,9 +747,7 @@ fn start_tags(html: &str) -> Result<Vec<Tag>, String> {
                     }
                     _ => {
                         if name == "class" {
-                            return Err(
-                                "the primitives fixture has an unquoted class attribute".to_owned()
-                            );
+                            return Err("the fixture has an unquoted class attribute".to_owned());
                         }
                         let start = index;
                         while bytes
@@ -845,11 +842,15 @@ pub fn validate_fixture(
             if primitive.kind == Kind::Base && carries_layout {
                 composed.insert(primitive.name.clone());
             }
+            if primitive.kind == Kind::Ui && carries_layout {
+                return Err(format!(
+                    "the primitives fixture puts a layout hook on `{root}`; a UI primitive owns its display, \
+so put the layout on a parent element"
+                ));
+            }
             for state in &primitive.states {
                 let present = match state.as_str() {
-                    "current" => tag
-                        .attribute("aria-current")
-                        .is_some_and(|value| value != Some("false")),
+                    "current" => tag.attribute("aria-current").is_some_and(is_current),
                     "disabled" => tag.name == "button" && tag.attribute("disabled").is_some(),
                     "unlinked" => tag.name == "a" && tag.attribute("href").is_none(),
                     _ => false,
@@ -905,6 +906,12 @@ primitives use native elements and ARIA state, not data-* state or a replaced ro
     Ok(hooked)
 }
 
+/// Whether an `aria-current` value (lowercased, `None` when the attribute has
+/// no value) marks the current item: anything but an empty value or `false`.
+pub(crate) fn is_current(value: Option<&str>) -> bool {
+    value.is_some_and(|value| !value.is_empty() && value != "false")
+}
+
 /// The class hooks `layouts.tsv` promotes, for the checks that let a
 /// primitive compose with a layout.
 pub fn layout_hooks(manifest: &layout::Manifest) -> BTreeSet<String> {
@@ -940,7 +947,7 @@ rejected\tcard\tcovered-by-promoted
     const SURFACE: &str = ":where(.ds-surface) { padding-block: var(--ds-space-flow); border-style: solid; background-color: var(--ds-color-surface); }";
     const ACTION: &str = ":where(.ds-action) { display: inline-flex; min-block-size: var(--ds-size-target-min); cursor: pointer; }
 :where(.ds-action.ds-action-primary) { background-color: var(--ds-color-accent); }
-:where(.ds-action[aria-current]:not([aria-current=\"false\"])) { font-weight: var(--ds-weight-strong); }
+:where(.ds-action[aria-current]:not([aria-current=\"\"], [aria-current=\"false\" i])) { font-weight: var(--ds-weight-strong); }
 :where(.ds-action:disabled) { cursor: not-allowed; }
 :where(a.ds-action:not(:any-link)) { cursor: not-allowed; }";
 
@@ -1064,6 +1071,7 @@ rejected\tcard\tcovered-by-promoted
             ":where(.ds-action.ds-action-quiet) { cursor: pointer; }",
             ":where(.ds-action:focus-visible) { cursor: pointer; }",
             ":where(.ds-action[aria-pressed=\"true\"]) { cursor: pointer; }",
+            ":where(.ds-action[aria-current]:not([aria-current=\"false\"])) { cursor: pointer; }",
             ":where(.ds-action:active) { cursor: pointer; }",
             ":where(button.ds-action) { cursor: pointer; }",
             ":where(.ds-action) > :where(*) { cursor: pointer; }",
@@ -1344,6 +1352,11 @@ States: `[aria-current]`, `:disabled`, `:not(:any-link)`.
             (FIXTURE.replace("ds-surface ds-stack", "ds-surface"), "never composes `.ds-surface`"),
             (FIXTURE.replace(" disabled>", ">"), "state `disabled`"),
             (FIXTURE.replace("aria-current=\"page\"", "aria-current=\"false\""), "state `current`"),
+            (FIXTURE.replace("aria-current=\"page\"", "aria-current=\"FALSE\""), "state `current`"),
+            (FIXTURE.replace("aria-current=\"page\"", "aria-current=\"\""), "state `current`"),
+            (FIXTURE.replace("aria-current=\"page\"", "aria-current"), "state `current`"),
+            (FIXTURE.replace("class=\"ds-action\" disabled", "class=\"ds-action ds-stack\" disabled"), "layout hook on `ds-action`"),
+            (FIXTURE.replace("class=\"ds-action\" disabled", "class=\"ds-cluster ds-action\" disabled"), "layout hook on `ds-action`"),
             (FIXTURE.replace("<a class=\"ds-action\">", "<a class=\"ds-action\" href=\"#y\">"), "state `unlinked`"),
             (FIXTURE.replace("ds-surface ds-stack", "ds-surface ds-card"), "`ds-card`"),
             (FIXTURE.replace("class=\"ds-action ds-action-primary\"", "class=\"ds-action-primary\""), "without `ds-action`"),

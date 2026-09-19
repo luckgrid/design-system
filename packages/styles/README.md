@@ -44,4 +44,9 @@ which also records the candidates that stay consumer-owned, deferred, or
 rejected. See
 [`docs/architecture/primitives.md`](/docs/architecture/primitives.md).
 
+Every rule that selects a hook styles only the element that carries it; a
+layout also reaches its direct children. No module uses `@scope`, and no rule
+tests a `data-*` attribute other than `data-ds-scheme`. See
+[`docs/architecture/hooks.md`](/docs/architecture/hooks.md).
+
 Do not copy Luna CSS here wholesale.

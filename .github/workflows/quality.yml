@@ -41,7 +41,7 @@ jobs:
         run: cargo +1.98.1 run --locked -p design-system-check -- layers exports.tsv bootstrap-surfaces.tsv fixtures/plain-html
 
       - name: Token authority
-        run: cargo +1.98.1 run --locked -p design-system-check -- tokens tokens.tsv exports.tsv docs/architecture/tokens.md fixtures/plain-html fixtures/brand-theme fixtures/layouts fixtures/primitives tests/browser/probes
+        run: cargo +1.98.1 run --locked -p design-system-check -- tokens tokens.tsv exports.tsv docs/architecture/tokens.md fixtures/plain-html fixtures/brand-theme fixtures/layouts fixtures/primitives fixtures/scoping tests/browser/probes
 
       - name: Theme contract
         run: cargo +1.98.1 run --locked -p design-system-check -- theme theme.tsv exports.tsv docs/architecture/theme.md fixtures tests/browser/probes
@@ -54,6 +54,9 @@ jobs:
 
       - name: Primitives
         run: cargo +1.98.1 run --locked -p design-system-check -- primitive primitives.tsv layouts.tsv exports.tsv docs/architecture/primitives.md fixtures/primitives
+
+      - name: Hooks and scoping
+        run: cargo +1.98.1 run --locked -p design-system-check -- hooks layouts.tsv primitives.tsv theme.tsv exports.tsv docs/architecture/hooks.md fixtures/scoping
 
   browser:
     runs-on: ubuntu-latest

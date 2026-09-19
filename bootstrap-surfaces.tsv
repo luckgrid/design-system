@@ -5,7 +5,8 @@
 # classified one by one in tokens.tsv, the theme default and hook are
 # classified in theme.tsv, the classless base subjects are classified in
 # base.tsv, the layout hooks are classified in layouts.tsv, and the primitive
-# hooks and states are classified in primitives.tsv.
+# hooks and states are classified in primitives.tsv. Together they form the
+# public hook vocabulary that docs/architecture/hooks.md states.
 #
 # Every tracked file in this repository is classified here exactly once.
 # Duplicate paths, dot-segment aliases, a directory row that overlaps another
@@ -35,6 +36,7 @@ internal	WORKSTREAMS.md	scan-exempt:planning-provenance-pointer
 internal	apps/ds-check/Cargo.toml
 internal	apps/ds-check/src/base.rs
 internal	apps/ds-check/src/css.rs
+internal	apps/ds-check/src/hooks.rs
 internal	apps/ds-check/src/layout.rs
 internal	apps/ds-check/src/primitive.rs
 internal	apps/ds-check/src/main.rs	scan-exempt:checker-owns-the-marker-constants
@@ -45,6 +47,7 @@ internal	design-system.descriptor.toml	scan-exempt:planning-provenance-metadata
 internal	docs/architecture/base.md
 internal	docs/architecture/bootstrap.md
 internal	docs/architecture/css-entrypoint.md
+internal	docs/architecture/hooks.md
 internal	docs/architecture/layouts.md
 internal	docs/architecture/primitives.md
 internal	docs/architecture/theme.md
@@ -85,6 +88,9 @@ internal	fixtures/layouts/index.html
 internal	fixtures/primitives/README.md
 internal	fixtures/primitives/consumer.css
 internal	fixtures/primitives/index.html
+internal	fixtures/scoping/README.md
+internal	fixtures/scoping/consumer.css
+internal	fixtures/scoping/index.html
 internal	fixtures/plain-html/README.md
 internal	fixtures/plain-html/consumer.css
 internal	fixtures/plain-html/figure.svg
@@ -125,6 +131,8 @@ internal	tests/browser/probes/layouts-reorder.css
 internal	tests/browser/probes/layouts-unlayered.css
 internal	tests/browser/probes/primitives-override.css
 internal	tests/browser/probes/primitives-unlayered.css
+internal	tests/browser/probes/scoping-leak.css
+internal	tests/browser/probes/scoping-unlayered.css
 internal	tests/browser/server.mjs
 internal	tests/browser/specs/base.spec.mjs
 internal	tests/browser/specs/cascade.spec.mjs
@@ -133,6 +141,7 @@ internal	tests/browser/specs/entrypoint.spec.mjs
 internal	tests/browser/specs/layer-ownership.spec.mjs
 internal	tests/browser/specs/layouts.spec.mjs
 internal	tests/browser/specs/primitives.spec.mjs
+internal	tests/browser/specs/scoping.spec.mjs
 internal	tests/browser/specs/support.mjs
 internal	tests/browser/specs/theme.spec.mjs
 internal	tests/browser/specs/tokens.spec.mjs

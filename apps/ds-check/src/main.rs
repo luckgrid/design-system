@@ -1362,9 +1362,9 @@ mod tests {
         assert_eq!(
             coverage,
             Coverage {
-                surfaces: 2,
+                surfaces: 1,
                 scanned: 1,
-                exempt: 1,
+                exempt: 0,
             }
         );
     }

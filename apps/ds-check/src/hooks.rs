@@ -383,13 +383,16 @@ const SELECTOR_PSEUDOS: [&str; 9] = [
 ];
 
 /// The argument of every functional selector pseudo-class, at any depth, with
-/// its lowercase name: `:where(nav .x)` gives `("where", "nav .x")`.
+/// its lowercase name: `:where(nav .x)` gives `("where", "nav .x")`. The name
+/// is decoded, because browsers read `:n\6ft(` as `:not(`.
 fn pseudo_arguments(selector: &str) -> Result<Vec<(String, String)>, String> {
     let chars: Vec<char> = selector.chars().collect();
     let mut found = Vec::new();
     let mut index = 0;
     let mut quote: Option<char> = None;
     let mut bracket = 0usize;
+    // Where the name after the latest `:` starts, while that name continues.
+    let mut pseudo: Option<usize> = None;
     while index < chars.len() {
         let c = chars[index];
         if let Some(open) = quote {
@@ -403,20 +406,24 @@ fn pseudo_arguments(selector: &str) -> Result<Vec<(String, String)>, String> {
         }
         match c {
             '\\' => index = escape_last(&chars, index),
-            '"' | '\'' => quote = Some(c),
-            '[' => bracket += 1,
+            ':' if bracket == 0 => pseudo = Some(index + 1),
+            c if bracket == 0
+                && (c.is_ascii_alphanumeric() || c == '-' || c == '_' || !c.is_ascii()) => {}
+            '"' | '\'' => {
+                quote = Some(c);
+                pseudo = None;
+            }
+            '[' => {
+                bracket += 1;
+                pseudo = None;
+            }
             ']' => bracket = bracket.saturating_sub(1),
             '(' if bracket == 0 => {
-                let name: String = chars[..index]
-                    .iter()
-                    .rev()
-                    .take_while(|c| c.is_ascii_alphanumeric() || **c == '-')
-                    .collect::<Vec<_>>()
-                    .into_iter()
-                    .rev()
-                    .collect();
+                let name = pseudo
+                    .take()
+                    .map(|start| decode_name(&chars[start..index]))
+                    .unwrap_or_default();
                 let close = matching_paren(&chars, index)?;
-                let name = name.to_ascii_lowercase();
                 if SELECTOR_PSEUDOS.contains(&name.as_str()) {
                     let argument: String = chars[index + 1..close].iter().collect();
                     found.extend(pseudo_arguments(&argument)?);
@@ -424,11 +431,35 @@ fn pseudo_arguments(selector: &str) -> Result<Vec<(String, String)>, String> {
                 }
                 index = close;
             }
-            _ => {}
+            _ => pseudo = None,
         }
         index += 1;
     }
     Ok(found)
+}
+
+/// A name with its CSS escapes decoded, lowercased.
+fn decode_name(chars: &[char]) -> String {
+    let mut name = String::new();
+    let mut index = 0;
+    while index < chars.len() {
+        if chars[index] == '\\' {
+            let last = escape_last(chars, index).min(chars.len() - 1);
+            let body: String = chars[index + 1..=last].iter().collect();
+            let body = body.trim_end();
+            match u32::from_str_radix(body, 16) {
+                Ok(value) if !body.is_empty() && body.chars().all(|c| c.is_ascii_hexdigit()) => {
+                    name.push(char::from_u32(value).unwrap_or('\u{fffd}'));
+                }
+                _ => name.push_str(body),
+            }
+            index = last + 1;
+        } else {
+            name.push(chars[index]);
+            index += 1;
+        }
+    }
+    name.to_ascii_lowercase()
 }
 
 /// Whether any selector argument of a functional pseudo-class, at any depth,
@@ -918,6 +949,28 @@ public-preview\tattribute\tdata-ds-scheme\tlight dark\n",
             (
                 ":where(.ds-surface)::slotted(p) { color: red; }",
                 "`:slotted`",
+            ),
+            // S058: escaped pseudo-class names, which browsers decode.
+            (
+                ":where(p:n\\6ft(.ds-surface)) { color: red; }",
+                "negates a hook",
+            ),
+            (
+                ":where(p:n\\6f t(.ds-surface)) { color: red; }",
+                "negates a hook",
+            ),
+            (
+                ":where(p:\\4eOT(.ds-surface)) { color: red; }",
+                "negates a hook",
+            ),
+            (
+                ":w\\68 ere(nav .ds-action) { color: red; }",
+                "pseudo-class argument",
+            ),
+            (":\\69s(.ds-surface, p) { color: red; }", "alternatives"),
+            (
+                ":where(.ds-surface:\\69s(:hover, p)) { color: red; }",
+                "alternatives",
             ),
         ] {
             let error = sheet(rule).expect_err(rule);

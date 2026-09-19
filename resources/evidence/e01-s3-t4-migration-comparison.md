@@ -1,6 +1,6 @@
 # DS-E01.S3.T4 migration comparison evidence
 
-Status: **implementation evidence; pending independent review**.
+Status: **accepted by the owner-directed S061 exact-head review**.
 
 This ledger compares the accepted E01 portable core with the Luna and
 Luckgrid.net evidence that informed it. It is a contract comparison, not a claim

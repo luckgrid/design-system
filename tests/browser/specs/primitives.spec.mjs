@@ -157,7 +157,7 @@ test.describe("primitives", () => {
       ":where(.ds-action.ds-action-quiet)",
       ":where(.ds-action.ds-action-icon)",
       ":where(.ds-action:hover)",
-      ':where(.ds-action[aria-current]:not([aria-current="false"]))',
+      ':where(.ds-action[aria-current]:not([aria-current=""], [aria-current="false" i]))',
       ":where(.ds-action:disabled)",
       ":where(a.ds-action:not(:any-link))",
     ]);

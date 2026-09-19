@@ -1,0 +1,8 @@
+/* Harness-only unlayered consumer rules on the scoping fixture's own classes. */
+.app-step {
+  background-color: rgb(4, 5, 6);
+}
+
+.app-spaced {
+  margin-block-end: 5px;
+}

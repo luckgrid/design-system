@@ -2,6 +2,7 @@
 
 mod base;
 mod css;
+mod hooks;
 mod layout;
 mod primitive;
 mod theme;
@@ -104,7 +105,7 @@ struct Export {
     path: PathBuf,
 }
 
-const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>";
+const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>\n       ds-check hooks <layouts.tsv> <primitives.tsv> <theme.tsv> <exports.tsv> <hooks-doc.md> <scoping-fixture-dir>";
 
 fn run(args: &[String]) -> Result<String, String> {
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
@@ -166,6 +167,25 @@ fn run(args: &[String]) -> Result<String, String> {
                 Path::new(fixture),
             )
         }
+        [
+            command,
+            layouts,
+            primitives,
+            theme,
+            exports,
+            document,
+            fixture,
+        ] if command == "hooks" => run_hooks(
+            &root,
+            &HookInputs {
+                layouts: Path::new(layouts),
+                primitives: Path::new(primitives),
+                theme: Path::new(theme),
+                exports: Path::new(exports),
+                document: Path::new(document),
+                fixture: Path::new(fixture),
+            },
+        ),
         _ => Err(USAGE.to_owned()),
     }
 }
@@ -1078,6 +1098,82 @@ primitives fixture {} uses every hook and state on {} element(s)",
     ))
 }
 
+/// The repository-relative inputs of `ds-check hooks`.
+struct HookInputs<'a> {
+    layouts: &'a Path,
+    primitives: &'a Path,
+    theme: &'a Path,
+    exports: &'a Path,
+    document: &'a Path,
+    fixture: &'a Path,
+}
+
+/// Validate every stylesheet reached from the declared exports against the
+/// public hook vocabulary that the layout, primitive, and theme inventories
+/// classify, then the hooks document and the scoping fixture.
+fn run_hooks(root: &Path, inputs: &HookInputs<'_>) -> Result<String, String> {
+    for path in [
+        inputs.layouts,
+        inputs.primitives,
+        inputs.theme,
+        inputs.exports,
+        inputs.document,
+        inputs.fixture,
+    ] {
+        validate_relative_path(path)?;
+    }
+    let root = canonical(root, "repository root")?;
+    let read = |path: &Path, label: &str| {
+        fs::read_to_string(root.join(path))
+            .map_err(|error| format!("read {label} {}: {error}", path.display()))
+    };
+    let vocabulary = hooks::vocabulary(
+        &layout::parse_manifest(&read(inputs.layouts, "layouts inventory")?)?,
+        &primitive::parse_manifest(&read(inputs.primitives, "primitives inventory")?)?,
+        &theme::parse_manifest(&read(inputs.theme, "theme inventory")?)?,
+    );
+
+    let mut reached = BTreeSet::new();
+    for export in parse_exports(&read(inputs.exports, "exports")?)? {
+        let graph = css::validate_graph(&root, &export.path, Path::new(STYLES_ROOT))?;
+        reached.extend(graph.stylesheets);
+    }
+    let mut stylesheets = Vec::new();
+    for file in &reached {
+        let source = fs::read_to_string(file)
+            .map_err(|error| format!("read stylesheet {}: {error}", file.display()))?;
+        stylesheets.push((relative_to(&root, file).display().to_string(), source));
+    }
+    let summary = hooks::validate_stylesheets(&stylesheets, &vocabulary)?;
+
+    hooks::validate_document(&read(inputs.document, "hooks document")?, &vocabulary)
+        .map_err(|error| format!("{}: {error}", inputs.document.display()))?;
+
+    let index = inputs.fixture.join("index.html");
+    let hooked = hooks::validate_fixture(&read(&index, "scoping fixture")?, &vocabulary)
+        .map_err(|error| format!("{}: {error}", inputs.fixture.display()))?;
+
+    Ok(format!(
+        "validated hooks in {} stylesheet(s): {} rule(s), {} of them hooked; {} public hook(s) ({} class, {} attribute) \
+from {}, {}, and {}; every class is a public hook, every data-* attribute other than the theme hook is reserved, \
+every hooked rule is anchored at the hooked element (a layout also reaches its direct children), and no rule uses @scope \
+or nesting; hooks document {} lists every hook with its kind, owner, and class; scoping fixture {} uses every class hook \
+on {} element(s) and puts no layout on a UI primitive",
+        summary.stylesheets,
+        summary.rules,
+        summary.hooked,
+        vocabulary.len(),
+        vocabulary.classes.len(),
+        vocabulary.attributes.len(),
+        inputs.layouts.display(),
+        inputs.primitives.display(),
+        inputs.theme.display(),
+        inputs.document.display(),
+        inputs.fixture.display(),
+        hooked
+    ))
+}
+
 fn parse_exports(text: &str) -> Result<Vec<Export>, String> {
     let mut exports: Vec<Export> = Vec::new();
 
@@ -1522,6 +1618,26 @@ mod tests {
         .expect("repository primitive contract");
         assert!(
             output.starts_with("validated primitives from packages/styles/primitives.css"),
+            "{output}"
+        );
+    }
+
+    #[test]
+    fn repository_hook_contract_passes() {
+        let output = run_hooks(
+            &repository_root(),
+            &HookInputs {
+                layouts: Path::new("layouts.tsv"),
+                primitives: Path::new("primitives.tsv"),
+                theme: Path::new("theme.tsv"),
+                exports: Path::new("exports.tsv"),
+                document: Path::new("docs/architecture/hooks.md"),
+                fixture: Path::new("fixtures/scoping"),
+            },
+        )
+        .expect("repository hook contract");
+        assert!(
+            output.starts_with("validated hooks in 17 stylesheet(s)"),
             "{output}"
         );
     }

@@ -43,9 +43,12 @@ product-neutral. Every other candidate is listed under
   `:where(.ds-<name>.ds-<name>-<variant>)`. A state appends its native selector
   to the hook. Rules appear in inventory order: the primitive, then its
   variants, then its states. Any consumer rule wins, even an unlayered one.
+  Every rule is anchored at the hooked element; [`hooks.md`](hooks.md) states
+  that scoping boundary for every hook.
 - **State is native.** No primitive tests a `data-*` attribute. Disabled is
-  the native `disabled` attribute; the current item is `aria-current`; an
-  unavailable link is an `<a>` with no `href`. A primitive never sets
+  the native `disabled` attribute; the current item is `aria-current` with any
+  value except an empty one or `false` in any case; an unavailable link is an
+  `<a>` with no `href`. A primitive never sets
   `pointer-events`, `opacity`, or `visibility` to fake a state.
 - **Focus stays with the base.** No primitive declares an `outline` property.
   The base's single `:focus-visible` outline applies to every primitive
@@ -100,13 +103,14 @@ Kind: `ui-primitive`. Hooks: `.ds-action`, and the variants
 | Roots | a `<button>`, with its `type` set by the consumer, or an `<a>`. A link keeps link semantics: it takes no `role="button"`. Choose `<button>` for an in-page command and `<a href>` for navigation |
 | Default | an inline control with a `--ds-size-target-min` minimum block and inline size. It has control padding, the border, `--ds-radius-control` corners, a `--ds-color-surface` fill, `--ds-color-text` text, no underline, and a pointer cursor. Its content (a label and an optional icon) is centered with a `--ds-space-control-inline` gap |
 | `.ds-action-primary` | the one emphasized action in a group: `--ds-color-accent` fill and border, `--ds-color-on-accent` text |
-| `.ds-action-quiet` | no fill and a transparent border that keeps its width, so the box does not move on hover and forced-colors mode still draws it |
+| `.ds-action-quiet` | no fill and a transparent border that keeps its width, so the box does not move on hover and forced-colors mode still draws it. At rest it has no border, fill, or underline, so use it only inside a navigation list or a toolbar group, where the grouping marks it as a control; never in running text |
 | `.ds-action-icon` | a square at the minimum target size with no padding. The consumer supplies the accessible name, for example with `aria-label` or visually hidden text |
-| States | `:hover` shows an accent border. `[aria-current]` (any value except `"false"`) shows the highlight fill, an accent border, and strong weight; the weight is the non-colour cue. `:disabled` on a `<button>` shows muted text and a not-allowed cursor, and the browser blocks activation. `:not(:any-link)` on an `<a>` with no `href` looks the same: the element is not a link, is not focusable, and cannot be activated |
+| States | `:hover` shows an accent border. `[aria-current]` (any value except an empty one, which is the ARIA default, or `"false"` in any case) shows the highlight fill, an accent border, and strong weight; the weight is the non-colour cue. `:disabled` on a `<button>` shows muted text and a not-allowed cursor, and the browser blocks activation. `:not(:any-link)` on an `<a>` with no `href` looks the same: the element is not a link, is not focusable, and cannot be activated |
 | Order | a state rule follows the variants, so a disabled primary action looks disabled and a current quiet action shows its fill |
 | Keyboard and focus | native. A `<button>` activates on Enter and Space, a link on Enter. The base's `:focus-visible` outline is unchanged |
 | Not provided | a pressed toggle (`aria-pressed`), a critical or destructive emphasis, loading or busy state, and `aria-disabled`. `aria-disabled` needs script to block activation, so a consumer that uses it owns that script and its styling |
 | Responsiveness | none; an action sizes to its content and never falls below the target size. Group actions with `.ds-cluster` |
+| Arrangement | an action owns its `display`, so no layout hook goes on the same element. Put the layout on the parent, such as a `.ds-cluster` of actions |
 | Override | set the real property from a consumer layer or rule; a consumer rule wins over every action rule, including state rules |
 | Compatibility | the hooks, the roots, and the four states are `public-preview`; the exact declarations are `internal` |
 
@@ -141,7 +145,8 @@ The primitives need no feature beyond the accepted browser floor (Chromium
 | `:any-link`, `:disabled`, `:hover`, attribute selectors | required; supported far below the floor |
 | logical properties | required, as for the base |
 | size container queries | not used: neither primitive changes with its own size |
-| `@scope` | not used: a class hook under `:where()` needs no scoping, and `@scope` is only progressive at the floor |
+| `:not()` with a selector list, the `i` attribute flag | required for the current state; supported below the floor |
+| `@scope` | not used: a class hook under `:where()` needs no scoping, and `@scope` is only progressive at the floor (see [`hooks.md`](hooks.md)) |
 
 No primitive has a progressive or fallback path.
 
@@ -231,9 +236,15 @@ disposition and reason code against the inventory.
   `--ds-color-accent`. The current state uses the text role on the highlight
   role. axe reports no violation in either scheme. A disabled action is exempt
   from contrast requirements, and its muted text still reads.
-- **Non-colour cues.** An action link has no underline; its border and fill
-  mark it as a control. The current state adds strong weight. The quiet variant
-  keeps a transparent border, which forced-colors mode draws.
+- **Non-colour cues.** An action link has no underline. At rest, the default
+  and primary actions are marked as controls by their border and fill. The
+  quiet variant has neither: its text color is the text role, so in running
+  text it cannot be told apart from the words around it. Use quiet link
+  actions only inside a navigation list or a toolbar group, where the grouping
+  and the target size mark each one as a control. The current state adds
+  strong weight. The quiet variant keeps a transparent border, which
+  forced-colors mode draws. axe does not detect a quiet action in running
+  text; the release review checks placement.
 - **Reduced motion.** The primitives add no motion.
 
 ## Classification and checks
@@ -265,8 +276,8 @@ fails when:
 - the primitives fixture has no `main`, misses a hook or a markup-expressible
   state, uses an unpromoted `ds-` class, puts a variant without its primitive
   or an action on anything other than `<button>` or `<a>`, gives a primitive a
-  `data-*` or `role` attribute, puts two primitives on one element, or never
-  composes the surface with a layout.
+  `data-*` or `role` attribute, puts two primitives on one element, puts a
+  layout hook on an action, or never composes the surface with a layout.
 
 The browser suite (`tests/browser/specs/primitives.spec.mjs`) checks the
 primitives in Chromium, Firefox, and WebKit:
@@ -274,7 +285,8 @@ primitives in Chromium, Firefox, and WebKit:
 - the rules sit in `ds.primitives.<name>` with zero specificity;
 - each variant and state computes its documented roles, in both schemes;
 - the states stay native: a disabled button and an unlinked `<a>` cannot be
-  focused or activated, and `aria-current="false"` is not current;
+  focused or activated, and `aria-current="false"` is not current (the scoping
+  suite checks the other `aria-current` values);
 - a button activates from the keyboard, and a link action follows its link;
 - the focus outline and target size on every variant;
 - surface and layout composition;

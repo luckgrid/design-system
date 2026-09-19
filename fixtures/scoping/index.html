@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Design System scoping fixture</title>
+    <link rel="stylesheet" href="/packages/styles/index.css">
+    <link rel="stylesheet" href="./consumer.css">
+  </head>
+  <body>
+    <header class="app-banner">
+      <nav aria-label="Current state values">
+        <ul class="ds-cluster" id="nav">
+          <li><a class="ds-action ds-action-quiet" id="current-page" href="#nested" aria-current="page">Page</a></li>
+          <li><a class="ds-action ds-action-quiet" id="current-true" href="#nested" aria-current="true">True</a></li>
+          <li><a class="ds-action ds-action-quiet" id="current-empty" href="#nested" aria-current="">Empty</a></li>
+          <li><a class="ds-action ds-action-quiet" id="current-false" href="#nested" aria-current="false">False</a></li>
+          <li><a class="ds-action ds-action-quiet" id="current-upper" href="#nested" aria-current="FALSE">Upper</a></li>
+          <li><a class="ds-action ds-action-quiet" id="current-mixed" href="#nested" aria-current="False">Mixed</a></li>
+          <li><a class="ds-action ds-action-quiet" id="current-bare" href="#nested" aria-current>Bare</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main class="ds-stack" id="page">
+      <h1>Scoping fixture</h1>
+      <p>This page loads only the declared Design System export and its own consumer stylesheet. It checks that each hook styles only the element that carries it, wherever it is nested, and that markup which only looks like a hook stays unstyled.</p>
+
+      <section class="ds-stack" id="nested" aria-labelledby="nested-title">
+        <h2 id="nested-title">Nested hooks</h2>
+        <article class="ds-surface ds-stack" id="outer">
+          <h3>A stacked surface</h3>
+          <ul class="ds-grid" id="inner-grid">
+            <li class="ds-surface ds-stack" id="inner-surface">
+              <h4>An inner surface</h4>
+              <p id="inner-text">A surface inside a grid inside a surface keeps its own edges.</p>
+              <p class="ds-cluster" id="inner-actions">
+                <button class="ds-action ds-action-primary" id="inner-primary" type="button">Inner primary</button>
+                <button class="ds-action ds-action-icon" id="inner-icon" type="button" aria-label="Close">×</button>
+              </p>
+            </li>
+            <li class="ds-surface" id="inner-plain">
+              <p>A surface with no layout.</p>
+            </li>
+          </ul>
+          <div class="ds-stack" id="nested-stack">
+            <div id="stack-child">
+              <p id="grandchild">A layout's grandchild keeps its own block margins.</p>
+              <p>Only direct children lose them.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="ds-stack" id="lookalikes" aria-labelledby="lookalikes-title">
+        <h2 id="lookalikes-title">Lookalike markup</h2>
+        <div class="app-row" id="lookalike-row">
+          <button class="ds-action-primary" id="variant-alone" type="button">Variant without its primitive</button>
+          <button class="ds-action-quiet" id="quiet-alone" type="button">Quiet without its primitive</button>
+          <button class="x-ds-action" id="prefixed" type="button">Prefixed lookalike</button>
+          <button class="app-ds-action-copy" id="infixed" type="button">Infixed lookalike</button>
+          <button data-component="action" data-ds-action="" id="data-lookalike" type="button">Data lookalike</button>
+          <button id="ds-action" type="button">Id lookalike</button>
+        </div>
+        <div class="app-panel" data-ds-layout="stack" data-slot="body" id="data-layout">
+          <p id="data-layout-text">A data attribute that names a layout is not a hook.</p>
+        </div>
+        <div class="app-panel" id="plain-panel">
+          <p>A consumer panel with no hook.</p>
+        </div>
+      </section>
+
+      <section class="ds-stack" id="override" aria-labelledby="override-title">
+        <h2 id="override-title">Overrides</h2>
+        <div class="ds-cluster app-toolbar" id="toolbar">
+          <a class="ds-action ds-action-quiet app-step" id="step" href="#nested">Next</a>
+          <button class="ds-action app-flat-action" id="flat-action" type="button">Flat</button>
+        </div>
+        <div class="ds-stack app-tight" id="tight">
+          <p class="app-spaced" id="spaced">A consumer class on a layout child sets its own margin.</p>
+          <p>Its sibling keeps the layout's reset.</p>
+        </div>
+      </section>
+    </main>
+    <footer class="app-footer">
+      <p>Scoping fixture footer.</p>
+    </footer>
+  </body>
+</html>

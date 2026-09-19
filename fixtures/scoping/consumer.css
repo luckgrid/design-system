@@ -1,0 +1,54 @@
+/*
+ * Consumer-owned stylesheet, loaded after the Design System core entrypoint.
+ * Declaring `app` after `ds` makes every rule here outrank every Design System
+ * layer through layer order alone.
+ *
+ * The page shell is consumer-owned. The override rules select the consumer's
+ * own classes only: none names a Design System hook or repeats a layout's
+ * child selector.
+ */
+@layer app;
+
+@layer app {
+  body {
+    margin: 0;
+    padding: 2rem;
+    background-color: var(--ds-color-canvas);
+    color: var(--ds-color-text);
+  }
+
+  .app-banner,
+  main,
+  .app-footer {
+    max-inline-size: 64rem;
+    margin-inline: auto;
+  }
+
+  ul {
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
+  .app-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .app-toolbar {
+    gap: 0;
+  }
+
+  .app-step {
+    margin-inline-end: 2rem;
+  }
+
+  .app-flat-action {
+    border-color: transparent;
+    background-color: var(--ds-color-canvas);
+  }
+
+  .app-spaced {
+    margin-block-start: 3rem;
+  }
+}

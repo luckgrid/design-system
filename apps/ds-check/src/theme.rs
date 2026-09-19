@@ -158,7 +158,7 @@ fn rules(file: &str, source: &str) -> Result<Vec<Rule>, String> {
 /// an alias or root subject look like unrelated selector pieces to the theme
 /// scanner. Reject comments that occur inside a prelude rather than guessing
 /// which selector spelling the author intended.
-fn reject_selector_comments(file: &str, source: &str) -> Result<(), String> {
+pub(crate) fn reject_selector_comments(file: &str, source: &str) -> Result<(), String> {
     let chars: Vec<char> = source.chars().collect();
     let mut segment_has_text = false;
     let mut index = 0;
@@ -262,7 +262,7 @@ fn is_color_scheme(name: &str) -> bool {
 /// functional pseudo-classes such as `:where()` count as part of the compound
 /// that holds them.
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum Simple {
+pub(crate) enum Simple {
     /// `.name`, with escapes decoded.
     Class(String),
     /// `[name ...]`, lowercased, with escapes decoded and any namespace dropped.
@@ -276,12 +276,12 @@ enum Simple {
 }
 
 /// A selector list: complex selectors, each a sequence of compounds.
-type SelectorList = Vec<Vec<Vec<Simple>>>;
+pub(crate) type SelectorList = Vec<Vec<Vec<Simple>>>;
 
 /// Scan a selector list into its simple selectors. The scan recognizes the
 /// selector grammar the stylesheets use and rejects anything else, so an
 /// escaped, spaced, or namespaced spelling cannot hide a theme hook.
-fn scan_selector(selector: &str) -> Result<SelectorList, String> {
+pub(crate) fn scan_selector(selector: &str) -> Result<SelectorList, String> {
     let mut scanner = Scanner {
         chars: selector.chars().collect(),
         pos: 0,

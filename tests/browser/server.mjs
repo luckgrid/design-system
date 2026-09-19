@@ -25,6 +25,7 @@ const servedDirectories = [
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
+  ".svg": "image/svg+xml",
 };
 
 export function declaredExports() {

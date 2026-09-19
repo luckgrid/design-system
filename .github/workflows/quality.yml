@@ -46,6 +46,9 @@ jobs:
       - name: Theme contract
         run: cargo +1.98.1 run --locked -p design-system-check -- theme theme.tsv exports.tsv docs/architecture/theme.md fixtures tests/browser/probes
 
+      - name: Classless base
+        run: cargo +1.98.1 run --locked -p design-system-check -- base base.tsv exports.tsv docs/architecture/base.md fixtures/plain-html
+
   browser:
     runs-on: ubuntu-latest
     defaults:

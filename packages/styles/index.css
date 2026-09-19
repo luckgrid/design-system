@@ -14,9 +14,11 @@
  *
  * `ds.tokens` is populated by tokens.css: the classified custom properties (see
  * tokens.tsv) and the theme contract that selects their color scheme (see
- * theme.tsv). The classless base populates a later layer.
+ * theme.tsv). `ds.base` is populated by base.css: the classless semantic
+ * defaults for ordinary HTML elements (see base.tsv).
  * This entrypoint itself contains no rules: only the order and its imports.
  */
 @layer ds.tokens, ds.base, ds.layouts, ds.primitives, ds.components, ds.utilities;
 
 @import "./tokens.css" layer(ds.tokens);
+@import "./base.css" layer(ds.base);

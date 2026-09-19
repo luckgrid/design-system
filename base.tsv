@@ -1,0 +1,65 @@
+# Classless semantic base inventory.
+# <class>	<group or owner>	<subject>
+# public-preview rows name each subject the base styles: an element, the
+# [popover] attribute, or the :focus-visible state. excluded rows name elements
+# the base deliberately leaves alone and the program task that owns them.
+# ds-check base keeps base/*.css, this file, docs/architecture/base.md, and the
+# plain fixture in agreement.
+public-preview	document	html
+public-preview	document	body
+public-preview	document	:focus-visible
+public-preview	content	h1
+public-preview	content	h2
+public-preview	content	h3
+public-preview	content	h4
+public-preview	content	h5
+public-preview	content	h6
+public-preview	content	p
+public-preview	content	a
+public-preview	content	strong
+public-preview	content	b
+public-preview	content	small
+public-preview	content	mark
+public-preview	content	ul
+public-preview	content	ol
+public-preview	content	dl
+public-preview	content	dt
+public-preview	content	blockquote
+public-preview	content	hr
+public-preview	content	code
+public-preview	content	kbd
+public-preview	content	samp
+public-preview	content	pre
+public-preview	content	img
+public-preview	content	svg
+public-preview	content	figure
+public-preview	content	figcaption
+public-preview	content	table
+public-preview	content	caption
+public-preview	content	th
+public-preview	content	td
+public-preview	forms	button
+public-preview	forms	input
+public-preview	forms	select
+public-preview	forms	textarea
+public-preview	forms	fieldset
+public-preview	forms	legend
+public-preview	interactive	details
+public-preview	interactive	summary
+public-preview	interactive	dialog
+public-preview	interactive	[popover]
+excluded	DS-E01.S3.T1	header
+excluded	DS-E01.S3.T1	nav
+excluded	DS-E01.S3.T1	main
+excluded	DS-E01.S3.T1	aside
+excluded	DS-E01.S3.T1	footer
+excluded	DS-E01.S3.T1	section
+excluded	DS-E01.S3.T1	article
+excluded	DS-E01.S3.T1	search
+excluded	DS-E01.S3.T1	menu
+excluded	DS-E01.S3.T5	progress
+excluded	DS-E01.S3.T5	meter
+excluded	DS-E01.S3.T5	video
+excluded	DS-E01.S3.T5	audio
+excluded	DS-E01.S3.T5	iframe
+excluded	DS-E01.S3.T5	canvas

@@ -1,0 +1,18 @@
+/*
+ * Harness-only consumer layer over the classless base: plain element
+ * selectors, no !important. Every rule here must win over the base.
+ */
+@layer app {
+  a {
+    color: rgb(0 100 0);
+    text-decoration-line: none;
+  }
+
+  button {
+    background-color: rgb(0 0 100);
+  }
+
+  h1 {
+    font-size: 12px;
+  }
+}

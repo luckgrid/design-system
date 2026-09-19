@@ -2,6 +2,9 @@
  * Consumer-owned stylesheet, loaded after the Design System core entrypoint.
  * Declaring `app` after `ds` makes every rule here outrank every Design System
  * layer through layer order alone, with plain element selectors.
+ *
+ * The classless base already styles the document, text, and controls. This
+ * sheet only adds the page layout the base deliberately leaves to consumers.
  */
 @layer app;
 
@@ -11,10 +14,6 @@
    * `data-ds-scheme` hook on <html> switches it. A root `color-scheme` in this
    * layer would outrank the theme and disable the hook.
    */
-  :root {
-    font-family: var(--ds-font-body);
-  }
-
   body {
     margin: 0;
     padding: 2rem;
@@ -25,9 +24,5 @@
   main {
     max-inline-size: 48rem;
     margin-inline: auto;
-  }
-
-  button {
-    font: inherit;
   }
 }

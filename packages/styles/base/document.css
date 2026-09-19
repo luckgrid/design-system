@@ -1,0 +1,29 @@
+/*
+ * Document defaults: the root canvas, body text, and focus indication.
+ *
+ * The canvas and text colors sit on the root so the viewport canvas follows the
+ * selected scheme. Body text size is set on <body>, never on the root, so `rem`
+ * keeps its initial meaning for every token authored in `rem`.
+ */
+:where(html) {
+  background-color: var(--ds-color-canvas);
+  color: var(--ds-color-text);
+  font-family: var(--ds-font-body);
+  line-height: var(--ds-leading-body);
+  overflow-wrap: break-word;
+}
+
+:where(body) {
+  font-size: var(--ds-text-body);
+  font-weight: var(--ds-weight-body);
+}
+
+/*
+ * One focus indicator for every focusable element. It is an outline, not a
+ * shadow, so it survives forced-colors mode, and it follows :focus-visible so
+ * pointer activation keeps the platform's own behavior.
+ */
+:where(:focus-visible) {
+  outline: var(--ds-focus-width) solid var(--ds-color-focus);
+  outline-offset: var(--ds-focus-offset);
+}

@@ -1,0 +1,28 @@
+/*
+ * Classless semantic base.
+ *
+ * Imported by the core entrypoint into `ds.base`. It styles ordinary semantic
+ * HTML so documents, content, and native controls read coherently before a
+ * consumer adds layouts, primitives, or components.
+ *
+ * The owned element defaults are classified in base.tsv; the elements the base
+ * deliberately leaves alone are listed there as `excluded`. Every module follows
+ * the same rules, which `ds-check base` enforces:
+ *
+ *   - each selector is one :where(...), optionally followed by a pseudo-element,
+ *     so every base rule has zero specificity and any consumer rule wins;
+ *   - selectors use element names, native pseudo-classes, and the native
+ *     `type`, `popover`, `multiple`, and `size` attributes only: no class, id,
+ *     data-* or role hook;
+ *   - values bind to public semantic roles (`--ds-*`), relative units, and
+ *     keywords, so the token authority stays the only source of visual values;
+ *   - no motion, no custom property, and no rule that removes focus indication.
+ *
+ * The modules sit in internal sub-layers in this order.
+ */
+@layer document, content, forms, interactive;
+
+@import "./base/document.css" layer(document);
+@import "./base/content.css" layer(content);
+@import "./base/forms.css" layer(forms);
+@import "./base/interactive.css" layer(interactive);

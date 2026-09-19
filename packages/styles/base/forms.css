@@ -1,0 +1,75 @@
+/*
+ * Form defaults. Native appearance is kept: the base sets typography, color,
+ * border, spacing, and target size, and leaves each control's behavior and
+ * platform rendering alone.
+ */
+:where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+/* Text-like fields share the control box and the minimum target size. */
+:where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="hidden"], [type="image"], [type="button"], [type="submit"], [type="reset"]), select, textarea) {
+  min-block-size: var(--ds-size-target-min);
+  padding: var(--ds-space-control-block) var(--ds-space-control-inline);
+  border: var(--ds-border-width) solid var(--ds-color-border);
+  border-radius: var(--ds-radius-control);
+  background-color: var(--ds-color-canvas);
+}
+
+/*
+ * WebKit draws a single-line <select> natively and ignores its padding and
+ * min-block-size, so it would fall below the target size. An explicit block
+ * size of one line plus the control padding and border, never below the
+ * target, gives every engine at least its natural height.
+ */
+:where(select:not([multiple], [size])) {
+  block-size: max(var(--ds-size-target-min), calc(1lh + 2 * var(--ds-space-control-block) + 2 * var(--ds-border-width)));
+}
+
+/*
+ * Buttons are neutral. A primary or branded action is a product role, so it
+ * belongs to a primitive or component contract, not to every <button>.
+ */
+:where(button, input[type="button"], input[type="submit"], input[type="reset"]),
+:where(input[type="file"])::file-selector-button {
+  min-block-size: var(--ds-size-target-min);
+  min-inline-size: var(--ds-size-target-min);
+  padding: var(--ds-space-control-block) var(--ds-space-control-inline);
+  border: var(--ds-border-width) solid var(--ds-color-border);
+  border-radius: var(--ds-radius-control);
+  background-color: var(--ds-color-surface);
+  color: var(--ds-color-text);
+  cursor: pointer;
+}
+
+:where(input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--ds-color-accent);
+}
+
+:where(input, textarea)::placeholder {
+  color: var(--ds-color-text-muted);
+  opacity: 1;
+}
+
+:where(button:disabled, input:disabled, select:disabled, textarea:disabled) {
+  color: var(--ds-color-text-muted);
+  cursor: not-allowed;
+}
+
+/* :user-invalid waits for user interaction, so untouched required fields stay calm. */
+:where(input:user-invalid, select:user-invalid, textarea:user-invalid) {
+  border-color: var(--ds-color-critical);
+}
+
+:where(fieldset) {
+  margin-inline: 0;
+  padding: var(--ds-space-control-block) var(--ds-space-control-inline);
+  border: var(--ds-border-width) solid var(--ds-color-border);
+  border-radius: var(--ds-radius-control);
+}
+
+:where(legend) {
+  padding-inline: 0.25em;
+}

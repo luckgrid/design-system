@@ -85,8 +85,8 @@ default copyright applies: public visibility is not permission to copy, modify,
 or redistribute the source.
 
 Open-source licensing is intended but deliberately deferred until before the
-first supported release candidate. No `LICENSE` file is added by the `DS-E01.S1.T3`
-bootstrap.
+first supported release candidate. No `LICENSE` file is added by the
+`DS-E01.S1.T3` bootstrap.
 
 ## Provenance
 

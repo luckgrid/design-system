@@ -1,5 +1,6 @@
 # Compatibility class<TAB>repository-relative path[<TAB>scan-exempt:<reason>]
-# DS-E01.S1.T3 exposes no public-stable surface. Every bootstrap path is internal.
+# DS-E01.S1.T3 exposes no public-stable surface. Every bootstrap path is
+# internal.
 #
 # Every tracked file in this repository is classified here. Classification is a
 # compatibility statement, not a claim that a path is a build input.

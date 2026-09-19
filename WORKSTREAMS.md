@@ -31,9 +31,10 @@ bootstrapped against.
 ## Sequence note
 
 This repository was created ahead of its place in the program sequence. Creation
-belongs to `DS-E01.S1.T3`, which requires accepted `DS-E01.S1.T1`/`DS-E01.S1.T2` evidence as
-input; at creation time `DS-E01.S1.T1` was implemented but still review-pending and
-`DS-E01.S1.T2` had not started. The repository was created by owner decision regardless.
+belongs to `DS-E01.S1.T3`, which requires accepted `DS-E01.S1.T1`/`DS-E01.S1.T2`
+evidence as input; at creation time `DS-E01.S1.T1` was implemented but still
+review-pending and `DS-E01.S1.T2` had not started. The repository was created by
+owner decision regardless.
 
 That is recorded on the Build side, not papered over:
 

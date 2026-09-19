@@ -153,8 +153,3 @@ or redistribute the source.
 
 Open-source licensing is intended but deliberately deferred until before the
 first supported release candidate. No `LICENSE` file exists yet.
-
-## Project history
-
-Internal project provenance is isolated in [WORKSTREAMS.md](WORKSTREAMS.md).
-It is not required to understand, build, test, or consume this repository.

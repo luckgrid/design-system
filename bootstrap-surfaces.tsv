@@ -23,8 +23,8 @@
 # A third scan-exempt field opts only that exact file out of the private-reference
 # content scan and must state why. Directory-wide exemptions are rejected.
 # Exemptions exist only for files that must legitimately contain private-path
-# literals: the checker's marker constants, one negative fixture, the repository
-# descriptor's Git remote, and the deliberate provenance pointer.
+# literals: the checker's marker constants, one negative fixture, and the
+# repository descriptor's Git remote.
 internal	.github/workflows/quality.yml
 internal	.gitignore
 internal	CONTRIBUTING.md
@@ -32,7 +32,6 @@ internal	Cargo.lock
 internal	Cargo.toml
 internal	README.md
 internal	SECURITY.md
-internal	WORKSTREAMS.md	scan-exempt:planning-provenance-pointer
 internal	apps/README.md
 internal	apps/ds-check/Cargo.toml
 internal	apps/ds-check/README.md

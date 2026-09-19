@@ -51,8 +51,8 @@ A file is exempted from the privacy content scan only through an explicit
 `scan-exempt:<reason>` field in the inventory. Directory-wide exemptions are
 rejected so newly added files cannot silently inherit an exclusion. The only
 exempt files are the checker's marker-owning `src/main.rs`, the one negative
-fixture that literally carries a rejected private path, the repository
-descriptor containing its Git remote, and the deliberate provenance pointer.
+fixture that literally carries a rejected private path, and the repository
+descriptor containing its Git remote.
 The command reports how many files were
 scanned and how many were exempt, so its output never implies coverage it did
 not perform.

@@ -40,6 +40,9 @@ jobs:
       - name: CSS layer contract
         run: cargo +1.98.1 run --locked -p design-system-check -- layers exports.tsv bootstrap-surfaces.tsv fixtures/plain-html
 
+      - name: Token authority
+        run: cargo +1.98.1 run --locked -p design-system-check -- tokens tokens.tsv exports.tsv docs/architecture/tokens.md fixtures/plain-html tests/browser/probes
+
   browser:
     runs-on: ubuntu-latest
     defaults:

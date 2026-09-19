@@ -327,6 +327,15 @@ fn check_layer_name(context: &Context<'_>, name: &str) -> Result<(), String> {
         ));
     }
 
+    // A stylesheet that no import placed owns its layers directly. At its top
+    // level every layer must sit under the shared `ds` namespace, so Design
+    // System source cannot create a sibling of `ds` that outranks or undercuts it.
+    if context.owner.is_none() && context.top_level && name != "ds" && !name.starts_with("ds.") {
+        return Err(format!(
+            "stylesheet {file} declares top-level layer '{name}' outside the `ds` namespace"
+        ));
+    }
+
     if let Some(owner) = context.owner {
         let local = owner.rsplit('.').next().unwrap_or(owner);
         if name == owner || name == local {
@@ -393,7 +402,26 @@ fn reject_nested_directives(file: &str, body: &str) -> Result<(), String> {
             "stylesheet {file} nests @layer or @import inside a style rule; declare layers at stylesheet or group level"
         ));
     }
+    if has_unescaped_bang(body) {
+        return Err(format!(
+            "stylesheet {file} uses `!` in a declaration; Design System rules never use !important, so consumer layers win by order alone"
+        ));
+    }
     Ok(())
+}
+
+/// Whether the body has a `!` that is not an escaped code point. Outside strings
+/// a declaration only uses `!` for a priority such as `!important` (in any case,
+/// spacing, or escaped spelling), so every such `!` is rejected.
+fn has_unescaped_bang(body: &str) -> bool {
+    body.match_indices('!').any(|(index, _)| {
+        let escaping = body[..index]
+            .chars()
+            .rev()
+            .take_while(|c| *c == '\\')
+            .count();
+        escaping % 2 == 0
+    })
 }
 
 /// Blank the contents of quoted strings so literal text such as
@@ -1005,5 +1033,55 @@ mod tests {
         let error =
             claim(&mut graph, "ds.base", Path::new("/r/b.css"), root).expect_err("second owner");
         assert!(error.contains("two owning stylesheets"), "{error}");
+    }
+
+    #[test]
+    fn source_owned_layers_stay_under_the_ds_namespace() {
+        for source in [
+            "@layer app;",
+            "@layer dsx { a { color: red; } }",
+            "@layer ds, app;",
+            "@import \"./a.css\" layer(vendor);",
+        ] {
+            let error = if source.starts_with("@import") {
+                let context = Context {
+                    file: "inline.css",
+                    owner: None,
+                    layered: false,
+                    top_level: true,
+                };
+                check_layer_name(&context, "vendor").expect_err("import layer")
+            } else {
+                file_check(source, None).expect_err(source)
+            };
+            assert!(error.contains("outside the `ds` namespace"), "{error}");
+        }
+        file_check("@layer ds;", None).expect("the ds namespace itself");
+        file_check(
+            "@layer ds.tokens { @layer local { a { color: red; } } }",
+            None,
+        )
+        .expect("nested local layer inside a ds layer");
+        file_check("@layer local { a { color: red; } }", Some("ds.tokens"))
+            .expect("import-owned sub-layer");
+    }
+
+    #[test]
+    fn important_declarations_are_rejected() {
+        for body in [
+            "color: red !important;",
+            "color: red ! important;",
+            "color: red !IMPORTANT;",
+            "color: red !imp\\ortant;",
+        ] {
+            let source = format!("@layer ds.base {{ a {{ {body} }} }}");
+            let error = file_check(&source, None).expect_err(body);
+            assert!(error.contains("!important"), "{error}");
+        }
+        file_check(
+            "@layer ds.base { a { content: \"!important\"; } .a\\! { color: red; } }",
+            None,
+        )
+        .expect("a quoted or escaped `!` is not a priority");
     }
 }

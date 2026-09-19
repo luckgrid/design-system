@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod css;
+mod tokens;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
@@ -9,7 +10,7 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
-const ALLOWED_ROOTS: [&str; 17] = [
+const ALLOWED_ROOTS: [&str; 18] = [
     ".github",
     ".gitignore",
     "apps",
@@ -27,6 +28,7 @@ const ALLOWED_ROOTS: [&str; 17] = [
     "design-system.descriptor.toml",
     "exports.tsv",
     "tests",
+    "tokens.tsv",
 ];
 
 /// The only compatibility class a CSS export may carry until a reviewed contract
@@ -94,7 +96,7 @@ struct Export {
     path: PathBuf,
 }
 
-const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>";
+const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...";
 
 fn run(args: &[String]) -> Result<String, String> {
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
@@ -108,6 +110,18 @@ fn run(args: &[String]) -> Result<String, String> {
             Path::new(manifest),
             Path::new(fixture),
         ),
+        [command, inventory, exports, document, consumers @ ..]
+            if command == "tokens" && !consumers.is_empty() =>
+        {
+            let consumers: Vec<PathBuf> = consumers.iter().map(PathBuf::from).collect();
+            run_tokens(
+                &root,
+                Path::new(inventory),
+                Path::new(exports),
+                Path::new(document),
+                &consumers,
+            )
+        }
         _ => Err(USAGE.to_owned()),
     }
 }
@@ -663,6 +677,83 @@ plain fixture {} loads only declared exports and its consumer stylesheet",
         reached.len(),
         owned.len(),
         fixture.display()
+    ))
+}
+
+/// Validate the token authority reached from the declared exports against the
+/// `tokens.tsv` inventory, the public token document, and the consumer
+/// stylesheets that map into it.
+fn run_tokens(
+    root: &Path,
+    inventory: &Path,
+    exports_file: &Path,
+    document: &Path,
+    consumers: &[PathBuf],
+) -> Result<String, String> {
+    validate_relative_path(inventory)?;
+    validate_relative_path(exports_file)?;
+    validate_relative_path(document)?;
+    let root = canonical(root, "repository root")?;
+
+    let inventory_text = fs::read_to_string(root.join(inventory))
+        .map_err(|error| format!("read token inventory {}: {error}", inventory.display()))?;
+    let rows = tokens::parse_inventory(&inventory_text)?;
+
+    let exports_text = fs::read_to_string(root.join(exports_file))
+        .map_err(|error| format!("read exports {}: {error}", exports_file.display()))?;
+    let mut reached = BTreeSet::new();
+    for export in parse_exports(&exports_text)? {
+        let graph = css::validate_graph(&root, &export.path, Path::new(STYLES_ROOT))?;
+        reached.extend(graph.stylesheets);
+    }
+    let mut stylesheets = Vec::new();
+    for file in &reached {
+        let source = fs::read_to_string(file)
+            .map_err(|error| format!("read stylesheet {}: {error}", file.display()))?;
+        stylesheets.push((relative_to(&root, file).display().to_string(), source));
+    }
+    let summary = tokens::validate_authority(&stylesheets, &rows)?;
+
+    let document_text = fs::read_to_string(root.join(document))
+        .map_err(|error| format!("read token document {}: {error}", document.display()))?;
+    tokens::validate_document(&document_text, &rows)
+        .map_err(|error| format!("{}: {error}", document.display()))?;
+
+    let tracked = tracked_files(&root)?;
+    let mut consumer_files = 0;
+    let mut mapped = 0;
+    for directory in consumers {
+        validate_relative_path(directory)?;
+        let prefix = root.join(directory);
+        for file in tracked.iter().filter(|file| {
+            file.starts_with(&prefix)
+                && file.extension().is_some_and(|extension| extension == "css")
+        }) {
+            let shown = relative_to(&root, file).display().to_string();
+            let source = fs::read_to_string(file)
+                .map_err(|error| format!("read consumer stylesheet {shown}: {error}"))?;
+            mapped += tokens::validate_consumer(&shown, &source, &rows)?;
+            consumer_files += 1;
+        }
+    }
+    if consumer_files == 0 {
+        return Err("no tracked consumer stylesheet was found to check".to_owned());
+    }
+
+    Ok(format!(
+        "validated {} token(s) from {} stylesheet(s): {} internal reference value(s) \
+({} fluid), {} public-preview semantic role(s) ({} light/dark pair(s)); \
+token document {} names every public role and no internal value; \
+{} consumer stylesheet(s) assign {} public role(s) and no internal value",
+        rows.len(),
+        stylesheets.len(),
+        summary.reference,
+        summary.fluid,
+        summary.semantic,
+        summary.scheme_pairs,
+        document.display(),
+        consumer_files,
+        mapped
     ))
 }
 

@@ -20,6 +20,11 @@ export const PUBLISHED_STYLESHEETS = [
   "/packages/styles/tokens/reference.css",
   "/packages/styles/tokens/semantic.css",
   "/packages/styles/tokens/theme.css",
+  "/packages/styles/base.css",
+  "/packages/styles/base/document.css",
+  "/packages/styles/base/content.css",
+  "/packages/styles/base/forms.css",
+  "/packages/styles/base/interactive.css",
 ];
 
 // Every test fails on any non-2xx response, failed request, console error, or

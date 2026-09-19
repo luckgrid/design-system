@@ -64,6 +64,9 @@ const THEME_SHEET = "/packages/styles/tokens/theme.css";
 async function resolve(page, requests) {
   return page.evaluate((items) => {
     const host = document.createElement("div");
+    // A fixed font size keeps font-relative roles (the `ch` measure) independent
+    // of the classless base's fluid body text, so "fixed" means viewport-fixed.
+    host.style.fontSize = "16px";
     document.body.append(host);
     const results = items.map(({ property, value, scheme, outer }) => {
       const parent = document.createElement("div");
@@ -109,8 +112,9 @@ test.describe("token authority", () => {
 
   test("declared tokens are exactly the inventory, on :root, in their tier's layer", async ({ page }) => {
     // The theme stylesheet sets only color-scheme; theme.spec.mjs covers it.
+    // The classless base declares no token; base.spec.mjs covers it.
     const rules = (await publishedRules(page, CORE_EXPORT)).filter(
-      (rule) => rule.sheet !== THEME_SHEET,
+      (rule) => rule.sheet.startsWith("/packages/styles/tokens/") && rule.sheet !== THEME_SHEET,
     );
     const declared = [];
     for (const rule of rules) {

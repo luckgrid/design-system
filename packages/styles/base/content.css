@@ -1,0 +1,147 @@
+/*
+ * Content defaults: headings, text flow, links, lists, quotes, code, media,
+ * figures, and tables.
+ */
+:where(h1, h2, h3, h4, h5, h6) {
+  margin-block: var(--ds-space-flow) 0.5em;
+  font-family: var(--ds-font-heading);
+  font-weight: var(--ds-weight-heading);
+  line-height: var(--ds-leading-heading);
+  text-wrap: balance;
+}
+
+:where(h1) {
+  font-size: var(--ds-text-heading-1);
+}
+
+:where(h2) {
+  font-size: var(--ds-text-heading-2);
+}
+
+:where(h3) {
+  font-size: var(--ds-text-heading-3);
+}
+
+:where(h4) {
+  font-size: var(--ds-text-heading-4);
+}
+
+:where(h5) {
+  font-size: var(--ds-text-heading-5);
+}
+
+:where(h6) {
+  font-size: var(--ds-text-heading-6);
+}
+
+/* Block flow: one trailing gap between blocks, from the flow role. */
+:where(p, ul, ol, dl, blockquote, pre, figure, table, details, fieldset) {
+  margin-block: 0 var(--ds-space-flow);
+}
+
+/*
+ * Links. The underline is the non-colour cue: link text and body text differ
+ * by colour alone at 3.89:1 (light) and 2.22:1 (dark), so the underline stays
+ * in every state rather than appearing only on hover.
+ */
+:where(a:any-link) {
+  color: var(--ds-color-accent);
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.0625em;
+  text-underline-offset: 0.15em;
+}
+
+:where(a:any-link:hover) {
+  text-decoration-thickness: 0.125em;
+}
+
+:where(strong, b, dt, th, legend) {
+  font-weight: var(--ds-weight-strong);
+}
+
+:where(small) {
+  font-size: var(--ds-text-small);
+}
+
+:where(mark) {
+  background-color: var(--ds-color-highlight);
+  color: var(--ds-color-text);
+}
+
+:where(blockquote) {
+  margin-inline: 0;
+  padding-inline-start: 1em;
+  border-inline-start: var(--ds-border-width) solid var(--ds-color-border);
+}
+
+:where(hr) {
+  block-size: 0;
+  margin-block: var(--ds-space-flow);
+  border: 0;
+  border-block-start: var(--ds-border-width) solid var(--ds-color-border);
+  color: inherit;
+}
+
+:where(code, kbd, samp, pre) {
+  font-family: var(--ds-font-code);
+  font-size: 0.875em;
+}
+
+:where(code, kbd, samp) {
+  padding-inline: 0.25em;
+  border-radius: var(--ds-radius-control);
+  background-color: var(--ds-color-surface);
+}
+
+/* Long lines scroll inside the block instead of widening the page. */
+:where(pre) {
+  overflow-x: auto;
+  padding: var(--ds-space-control-block) var(--ds-space-control-inline);
+  border-radius: var(--ds-radius-control);
+  background-color: var(--ds-color-surface);
+}
+
+:where(pre code) {
+  padding: 0;
+  font-size: inherit;
+  background-color: transparent;
+}
+
+:where(img) {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+:where(svg) {
+  max-inline-size: 100%;
+}
+
+:where(figure) {
+  margin-inline: 0;
+}
+
+:where(figcaption) {
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-text-small);
+}
+
+/*
+ * Tables. Wide tables are not wrapped or re-displayed: changing a table's
+ * display can remove its semantics, so horizontal scrolling for wide data is a
+ * layout decision left to the consumer (see base.md).
+ */
+:where(table) {
+  border-collapse: collapse;
+}
+
+:where(caption) {
+  padding-block-end: 0.5em;
+  text-align: start;
+}
+
+:where(th, td) {
+  padding: var(--ds-space-control-block) var(--ds-space-control-inline);
+  border-block-end: var(--ds-border-width) solid var(--ds-color-border);
+  text-align: start;
+  vertical-align: top;
+}

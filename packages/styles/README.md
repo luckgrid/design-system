@@ -23,4 +23,10 @@ default follows the user's preference, and the `data-ds-scheme` hook on
 `<html>` selects light or dark. Its default and hook are classified in
 `theme.tsv`. See [`docs/architecture/theme.md`](/docs/architecture/theme.md).
 
+`base.css` and `base/` are the classless semantic base in `ds.base`: one module
+per group (document, content, forms, interactive), zero-specificity `:where()`
+selectors, and values bound to the semantic roles. The owned subjects and the
+exclusions are classified in `base.tsv`. See
+[`docs/architecture/base.md`](/docs/architecture/base.md).
+
 Do not copy Luna CSS here wholesale.

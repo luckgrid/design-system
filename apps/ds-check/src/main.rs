@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+mod base;
 mod css;
 mod theme;
 mod tokens;
@@ -11,10 +12,11 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
-const ALLOWED_ROOTS: [&str; 19] = [
+const ALLOWED_ROOTS: [&str; 20] = [
     ".github",
     ".gitignore",
     "apps",
+    "base.tsv",
     "packages",
     "fixtures",
     "docs",
@@ -98,7 +100,7 @@ struct Export {
     path: PathBuf,
 }
 
-const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...";
+const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>";
 
 fn run(args: &[String]) -> Result<String, String> {
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
@@ -136,6 +138,13 @@ fn run(args: &[String]) -> Result<String, String> {
                 &consumers,
             )
         }
+        [command, inventory, exports, document, fixture] if command == "base" => run_base(
+            &root,
+            Path::new(inventory),
+            Path::new(exports),
+            Path::new(document),
+            Path::new(fixture),
+        ),
         _ => Err(USAGE.to_owned()),
     }
 }
@@ -846,6 +855,69 @@ theme document {} states the default rule and the hook behavior table and names 
     ))
 }
 
+/// Validate the classless base reached from the declared exports against the
+/// `base.tsv` inventory, the public base document, and the plain fixture.
+fn run_base(
+    root: &Path,
+    inventory: &Path,
+    exports_file: &Path,
+    document: &Path,
+    fixture: &Path,
+) -> Result<String, String> {
+    validate_relative_path(inventory)?;
+    validate_relative_path(exports_file)?;
+    validate_relative_path(document)?;
+    validate_relative_path(fixture)?;
+    let root = canonical(root, "repository root")?;
+
+    let inventory_text = fs::read_to_string(root.join(inventory))
+        .map_err(|error| format!("read base inventory {}: {error}", inventory.display()))?;
+    let manifest = base::parse_manifest(&inventory_text)?;
+
+    let exports_text = fs::read_to_string(root.join(exports_file))
+        .map_err(|error| format!("read exports {}: {error}", exports_file.display()))?;
+    let mut reached = BTreeSet::new();
+    for export in parse_exports(&exports_text)? {
+        let graph = css::validate_graph(&root, &export.path, Path::new(STYLES_ROOT))?;
+        reached.extend(graph.stylesheets);
+    }
+    let mut stylesheets = Vec::new();
+    for file in &reached {
+        let source = fs::read_to_string(file)
+            .map_err(|error| format!("read stylesheet {}: {error}", file.display()))?;
+        stylesheets.push((relative_to(&root, file).display().to_string(), source));
+    }
+    let summary = base::validate_stylesheets(&stylesheets, &manifest)?;
+
+    let document_text = fs::read_to_string(root.join(document))
+        .map_err(|error| format!("read base document {}: {error}", document.display()))?;
+    base::validate_document(&document_text, &manifest)
+        .map_err(|error| format!("{}: {error}", document.display()))?;
+
+    let index = root.join(fixture).join("index.html");
+    let html = fs::read_to_string(&index)
+        .map_err(|error| format!("read plain fixture {}: {error}", index.display()))?;
+    let covered = base::validate_fixture(&html, &manifest)
+        .map_err(|error| format!("{}: {error}", fixture.display()))?;
+
+    Ok(format!(
+        "validated classless base from {}: {} module(s), {} rule(s), {} declaration(s); \
+{} owned subject(s) and {} exclusion(s) in {}; every selector is one zero-specificity :where() \
+with no class, id, data-*, or role hook, and every value binds to a public semantic role, a relative unit, or a keyword; \
+base document {} lists every owned subject and exclusion; plain fixture {} covers {} owned element or attribute subject(s)",
+        base::BASE_ENTRY,
+        summary.modules,
+        summary.rules,
+        summary.declarations,
+        manifest.owned.len(),
+        manifest.excluded.len(),
+        inventory.display(),
+        document.display(),
+        fixture.display(),
+        covered
+    ))
+}
+
 fn parse_exports(text: &str) -> Result<Vec<Export>, String> {
     let mut exports: Vec<Export> = Vec::new();
 
@@ -979,6 +1051,11 @@ fn validate_fixture_links(html: &str, exports: &[Export]) -> Result<(), String> 
     for (position, href) in hrefs.iter().enumerate() {
         if *href == FIXTURE_CONSUMER_STYLESHEET {
             consumer = Some(position);
+            continue;
+        }
+        // A same-document fragment link, such as the classless base's inline
+        // links, loads nothing. Anything else must be a declared export.
+        if href.starts_with('#') {
             continue;
         }
         let declared = href
@@ -1241,6 +1318,22 @@ mod tests {
     }
 
     #[test]
+    fn repository_base_contract_passes() {
+        let output = run_base(
+            &repository_root(),
+            Path::new("base.tsv"),
+            Path::new("exports.tsv"),
+            Path::new("docs/architecture/base.md"),
+            Path::new("fixtures/plain-html"),
+        )
+        .expect("repository base contract");
+        assert!(
+            output.starts_with("validated classless base from packages/styles/base.css"),
+            "{output}"
+        );
+    }
+
+    #[test]
     fn exports_reject_unearned_or_internal_classes() {
         let stable = parse_exports("public-stable\tcore.css\tpackages/styles/index.css")
             .expect_err("public-stable export");
@@ -1299,6 +1392,27 @@ mod tests {
 
         let inline = r#"<link href="/packages/styles/index.css"><style>a{}</style><link href="./consumer.css">"#;
         assert!(validate_fixture_links(inline, &exports).is_err());
+
+        // In-page fragment links load nothing and are allowed; any other
+        // relative or absolute target still fails.
+        let fragment = r##"<link href="/packages/styles/index.css"><link href="./consumer.css"><a href="#text">x</a>"##;
+        validate_fixture_links(fragment, &exports).expect("fragment link");
+        for target in [
+            "./other.css",
+            "other.css",
+            "/#x",
+            "?#x",
+            "https://example.test/#x",
+        ] {
+            let html = format!(
+                r#"<link href="/packages/styles/index.css"><link href="./consumer.css"><a href="{target}">x</a>"#
+            );
+            let error = validate_fixture_links(&html, &exports).expect_err(target);
+            assert!(
+                error.contains("neither a declared export"),
+                "{target}: {error}"
+            );
+        }
     }
 
     /// Directory surfaces are walked from Git's tracked-file set, so the walk and

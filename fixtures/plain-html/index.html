@@ -10,8 +10,125 @@
   <body>
     <main>
       <h1>Plain consumer fixture</h1>
-      <p>This page loads only the declared Design System export and its own consumer stylesheet.</p>
-      <button type="button">Native button</button>
+      <p>This page loads only the declared Design System export and its own consumer stylesheet. It uses no class, no wrapper, and no script. The <a href="#text">text section</a> links inside a sentence, and <strong>strong</strong>, <b>bold</b>, <small>small</small>, and <mark>marked</mark> text sit inline.</p>
+
+      <h2 id="text">Text</h2>
+      <p>Press <kbd>Tab</kbd> to move focus. The command printed <samp>ok</samp>, and the stylesheet sets <code>color-scheme</code>.</p>
+      <p>A long unbroken word and address must wrap instead of widening the page: Pneumonoultramicroscopicsilicovolcanoconiosispneumonoultramicroscopicsilicovolcanoconiosis and <a href="#a-very-long-fragment-identifier-that-keeps-going-without-any-natural-break-point-at-all">#a-very-long-fragment-identifier-that-keeps-going-without-any-natural-break-point-at-all</a>.</p>
+      <p dir="rtl" lang="ar">نص من اليمين إلى اليسار مع <a href="#text">رابط</a> داخل الجملة.</p>
+      <h3>Heading level three</h3>
+      <h4>Heading level four</h4>
+      <h5>Heading level five</h5>
+      <h6>Heading level six</h6>
+      <blockquote>
+        <p>A quotation, set apart from the text around it.</p>
+      </blockquote>
+      <hr>
+
+      <h2>Lists</h2>
+      <ul>
+        <li>An unordered item</li>
+        <li>Another unordered item</li>
+      </ul>
+      <ol>
+        <li>The first step</li>
+        <li>The second step</li>
+      </ol>
+      <dl>
+        <dt>Term</dt>
+        <dd>Its description.</dd>
+      </dl>
+
+      <h2>Code and media</h2>
+      <pre tabindex="0"><code>@layer app;
+@layer app { a { text-decoration-thickness: 2px; } } /* a long line that must scroll inside the block instead of widening the page */</code></pre>
+      <figure>
+        <img src="./figure.svg" alt="Three bars of increasing height" width="480" height="160">
+        <figcaption>An image figure with a caption.</figcaption>
+      </figure>
+      <p>An inline <svg role="img" aria-label="Circle" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="currentColor"></circle></svg> icon.</p>
+
+      <h2>Table</h2>
+      <table>
+        <caption>Release floor by engine</caption>
+        <thead>
+          <tr>
+            <th scope="col">Engine</th>
+            <th scope="col">Minimum</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Chromium</th>
+            <td>123</td>
+          </tr>
+          <tr>
+            <th scope="row">Firefox</th>
+            <td>121</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Form</h2>
+      <form action="#form-sent">
+        <fieldset>
+          <legend>Contact</legend>
+          <p>
+            <label for="name">Name</label>
+            <input id="name" name="name" type="text" required autocomplete="name">
+          </p>
+          <p>
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="you@example.test" autocomplete="email">
+          </p>
+          <p>
+            <label for="topic">Topic</label>
+            <select id="topic" name="topic">
+              <option>Question</option>
+              <option>Feedback</option>
+              <option>Other</option>
+            </select>
+          </p>
+          <p>
+            <label for="message">Message</label>
+            <textarea id="message" name="message" rows="3"></textarea>
+          </p>
+          <p>
+            <input id="updates" name="updates" type="checkbox">
+            <label for="updates">Send updates</label>
+          </p>
+          <p>
+            <input id="reply-email" name="reply" type="radio" value="email" checked>
+            <label for="reply-email">Reply by email</label>
+            <input id="reply-none" name="reply" type="radio" value="none">
+            <label for="reply-none">No reply</label>
+          </p>
+          <p>
+            <label for="disabled">Disabled</label>
+            <input id="disabled" name="disabled" type="text" value="Not editable" disabled>
+          </p>
+        </fieldset>
+        <button type="submit">Send</button>
+        <button type="button">Native button</button>
+        <input type="reset" value="Reset">
+      </form>
+
+      <h2>Disclosure</h2>
+      <details>
+        <summary>More detail</summary>
+        <p>Content revealed by the native disclosure.</p>
+      </details>
+      <button type="button" popovertarget="note">Show note</button>
+      <div id="note" popover>
+        <p>A popover note. Where Popover is unsupported, it stays visible here.</p>
+      </div>
+      <dialog id="dialog" aria-labelledby="dialog-title" open>
+        <h2 id="dialog-title">Dialog</h2>
+        <p>A native dialog.</p>
+        <form method="dialog">
+          <button>Close</button>
+        </form>
+      </dialog>
     </main>
   </body>
 </html>

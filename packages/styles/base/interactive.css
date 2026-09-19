@@ -1,0 +1,32 @@
+/*
+ * Native disclosure, dialog, and popover defaults.
+ *
+ * Behavior stays native: the browser owns opening, closing, focus movement, and
+ * Escape. The base only makes the surfaces match the document.
+ */
+:where(summary) {
+  cursor: pointer;
+}
+
+/* The ::backdrop keeps the user-agent scrim; no token models a scrim yet. */
+:where(dialog) {
+  padding: var(--ds-space-control-block) var(--ds-space-control-inline);
+  border: var(--ds-border-width) solid var(--ds-color-border);
+  border-radius: var(--ds-radius-control);
+  background-color: var(--ds-color-canvas);
+  color: var(--ds-color-text);
+}
+
+/*
+ * Popover is progressive at the accepted browser floor (Firefox 121 has no
+ * Popover API). These declarations only style the surface, so where popover is
+ * unsupported the element is ordinary inline content that still reads
+ * correctly. No positioning, display, or animation is set here.
+ */
+:where([popover]) {
+  padding: var(--ds-space-control-block) var(--ds-space-control-inline);
+  border: var(--ds-border-width) solid var(--ds-color-border);
+  border-radius: var(--ds-radius-control);
+  background-color: var(--ds-color-canvas);
+  color: var(--ds-color-text);
+}

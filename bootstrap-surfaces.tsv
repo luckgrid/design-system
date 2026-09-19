@@ -2,8 +2,9 @@
 # No surface is public-stable. The only public-preview file is the core CSS
 # entrypoint declared in exports.tsv; every other path is internal. The token
 # stylesheets are internal files: the custom properties they declare are
-# classified one by one in tokens.tsv, and the theme default and hook are
-# classified in theme.tsv.
+# classified one by one in tokens.tsv, the theme default and hook are
+# classified in theme.tsv, and the classless base subjects are classified in
+# base.tsv.
 #
 # Every tracked file in this repository is classified here exactly once.
 # Duplicate paths, dot-segment aliases, a directory row that overlaps another
@@ -31,12 +32,14 @@ internal	README.md
 internal	SECURITY.md
 internal	WORKSTREAMS.md	scan-exempt:planning-provenance-pointer
 internal	apps/ds-check/Cargo.toml
+internal	apps/ds-check/src/base.rs
 internal	apps/ds-check/src/css.rs
 internal	apps/ds-check/src/main.rs	scan-exempt:checker-owns-the-marker-constants
 internal	apps/ds-check/src/theme.rs
 internal	apps/ds-check/src/tokens.rs
 internal	bootstrap-surfaces.tsv
 internal	design-system.descriptor.toml	scan-exempt:planning-provenance-metadata
+internal	docs/architecture/base.md
 internal	docs/architecture/bootstrap.md
 internal	docs/architecture/css-entrypoint.md
 internal	docs/architecture/theme.md
@@ -73,8 +76,14 @@ internal	fixtures/brand-theme/brand.css
 internal	fixtures/brand-theme/index.html
 internal	fixtures/plain-html/README.md
 internal	fixtures/plain-html/consumer.css
+internal	fixtures/plain-html/figure.svg
 internal	fixtures/plain-html/index.html
 internal	packages/styles/README.md
+internal	packages/styles/base.css
+internal	packages/styles/base/content.css
+internal	packages/styles/base/document.css
+internal	packages/styles/base/forms.css
+internal	packages/styles/base/interactive.css
 public-preview	packages/styles/index.css
 internal	packages/styles/tokens.css
 internal	packages/styles/tokens/reference.css
@@ -84,12 +93,15 @@ internal	rust-toolchain.toml
 internal	tests/browser/package-lock.json
 internal	tests/browser/package.json
 internal	tests/browser/playwright.config.mjs
+internal	tests/browser/probes/base-override.css
+internal	tests/browser/probes/base-unlayered.css
 internal	tests/browser/probes/blank.html
 internal	tests/browser/probes/brand-mapping.css
 internal	tests/browser/probes/consumer-layer.css
 internal	tests/browser/probes/consumer-unlayered.css
 internal	tests/browser/probes/ds-layers-reversed.css
 internal	tests/browser/server.mjs
+internal	tests/browser/specs/base.spec.mjs
 internal	tests/browser/specs/cascade.spec.mjs
 internal	tests/browser/specs/consumer-fixture.spec.mjs
 internal	tests/browser/specs/entrypoint.spec.mjs
@@ -97,5 +109,6 @@ internal	tests/browser/specs/layer-ownership.spec.mjs
 internal	tests/browser/specs/support.mjs
 internal	tests/browser/specs/theme.spec.mjs
 internal	tests/browser/specs/tokens.spec.mjs
+internal	base.tsv
 internal	theme.tsv
 internal	tokens.tsv

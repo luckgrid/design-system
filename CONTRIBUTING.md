@@ -52,13 +52,6 @@ npx playwright test
 
 A browser check that is skipped or cannot run is not a pass.
 
-## Program references
-
-Use the complete program identifier when durable documentation refers to a story
-or task, for example `DS-E01.S1.T3`. Prefer the durable task/story name when it
-reads more clearly. Do not use bare references such as `T3`, `S2.T1`, or `S2`
-outside a table or list whose parent identifier is explicit in the same entry.
-
 ## Pull requests
 
 Keep changes bounded and explain compatibility impact for any surface that is
@@ -73,9 +66,8 @@ declares, or a public role's name, meaning, value type, or alias relationship
 are compatibility changes and must say so. So are changes to a base default or
 to a layout hook or its documented contract, and to the public hook vocabulary
 and scoping boundary in `docs/architecture/hooks.md`. Reference tokens (`--ds-ref-*`) are
-internal. Other files in
-`packages/styles/` stay `internal` until an owning DS-E01 task accepts a public
-contract for them.
+internal. Other files in `packages/styles/` stay `internal` until a reviewed
+source change defines and tests a public contract for them.
 
 For vulnerabilities, follow [SECURITY.md](SECURITY.md) rather than publishing
 sensitive details in an issue.

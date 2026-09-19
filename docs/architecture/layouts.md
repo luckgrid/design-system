@@ -90,20 +90,16 @@ Use it for collections of like items: cards, galleries, and feature lists. It
 is not a page grid. A 12-column page grid with named areas is page
 composition and stays with the consumer.
 
-## Multi-consumer rationale
+## Selection rationale
 
 A layout is promoted only when a reusable need exists beyond one page
 arrangement.
 
-| Layout | Named needs |
+| Layout | Reusable need |
 |---|---|
-| stack | Luckgrid.net uses its own stack hook in shared components (collection pager, showcase content) and in navigation; Luna builds the same vertical rhythm ad hoc inside its landmark and article styles; this repository's own fixtures need vertical rhythm in regions, cards, and forms |
-| cluster | Luckgrid.net uses its own cluster hook in five templates (post collections, article pages, post metadata, the post index, showcase content); Luna builds the same wrapping row ad hoc for article tags and footer links; tag, metadata, and button groups recur in every content site |
-| grid | Luckgrid.net uses a column-count grid hook in four templates, including card collections; Luna's section lists use a gapped grid for catalog, taxonomy, and term lists; card and gallery collections recur in every content site. Only the intrinsic collection grid is promoted, not the 12-column page grid either consumer uses for its page shell |
-
-Both evidence consumers share an author. µWiki is the named candidate for a
-materially unlike consumer; the release review re-checks these contracts
-against it.
+| stack | vertical rhythm recurs in regions, cards, forms, navigation, and long-form content |
+| cluster | wrapping inline groups recur for tags, metadata, actions, and navigation links |
+| grid | intrinsic collections recur for cards, galleries, catalogs, and feature lists; page grids and named areas remain consumer composition |
 
 ## Browser support
 
@@ -164,10 +160,10 @@ one with its disposition and a reason code. None is a backlog commitment.
 
 | Candidate | Disposition | Reason |
 |---|---|---|
-| `page-shell` | consumer | Luna's and Luckgrid.net's body/landmark shells (flex-column `header`/`main`/`footer`, full-height body, sticky header) are page composition. No Design System rule selects a landmark; a consumer may put a layout hook on one |
-| `article-layout` | consumer | Luna's article and collection layouts (named areas, sidebar panel, sticky offsets) are one product's page arrangement |
+| `page-shell` | consumer | body and landmark shells, viewport filling, and sticky headers are page composition. No Design System rule selects a landmark; a consumer may put a layout hook on one |
+| `article-layout` | consumer | named areas, sidebar panels, and sticky offsets are page arrangement |
 | `column-grid` | consumer | the 12- and 16-column page grids with spans are a page-template framework, which this contract excludes |
-| `scroll-timeline` | consumer | Luna's and Luckgrid.net's scroll-driven page effects are product behavior, not layout |
+| `scroll-timeline` | consumer | scroll-driven page effects are product behavior, not layout |
 | `center` | deferred | a measure-bounded centered column; the only consumer hook for it is unused |
 | `sidebar` | deferred | no consumer uses a reusable sidebar-and-content layout outside page shells |
 | `switcher` | deferred | no consumer evidence |
@@ -175,7 +171,7 @@ one with its disposition and a reason code. None is a backlog commitment.
 | `frame` | deferred | no consumer evidence for an aspect-ratio frame layout |
 | `reel` | deferred | no consumer uses a horizontal scrolling reel; scroll snap is progressive |
 | `container` | deferred | a hook that only establishes a size container has no consumer use; containment is a consumer decision until a promoted module needs it |
-| `flex-switch` | rejected | Luckgrid.net's column-to-row container switch has one use, and the cluster and grid already adapt to their space |
+| `flex-switch` | rejected | cluster and grid already adapt to their available space |
 | `footer-reorder` | rejected | moving footer navigation with `order` separates visual order from source and keyboard order |
 
 ## Accessibility notes

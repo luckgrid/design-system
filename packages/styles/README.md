@@ -49,4 +49,5 @@ layout also reaches its direct children. No module uses `@scope`, and no rule
 tests a `data-*` attribute other than `data-ds-scheme`. See
 [`docs/architecture/hooks.md`](/docs/architecture/hooks.md).
 
-Do not copy Luna CSS here wholesale.
+Do not copy consumer-specific CSS here wholesale. Shared source must express a
+portable contract and remain independently testable.

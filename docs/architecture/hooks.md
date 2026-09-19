@@ -4,7 +4,7 @@ Status: **public-preview**. This page states the Design System's public hook
 vocabulary and the scoping boundary of every module that has a hook: the
 layouts in [`layouts.md`](layouts.md), the primitives in
 [`primitives.md`](primitives.md), and the theme attribute in
-[`theme.md`](theme.md). It was settled by DS-E01.S3.T3.
+[`theme.md`](theme.md).
 
 A hook is the markup a consumer writes to opt an element into a Design System
 contract. Everything else is internal: the sub-layers, the exact declarations,
@@ -180,8 +180,8 @@ reviewed public-preview change. `ds-check hooks` fails when:
   that is not a hook, puts two primitives on one element, or puts a layout
   hook on a UI primitive.
 
-The fixture check reads markup lexically. A character reference in a class
-name, or a hook inside `<template>`, is not decoded (DS-E01.S3.T6).
+The fixture check reads markup lexically. It does not decode a character
+reference in a class name or inspect a hook inside `<template>`.
 
 The browser suite (`tests/browser/specs/scoping.spec.mjs`) checks the boundary
 in Chromium, Firefox, and WebKit on `fixtures/scoping`:

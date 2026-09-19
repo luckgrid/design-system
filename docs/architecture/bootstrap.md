@@ -8,9 +8,8 @@ boundaries; it is not a runtime requirement for CSS consumers.
 
 ## Current bootstrap surfaces
 
-The compatibility inventory is `bootstrap-surfaces.tsv`. At `DS-E01.S1.T3` every
-listed surface was `internal`. The only `public-preview` surface now is the CSS
-entrypoint declared in `exports.tsv`, and there is still no `public-stable`
+The compatibility inventory is `bootstrap-surfaces.tsv`. The CSS entrypoint
+declared in `exports.tsv` is `public-preview`; there is no `public-stable`
 surface.
 
 Every tracked path in this repository is classified there, and the checker
@@ -23,9 +22,6 @@ position; it does not claim a path is a build input.
 The frontend source root is `packages/styles/`. Its first supported CSS
 entrypoint and cascade contract are described in
 [`css-entrypoint.md`](css-entrypoint.md) and checked by `ds-check layers`.
-Revision-pinned internal implementation evidence may live under
-`resources/evidence/`; it remains privacy-scanned, compatibility-classified,
-and outside the published CSS artifact.
 
 ## Contributor check
 
@@ -55,9 +51,9 @@ A file is exempted from the privacy content scan only through an explicit
 `scan-exempt:<reason>` field in the inventory. Directory-wide exemptions are
 rejected so newly added files cannot silently inherit an exclusion. The only
 exempt files are the checker's marker-owning `src/main.rs`, the one negative
-fixture that literally carries a rejected private path, and the two deliberate
-planning-provenance pointers (`WORKSTREAMS.md`,
-`design-system.descriptor.toml`). The command reports how many files were
+fixture that literally carries a rejected private path, the repository
+descriptor containing its Git remote, and the deliberate provenance pointer.
+The command reports how many files were
 scanned and how many were exempt, so its output never implies coverage it did
 not perform.
 
@@ -70,9 +66,10 @@ incomplete-inventory, and non-lint-inheriting cases.
 ## Release premise
 
 There is no supported release at bootstrap. The workspace version is `0.0.0` and
-product maturity is experimental. A later DS-E01 candidate may use an immutable
-source tag plus GitHub release/archive after the portable frontend contract and
-assurance work are accepted. Registry publication remains evidence-driven.
+product maturity is experimental. A future release candidate may use an
+immutable source tag plus a GitHub release/archive after the portable frontend
+contract and assurance work are accepted. Registry publication remains
+evidence-driven.
 
 The repository is intentionally unlicensed until a license is selected before
 the first supported release candidate.

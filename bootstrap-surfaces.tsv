@@ -23,8 +23,8 @@
 # A third scan-exempt field opts only that exact file out of the private-reference
 # content scan and must state why. Directory-wide exemptions are rejected.
 # Exemptions exist only for files that must legitimately contain private-path
-# literals: the checker's marker constants, one negative fixture, and the two
-# deliberate planning-provenance pointers.
+# literals: the checker's marker constants, one negative fixture, the repository
+# descriptor's Git remote, and the deliberate provenance pointer.
 internal	.github/workflows/quality.yml
 internal	.gitignore
 internal	CONTRIBUTING.md
@@ -33,7 +33,9 @@ internal	Cargo.toml
 internal	README.md
 internal	SECURITY.md
 internal	WORKSTREAMS.md	scan-exempt:planning-provenance-pointer
+internal	apps/README.md
 internal	apps/ds-check/Cargo.toml
+internal	apps/ds-check/README.md
 internal	apps/ds-check/src/base.rs
 internal	apps/ds-check/src/css.rs
 internal	apps/ds-check/src/hooks.rs
@@ -43,17 +45,19 @@ internal	apps/ds-check/src/main.rs	scan-exempt:checker-owns-the-marker-constants
 internal	apps/ds-check/src/theme.rs
 internal	apps/ds-check/src/tokens.rs
 internal	bootstrap-surfaces.tsv
-internal	design-system.descriptor.toml	scan-exempt:planning-provenance-metadata
+internal	design-system.descriptor.toml	scan-exempt:repository-remote-metadata
+internal	docs/README.md
+internal	docs/architecture/README.md
 internal	docs/architecture/base.md
 internal	docs/architecture/bootstrap.md
 internal	docs/architecture/css-entrypoint.md
 internal	docs/architecture/hooks.md
 internal	docs/architecture/layouts.md
-internal	docs/architecture/migration-comparison.md
 internal	docs/architecture/primitives.md
 internal	docs/architecture/theme.md
 internal	docs/architecture/tokens.md
 internal	exports.tsv
+internal	fixtures/README.md
 internal	fixtures/bootstrap-boundary/accepted-directory.tsv
 internal	fixtures/bootstrap-boundary/accepted.tsv
 internal	fixtures/bootstrap-boundary/member-lints-inheriting.toml
@@ -98,7 +102,7 @@ internal	fixtures/plain-html/figure.svg
 internal	fixtures/plain-html/index.html
 internal	layouts.tsv
 internal	primitives.tsv
-internal	resources/evidence/e01-s3-t4-migration-comparison.md
+internal	packages/README.md
 internal	packages/styles/README.md
 internal	packages/styles/base.css
 internal	packages/styles/base/content.css
@@ -118,6 +122,8 @@ internal	packages/styles/tokens/reference.css
 internal	packages/styles/tokens/semantic.css
 internal	packages/styles/tokens/theme.css
 internal	rust-toolchain.toml
+internal	tests/README.md
+internal	tests/browser/README.md
 internal	tests/browser/package-lock.json
 internal	tests/browser/package.json
 internal	tests/browser/playwright.config.mjs

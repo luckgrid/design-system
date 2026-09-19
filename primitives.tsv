@@ -12,7 +12,7 @@
 #                   unlinked (an <a> without href)
 # The other rows record each candidate that was evaluated and not promoted:
 #   consumer  product-composition | product-identity
-#   deferred  native-pattern-refinement (DS-E01.S3.T5) | no-repeat-evidence
+#   deferred  native-pattern-refinement | no-repeat-evidence
 #   rejected  covered-by-promoted | covered-by-base | duplicates-native-state |
 #             conflicts-with-native-semantics
 # None is a backlog commitment. Contracts are in docs/architecture/primitives.md.

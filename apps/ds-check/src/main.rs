@@ -15,7 +15,7 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
-const ALLOWED_ROOTS: [&str; 23] = [
+const ALLOWED_ROOTS: [&str; 22] = [
     ".github",
     ".gitignore",
     "apps",
@@ -29,7 +29,6 @@ const ALLOWED_ROOTS: [&str; 23] = [
     "Cargo.lock",
     "rust-toolchain.toml",
     "README.md",
-    "resources",
     "CONTRIBUTING.md",
     "SECURITY.md",
     "WORKSTREAMS.md",
@@ -1384,14 +1383,6 @@ mod tests {
     #[test]
     fn rejected_outside_root_boundary_fixture_fails() {
         assert!(reject("rejected-outside-root.tsv").contains("outside permitted bootstrap roots"));
-    }
-
-    #[test]
-    fn evidence_resources_are_a_permitted_internal_root() {
-        validate_allowed_root(Path::new(
-            "resources/evidence/e01-s3-t4-migration-comparison.md",
-        ))
-        .expect("evidence resources root");
     }
 
     /// The privacy scan must reach a listed file, not merely the manifest rows.

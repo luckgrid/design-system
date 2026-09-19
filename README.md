@@ -61,10 +61,6 @@ The repository currently provides:
   it (a layout also reaches its direct children), with no `@scope` and every
   other `data-*` name reserved; see
   [`docs/architecture/hooks.md`](docs/architecture/hooks.md);
-- an exhaustive Luna/Luckgrid.net migration comparison that accounts for every
-  selected module, candidate family, token, hook, and native-platform handoff
-  without promoting new components; see
-  [`docs/architecture/migration-comparison.md`](docs/architecture/migration-comparison.md);
 - a brand theme fixture that maps one fictional consumer brand into the public
   semantic roles;
 - a plain HTML consumer fixture that loads only that export and exercises every
@@ -76,8 +72,18 @@ The repository currently provides:
 - explicit compatibility classification in `bootstrap-surfaces.tsv`;
 - least-privilege GitHub Actions quality checks.
 
-Components and utilities are not defined yet; their layers stay empty until
-later DS-E01 work fills them.
+Components and utilities are not defined yet; their layers stay empty until a
+reviewed source change defines their contracts.
+
+## Start here
+
+- [Architecture](docs/README.md) explains the CSS entrypoint, cascade, tokens,
+  theme, base styles, layouts, primitives, and public hooks.
+- [Styles source](packages/styles/README.md) maps those contracts to files.
+- [Examples and fixtures](fixtures/README.md) show framework-free integration
+  and the cases enforced by contributor checks.
+- [Browser tests](tests/README.md) describe the cross-engine assurance suite.
+- [Contributor tooling](apps/README.md) documents the repository-local checks.
 
 ## Contributor checks
 
@@ -148,8 +154,7 @@ or redistribute the source.
 Open-source licensing is intended but deliberately deferred until before the
 first supported release candidate. No `LICENSE` file exists yet.
 
-## Provenance
+## Project history
 
-Planning/specification provenance is described in
-[WORKSTREAMS.md](WORKSTREAMS.md). That file is human/process metadata only and
-is not required to build, test, or eventually consume this repository.
+Internal project provenance is isolated in [WORKSTREAMS.md](WORKSTREAMS.md).
+It is not required to understand, build, test, or consume this repository.

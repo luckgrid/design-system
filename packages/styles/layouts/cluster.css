@@ -1,0 +1,16 @@
+/*
+ * Cluster: direct children in a row that wraps onto new lines, in source order,
+ * separated by the control gaps. Children may shrink below their content width
+ * so long words wrap inside them instead of widening the page.
+ */
+:where(.ds-cluster) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-space-control-block) var(--ds-space-control-inline);
+}
+
+:where(.ds-cluster) > :where(*) {
+  margin-block: 0;
+  min-inline-size: 0;
+}

@@ -1,0 +1,14 @@
+/*
+ * Stack: direct children in one column, in source order, separated by the flow
+ * gap. Children lose their own block margins so the gap is the only spacing.
+ */
+:where(.ds-stack) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-flow);
+}
+
+:where(.ds-stack) > :where(*) {
+  margin-block: 0;
+  min-inline-size: 0;
+}

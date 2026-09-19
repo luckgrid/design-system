@@ -2,7 +2,8 @@
 # <class>	<group or owner>	<subject>
 # public-preview rows name each subject the base styles: an element, the
 # [popover] attribute, or the :focus-visible state. excluded rows name elements
-# the base deliberately leaves alone and the program task that owns them.
+# the base deliberately leaves alone and who owns them: a program task, or
+# `consumer` for page layout (landmarks and sectioning; see layouts.tsv).
 # ds-check base keeps base/*.css, this file, docs/architecture/base.md, and the
 # plain fixture in agreement.
 public-preview	document	html
@@ -48,15 +49,15 @@ public-preview	interactive	details
 public-preview	interactive	summary
 public-preview	interactive	dialog
 public-preview	interactive	[popover]
-excluded	DS-E01.S3.T1	header
-excluded	DS-E01.S3.T1	nav
-excluded	DS-E01.S3.T1	main
-excluded	DS-E01.S3.T1	aside
-excluded	DS-E01.S3.T1	footer
-excluded	DS-E01.S3.T1	section
-excluded	DS-E01.S3.T1	article
-excluded	DS-E01.S3.T1	search
-excluded	DS-E01.S3.T1	menu
+excluded	consumer	header
+excluded	consumer	nav
+excluded	consumer	main
+excluded	consumer	aside
+excluded	consumer	footer
+excluded	consumer	section
+excluded	consumer	article
+excluded	consumer	search
+excluded	consumer	menu
 excluded	DS-E01.S3.T5	progress
 excluded	DS-E01.S3.T5	meter
 excluded	DS-E01.S3.T5	video

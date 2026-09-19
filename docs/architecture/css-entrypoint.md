@@ -47,8 +47,9 @@ The entrypoint imports the token authority, `tokens.css`, into `ds.tokens`; see
 [`tokens.md`](tokens.md). `tokens.css` also imports the theme contract into the
 internal sub-layer `ds.tokens.theme`; see [`theme.md`](theme.md). The entrypoint
 then imports the classless base, `base.css`, into `ds.base`; see
-[`base.md`](base.md). The entrypoint itself holds only the order statement and
-those two imports. It adds no `ds.reset` layer; reset behavior belongs to the base. Adding a new
+[`base.md`](base.md). It then imports the layout primitives, `layouts.css`, into
+`ds.layouts`; see [`layouts.md`](layouts.md). The entrypoint itself holds only
+the order statement and those three imports. It adds no `ds.reset` layer; reset behavior belongs to the base. Adding a new
 `ds.*` child later is a reviewed public-preview change.
 
 ## Overriding

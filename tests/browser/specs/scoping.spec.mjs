@@ -27,11 +27,31 @@ const ATTRIBUTE_HOOKS = promoted("theme.tsv")
   .filter(([, kind]) => kind === "attribute")
   .map(([, , name]) => name);
 const LAYOUT_HOOKS = promoted("layouts.tsv").map(([, name]) => `ds-${name}`);
+/** Each variant hook with the primitive hook it refines. */
+const VARIANTS = promoted("primitives.tsv")
+  .filter(([, , kind]) => kind === "variant")
+  .map(([, name]) => [`ds-${name}`, `ds-${name.split("-")[0]}`]);
+
+/**
+ * The characters of `selector` that sit directly inside its outermost
+ * parentheses, with bracket and deeper contents dropped: for
+ * `:where(nav .x:not(.y))` that is `nav .x:not`.
+ */
+function firstLevel(selector) {
+  let depth = 0;
+  let found = "";
+  for (const character of selector) {
+    if (character === ")" || character === "]") depth -= 1;
+    if (depth === 1 && character !== "(" && character !== "[") found += character;
+    if (character === "(" || character === "[") depth += 1;
+  }
+  return found;
+}
 
 const FIXTURE = "/fixtures/scoping/index.html";
 
 /** Elements that only look like hooks: each must compute like its hookless copy. */
-const LOOKALIKES = ["#variant-alone", "#quiet-alone", "#prefixed", "#infixed", "#data-lookalike", "#ds-action", "#data-layout"];
+const LOOKALIKES = ["#variant-alone", "#quiet-alone", "#icon-alone", "#prefixed", "#infixed", "#data-lookalike", "#ds-action", "#data-layout"];
 
 /**
  * Elements inside hooked or lookalike markup that no hook reaches, each with a
@@ -180,6 +200,7 @@ test.describe("scoping", () => {
 
     const rules = await publishedRules(page, CORE_EXPORT);
     let hooked = 0;
+    let attributeHooked = 0;
     for (const rule of rules) {
       const classes = [...rule.selector.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map(([, name]) => name);
       const attributes = [...rule.selector.matchAll(/\[\s*([\w-]+)/g)].map(([, name]) => name.toLowerCase());
@@ -189,11 +210,25 @@ test.describe("scoping", () => {
       for (const name of attributes.filter((name) => name.startsWith("data-"))) {
         expect(ATTRIBUTE_HOOKS, `${rule.selector} tests only the theme attribute`).toContain(name);
       }
+      const themed = attributes.some((name) => ATTRIBUTE_HOOKS.includes(name));
+      if (classes.length === 0 && !themed) {
+        continue;
+      }
+      expect(rule.selector, "no :has() beside a hook").not.toContain(":has(");
       if (classes.length === 0) {
+        // The theme attribute sits on the root element and reaches nothing else.
+        attributeHooked += 1;
+        expect(rule.selector, "the theme attribute is on :root").toMatch(/^:root\[/);
+        expect(rule.selector, "no combinator beside the theme attribute").not.toMatch(/\]\s*[\s>+~]\s*\S/);
+        expect(rule.layer, rule.selector).toMatch(/^ds\.tokens\./);
         continue;
       }
       hooked += 1;
-      expect(rule.selector, "no :has() beside a hook").not.toContain(":has(");
+      for (const [variant, primitive] of VARIANTS) {
+        if (classes.includes(variant)) {
+          expect(classes, `${rule.selector}: ${variant} sits with ${primitive}`).toContain(primitive);
+        }
+      }
       // Strip the one reach a layout has, then no top-level combinator may remain.
       const layoutChild = /^:where\(\.(ds-[a-z]+)\) > :where\(\*\)$/.exec(rule.selector);
       if (layoutChild) {
@@ -206,12 +241,15 @@ test.describe("scoping", () => {
           if (character === ")" || character === "]") depth -= 1;
           if (depth === 0) topLevel += character;
         }
-        // One :where() anchored at the hooked element: no top-level combinator.
+        // One :where() anchored at the hooked element: no top-level combinator,
+        // and no combinator or alternative inside it either.
         expect(topLevel.trim(), rule.selector).toBe(":where)");
+        expect(firstLevel(rule.selector), rule.selector).not.toMatch(/[\s>+~,]/);
       }
       expect(rule.layer, rule.selector).toMatch(/^ds\.(layouts|primitives)\.[a-z]+$/);
     }
     expect(hooked).toBe(15);
+    expect(attributeHooked).toBeGreaterThan(0);
   });
 
   for (const scheme of ["light", "dark"]) {

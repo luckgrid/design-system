@@ -16,7 +16,7 @@ The page shows:
 - hooks nested inside each other: a stacked surface that holds a grid of
   surfaces, which hold a cluster of actions, and a stack whose grandchildren
   keep their own margins;
-- lookalike markup that must stay unstyled: variant classes without their
+- lookalike markup that must stay unstyled: the three variant classes without their
   primitive, classes that contain `ds-action`, `data-*` attributes that name a
   component, a layout, or a slot, and an element whose id is `ds-action`;
 - consumer overrides that select only consumer classes, including a class on a

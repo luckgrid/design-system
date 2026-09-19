@@ -21,8 +21,12 @@ element that carries the hook:
 - a layout rule also reaches the hooked element's direct children, as
   `:where(.ds-<layout>) > :where(*)`, and nothing deeper.
 
-No hooked rule depends on an ancestor, a sibling, or a descendant. None uses
-`:has()`, and none hides a combinator inside `:where()`, `:is()`, or `:not()`.
+No hooked rule depends on an ancestor, a sibling, or a descendant. It tests
+only the hooked element's own state (`:hover`, `:disabled`, `:any-link`, an
+attribute) and, for the theme, `:root`. None uses `:has()`, a structural or
+`:focus-within` pseudo-class, or a shadow-tree selector. None negates a hook
+or offers an alternative without it, and none hides a combinator inside
+`:where()`, `:is()`, or `:not()`.
 So a hook styles the same way wherever it sits. It cannot reach into
 consumer markup it does not own. Consumer markup that only looks like a hook,
 such as a variant class without its primitive's class, a `data-*` attribute, or
@@ -144,9 +148,9 @@ child wins over it.
 
 | Feature | Disposition |
 |---|---|
-| `:where()` | required; supported far below the floor |
-| `:not()` with a selector list | required for the current state; supported below the floor |
-| the `i` attribute-selector flag | required for the current state; supported far below the floor |
+| `:where()` | required; Chromium 88, Firefox 78, Safari 14 |
+| `:not()` with a selector list | required for the current state; Chromium 88, Firefox 84, Safari 9 |
+| the `i` attribute-selector flag | required for the current state; Chromium 49, Firefox 47, Safari 9 |
 | `@scope` | not used; progressive at the floor |
 
 ## Classification and checks
@@ -157,20 +161,35 @@ reviewed public-preview change. `ds-check hooks` fails when:
 - a Design System stylesheet reached from `exports.tsv` selects a class that is
   not a public hook, in any spelling;
 - a rule tests a `data-*` attribute other than the theme hook;
-- a hooked selector puts a hook anywhere but its first compound, uses `:has()`,
-  hides a combinator inside a pseudo-class argument, or reaches past the hooked
-  element other than a layout's `> :where(*)`;
+- a hooked selector, read as written (the whitespace that ends an escape is
+  not collapsed), does any of these:
+  - puts a class or attribute hook anywhere but its first compound;
+  - negates a hook inside `:not()`;
+  - offers an alternative without the hook in `:is()` or `:where()`;
+  - hides a combinator inside a pseudo-class argument;
+  - uses a pseudo-class other than `:where()`, `:is()`, `:not()`, `:hover`,
+    `:disabled`, `:any-link`, and `:root` (so no `:has()`, structural,
+    `:focus-within`, or shadow-tree selector);
+  - tests the theme attribute away from `:root`;
+  - reaches past the hooked element other than a layout's `> :where(*)`;
 - any stylesheet uses `@scope` or a nested rule, or spells an at-rule with an
   escape;
 - this document's hook table does not list exactly the inventories' hooks, each
   with its kind, owner, and class;
 - the scoping fixture has no `main`, misses a class hook, uses a `ds-` class
-  that is not a hook, or puts a layout hook on a UI primitive.
+  that is not a hook, puts two primitives on one element, or puts a layout
+  hook on a UI primitive.
+
+The fixture check reads markup lexically. A character reference in a class
+name, or a hook inside `<template>`, is not decoded (DS-E01.S3.T6).
 
 The browser suite (`tests/browser/specs/scoping.spec.mjs`) checks the boundary
 in Chromium, Firefox, and WebKit on `fixtures/scoping`:
 
 - hooks nested inside each other keep their own contracts;
+- every published hooked rule is one anchored `:where()` (or a layout's child
+  rule, or the theme attribute on `:root`), with no combinator or alternative
+  inside it, and every variant sits with its primitive;
 - lookalike markup gets no Design System styling;
 - a layout does not reach its grandchildren;
 - the current state follows the ARIA values;

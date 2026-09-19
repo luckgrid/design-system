@@ -684,7 +684,7 @@ pub(crate) fn start_tags(html: &str) -> Result<Vec<Tag>, String> {
         if html[index..].starts_with("!--") {
             let end = html[index..]
                 .find("-->")
-                .ok_or("the primitives fixture has an unterminated comment")?;
+                .ok_or("the fixture has an unterminated comment")?;
             index += end + 3;
             continue;
         }
@@ -708,10 +708,7 @@ pub(crate) fn start_tags(html: &str) -> Result<Vec<Tag>, String> {
             }
             match bytes.get(index) {
                 None => {
-                    return Err(format!(
-                        "the primitives fixture has an unterminated <{}>",
-                        tag.name
-                    ));
+                    return Err(format!("the fixture has an unterminated <{}>", tag.name));
                 }
                 Some(b'>') => {
                     index += 1;
@@ -742,7 +739,7 @@ pub(crate) fn start_tags(html: &str) -> Result<Vec<Tag>, String> {
                 match bytes.get(index) {
                     Some(quote @ (b'"' | b'\'')) => {
                         let close = html[index + 1..].find(*quote as char).ok_or_else(|| {
-                            format!("the primitives fixture has an unterminated `{name}` value")
+                            format!("the fixture has an unterminated `{name}` value")
                         })?;
                         let value = html[index + 1..index + 1 + close].to_owned();
                         index += close + 2;
@@ -750,9 +747,7 @@ pub(crate) fn start_tags(html: &str) -> Result<Vec<Tag>, String> {
                     }
                     _ => {
                         if name == "class" {
-                            return Err(
-                                "the primitives fixture has an unquoted class attribute".to_owned()
-                            );
+                            return Err("the fixture has an unquoted class attribute".to_owned());
                         }
                         let start = index;
                         while bytes

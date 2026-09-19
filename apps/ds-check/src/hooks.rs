@@ -170,13 +170,16 @@ fn check_nodes(
                 check_nodes(file, children, vocabulary, summary)?;
             }
             Node::Style { prelude, body } => {
+                // Messages show the selector on one line, but the check reads the
+                // raw text: the whitespace after a hex escape is part of the
+                // escape, so collapsing it first could hide a combinator.
                 let selector = prelude.split_whitespace().collect::<Vec<_>>().join(" ");
                 if body.contains('{') {
                     return Err(format!(
                         "{file} `{selector}` nests a rule; a nested selector's reach cannot be bounded by its hook"
                     ));
                 }
-                if check_selector(&selector, vocabulary)
+                if check_selector(prelude.trim(), vocabulary)
                     .map_err(|error| format!("{file} `{selector}`: {error}"))?
                 {
                     summary.hooked += 1;
@@ -205,20 +208,58 @@ selector is the scoping boundary"
     Ok(())
 }
 
-/// Check one selector list. Returns whether it selects a public hook.
+/// Pseudo-classes a hooked selector may use. Each tests the hooked element's
+/// own state or position as the document root; none depends on an ancestor,
+/// a sibling, a descendant, or a shadow tree. Anything else fails closed.
+const HOOKED_PSEUDOS: [&str; 7] = [
+    "where", "is", "not", "hover", "disabled", "any-link", "root",
+];
+
+/// Selector pseudo-classes whose argument is a list of alternatives.
+const ALTERNATIVE_PSEUDOS: [&str; 5] = ["is", "where", "matches", "-webkit-any", "-moz-any"];
+
+/// Check one selector list, as written. Returns whether it selects a public
+/// hook.
 ///
 /// Every class is a declared hook and every `data-*` attribute is a declared
 /// attribute hook. A hooked complex selector holds its hooks in its first
-/// compound, which is the element that carries them, and uses no `:has()`.
-/// It has no second compound, except that a layout reaches its direct
-/// children with `> :where(*)`.
+/// compound, which is the element that carries them:
+///
+/// - no hook is negated, and no alternative list offers a branch without it;
+/// - no combinator hides inside a pseudo-class argument;
+/// - it uses only the state pseudo-classes in `HOOKED_PSEUDOS`, so no `:has()`,
+///   structural, focus-within, or shadow-tree selector;
+/// - the theme attribute sits on `:root`;
+/// - it has no second compound, except that a layout reaches its direct
+///   children with `> :where(*)`.
 fn check_selector(selector: &str, vocabulary: &Vocabulary) -> Result<bool, String> {
     let list = theme::scan_selector(selector)?;
     let combinators = top_level_combinators(selector)?;
     if combinators.len() != list.len() {
         return Err("cannot pair its combinators with its selectors".to_owned());
     }
-    let nested = nested_combinators(selector)?;
+    let arguments = pseudo_arguments(selector)?;
+    let mut nested = false;
+    let mut alternatives = false;
+    let mut negated = false;
+    for (name, argument) in &arguments {
+        let branches = top_level_combinators(argument)?;
+        nested |= branches.iter().any(|combinators| !combinators.is_empty());
+        if ALTERNATIVE_PSEUDOS.contains(&name.as_str()) {
+            alternatives |= branches.len() > 1;
+        }
+        if name == "not" {
+            negated |= theme::scan_selector(argument)?
+                .iter()
+                .flatten()
+                .flatten()
+                .any(|simple| match simple {
+                    Simple::Class(_) => true,
+                    Simple::Attribute(attribute) => attribute.starts_with("data-"),
+                    _ => false,
+                });
+        }
+    }
     let mut hooked = false;
     for (complex, combinators) in list.iter().zip(&combinators) {
         let mut hooks = Vec::new();
@@ -241,12 +282,18 @@ at the element that carries the hook"
                         hooks.push(kind);
                     }
                     Simple::Attribute(name) if name.starts_with("data-") => {
-                        if !vocabulary.attributes.contains_key(name) {
+                        let Some(hook) = vocabulary.attributes.get(name) else {
                             return Err(format!(
                                 "tests `{name}`; every `data-*` name other than the theme attribute is reserved"
                             ));
+                        };
+                        if index > 0 {
+                            return Err(format!(
+                                "reaches attribute hook `{name}` through another element; a hooked rule is \
+anchored at the element that carries the hook"
+                            ));
                         }
-                        hooked = true;
+                        hooks.push(hook.kind);
                     }
                     _ => {}
                 }
@@ -256,6 +303,18 @@ at the element that carries the hook"
             continue;
         }
         hooked = true;
+        if negated {
+            return Err(
+                "negates a hook inside `:not()`, which selects every element without it".to_owned(),
+            );
+        }
+        if alternatives {
+            return Err(
+                "offers alternatives in `:is()` or `:where()` beside a hook; a branch without the hook \
+styles elements that do not carry it"
+                    .to_owned(),
+            );
+        }
         if nested {
             return Err(
                 "hides a combinator inside a pseudo-class argument, which reaches past the hooked element"
@@ -269,6 +328,21 @@ at the element that carries the hook"
             return Err(
                 "puts a hook beside `:has()`, which reaches past the hooked element".to_owned(),
             );
+        }
+        if let Some(pseudo) = complex.iter().flatten().find_map(|simple| match simple {
+            Simple::Pseudo(name) if !HOOKED_PSEUDOS.contains(&name.as_str()) => Some(name),
+            _ => None,
+        }) {
+            return Err(format!(
+                "uses `:{pseudo}` beside a hook; a hooked rule tests only the element's own state \
+({})",
+                HOOKED_PSEUDOS.map(|name| format!(":{name}")).join(", ")
+            ));
+        }
+        if hooks.contains(&THEME_ATTRIBUTE)
+            && !complex[0].contains(&Simple::Pseudo("root".to_owned()))
+        {
+            return Err("tests the theme attribute away from `:root`".to_owned());
         }
         match complex.as_slice() {
             [_] => {}
@@ -308,10 +382,11 @@ const SELECTOR_PSEUDOS: [&str; 9] = [
     "host-context",
 ];
 
-/// Whether any selector argument of a functional pseudo-class, at any depth,
-/// holds a combinator: `:where(nav .x)` or `:is(a > b)`.
-fn nested_combinators(selector: &str) -> Result<bool, String> {
+/// The argument of every functional selector pseudo-class, at any depth, with
+/// its lowercase name: `:where(nav .x)` gives `("where", "nav .x")`.
+fn pseudo_arguments(selector: &str) -> Result<Vec<(String, String)>, String> {
     let chars: Vec<char> = selector.chars().collect();
+    let mut found = Vec::new();
     let mut index = 0;
     let mut quote: Option<char> = None;
     let mut bracket = 0usize;
@@ -341,21 +416,32 @@ fn nested_combinators(selector: &str) -> Result<bool, String> {
                     .rev()
                     .collect();
                 let close = matching_paren(&chars, index)?;
-                if SELECTOR_PSEUDOS.contains(&name.to_ascii_lowercase().as_str()) {
+                let name = name.to_ascii_lowercase();
+                if SELECTOR_PSEUDOS.contains(&name.as_str()) {
                     let argument: String = chars[index + 1..close].iter().collect();
-                    if top_level_combinators(&argument)?
-                        .iter()
-                        .any(|combinators| !combinators.is_empty())
-                        || nested_combinators(&argument)?
-                    {
-                        return Ok(true);
-                    }
+                    found.extend(pseudo_arguments(&argument)?);
+                    found.push((name, argument));
                 }
                 index = close;
             }
             _ => {}
         }
         index += 1;
+    }
+    Ok(found)
+}
+
+/// Whether any selector argument of a functional pseudo-class, at any depth,
+/// holds a combinator: `:where(nav .x)` or `:is(a > b)`.
+#[cfg(test)]
+fn nested_combinators(selector: &str) -> Result<bool, String> {
+    for (_, argument) in pseudo_arguments(selector)? {
+        if top_level_combinators(&argument)?
+            .iter()
+            .any(|combinators| !combinators.is_empty())
+        {
+            return Ok(true);
+        }
     }
     Ok(false)
 }
@@ -532,8 +618,9 @@ fn backticked_one(cell: &str) -> Option<String> {
     (!inner.contains('`')).then(|| inner.to_owned())
 }
 
-/// The scoping fixture uses every class hook, no other `ds-` class, and never
-/// puts a layout hook on a UI primitive. Returns the number of hooked elements.
+/// The scoping fixture uses every class hook, no other `ds-` class, never puts
+/// two primitives on one element, and never puts a layout hook on a UI
+/// primitive. Returns the number of hooked elements.
 pub fn validate_fixture(html: &str, vocabulary: &Vocabulary) -> Result<usize, String> {
     let lower = html.to_ascii_lowercase();
     if !base::has_element(&lower, "main") {
@@ -562,6 +649,17 @@ pub fn validate_fixture(html: &str, vocabulary: &Vocabulary) -> Result<usize, St
             continue;
         }
         hooked += 1;
+        if kinds
+            .iter()
+            .filter(|kind| **kind == BASE_PRIMITIVE || **kind == UI_PRIMITIVE)
+            .count()
+            > 1
+        {
+            return Err(format!(
+                "the scoping fixture puts two primitives on one <{}>; nest them instead",
+                tag.name
+            ));
+        }
         if kinds.contains(&UI_PRIMITIVE) && kinds.contains(&LAYOUT) {
             return Err(format!(
                 "the scoping fixture puts a layout hook on a UI primitive <{}>; a UI primitive owns its \
@@ -751,6 +849,93 @@ public-preview\tattribute\tdata-ds-scheme\tlight dark\n",
         }
     }
 
+    /// S056-P2-1: each bypass goes through `validate_stylesheets`, raw
+    /// whitespace included, as the command reads it.
+    #[test]
+    fn rejects_s056_bypasses_through_the_whole_pipeline() {
+        for (rule, needle) in [
+            (
+                ":where(.ds-actio\\6e  :where(p)) { color: red; }",
+                "pseudo-class argument",
+            ),
+            (
+                ":where(.ds-actio\\6e \t:where(p)) { color: red; }",
+                "pseudo-class argument",
+            ),
+            (
+                ":where(.ds-actio\\6e\n\n:where(p)) { color: red; }",
+                "pseudo-class argument",
+            ),
+            (".ds-actio\\6e  p { color: red; }", "only a layout"),
+            (":where(:not(.ds-action)) { color: red; }", "negates a hook"),
+            (
+                ":where(p:not(.ds-surface)) { color: red; }",
+                "negates a hook",
+            ),
+            (
+                ":where(p:not(:is(.ds-surface))) { color: red; }",
+                "negates a hook",
+            ),
+            (
+                ":where(p:not([data-ds-scheme])) { color: red; }",
+                "negates a hook",
+            ),
+            (":is(.ds-surface, p) { color: red; }", "alternatives"),
+            (":where(.ds-surface, p) { color: red; }", "alternatives"),
+            (
+                ":where([data-ds-scheme]) :where(p) { color: red; }",
+                "away from `:root`",
+            ),
+            (
+                ":root[data-ds-scheme] :where(p) { color: red; }",
+                "only a layout",
+            ),
+            (
+                ":root[data-ds-scheme] > :where(*) { color: red; }",
+                "only a layout",
+            ),
+            (
+                ":where(p) :root[data-ds-scheme] { color: red; }",
+                "attribute hook",
+            ),
+            (
+                ":where(p[data-ds-scheme]) { color: red; }",
+                "away from `:root`",
+            ),
+            (
+                ":where(.ds-surface:first-child) { color: red; }",
+                "`:first-child`",
+            ),
+            (
+                ":where(.ds-surface:focus-within) { color: red; }",
+                "`:focus-within`",
+            ),
+            (
+                ":where(.ds-surface:host-context(nav)) { color: red; }",
+                "`:host-context`",
+            ),
+            (":where(.ds-surface)::part(x) { color: red; }", "`:part`"),
+            (
+                ":where(.ds-surface)::slotted(p) { color: red; }",
+                "`:slotted`",
+            ),
+        ] {
+            let error = sheet(rule).expect_err(rule);
+            assert!(error.contains(needle), "{rule}: {error}");
+        }
+        // Legitimate raw spellings still pass the whole pipeline.
+        for rule in [
+            ":where(.ds-\\73 urface) { color: red; }",
+            ":where(.ds-\\73\turface) { color: red; }",
+            ":where(.ds-\\000073urface) { color: red; }",
+            ":where(.ds-stack)\n>\n:where(*) { color: red; }",
+            ":root[data-ds-scheme~=\"dark\"] { color-scheme: dark; }",
+            ":where(.ds-action[aria-current]:not([aria-current=\"\"], [aria-current=\"false\" i])) { color: red; }",
+        ] {
+            sheet(rule).expect(rule);
+        }
+    }
+
     #[test]
     fn rejects_scope_and_nesting() {
         for (rule, needle) in [
@@ -864,6 +1049,13 @@ public-preview\tattribute\tdata-ds-scheme\tlight dark\n",
                     "class=\"ds-action ds-action-quiet ds-stack\"",
                 ),
                 "layout hook on a UI primitive",
+            ),
+            (
+                FIXTURE.replace(
+                    "class=\"ds-action ds-action-quiet\"",
+                    "class=\"ds-action ds-surface ds-action-quiet\"",
+                ),
+                "two primitives",
             ),
         ] {
             let error = validate_fixture(&bad, &vocabulary()).expect_err(&bad);

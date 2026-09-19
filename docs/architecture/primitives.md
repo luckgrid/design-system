@@ -145,7 +145,7 @@ The primitives need no feature beyond the accepted browser floor (Chromium
 | `:any-link`, `:disabled`, `:hover`, attribute selectors | required; supported far below the floor |
 | logical properties | required, as for the base |
 | size container queries | not used: neither primitive changes with its own size |
-| `:not()` with a selector list, the `i` attribute flag | required for the current state; supported below the floor |
+| `:not()` with a selector list, the `i` attribute flag | required for the current state; Chromium 88 / 49, Firefox 84 / 47, Safari 9 |
 | `@scope` | not used: a class hook under `:where()` needs no scoping, and `@scope` is only progressive at the floor (see [`hooks.md`](hooks.md)) |
 
 No primitive has a progressive or fallback path.

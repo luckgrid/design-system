@@ -176,6 +176,14 @@ fn reject_selector_comments(file: &str, source: &str) -> Result<(), String> {
             }
             continue;
         }
+        if character == '\\' {
+            // An escaped code point is part of an identifier, never a quote or
+            // comment opener; this matches the structural parser, which would
+            // otherwise see a comment this scan had skipped as string content.
+            segment_has_text = true;
+            index += 2;
+            continue;
+        }
         if character == '"' || character == '\'' {
             quote = Some(character);
             segment_has_text = true;
@@ -1344,6 +1352,9 @@ Rejects a `.dark` class.
             "p ::",
             ".d/* comment */ark p",
             ":r/* comment */oot",
+            ".x\\\", .d/* comment */ark p",
+            ".x\\', :r/* comment */oot",
+            ".x\\\" { } .y { content: \"a\"; } .d/* comment */ark p",
         ] {
             let source = format!("@layer app {{ {selector} {{ color: red; }} }}");
             let error = validate_consumer("c.css", &source, &manifest).expect_err(selector);

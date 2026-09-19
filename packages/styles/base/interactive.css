@@ -8,6 +8,11 @@
   cursor: pointer;
 }
 
+/* The native `open` state keeps disclosure content clear of following flow. */
+:where(details[open]) {
+  padding-block-end: var(--ds-space-control-block);
+}
+
 /* The ::backdrop keeps the user-agent scrim; no token models a scrim yet. */
 :where(dialog) {
   padding: var(--ds-space-control-block) var(--ds-space-control-inline);

@@ -89,7 +89,7 @@ accepted floor (Chromium 109, Firefox 120, Safari 16.4).
 
 | Subject | Default |
 |---|---|
-| `details`, `summary` | a block gap for `details`; a pointer cursor on `summary`. The disclosure marker and toggling stay native |
+| `details`, `summary` | a block gap for `details`; a pointer cursor on `summary`; and token-bound trailing control space only while `details[open]`. The disclosure marker, keyboard toggling, and no-animation behavior stay native |
 | `dialog` | the canvas and text roles with a border, radius, and control padding. Opening, focus movement, Escape, and the `::backdrop` scrim stay native |
 | `[popover]` | the same surface as `dialog`, and nothing else. See below |
 
@@ -98,6 +98,11 @@ browser floor (Firefox 121). The base styles only the surface: no position,
 `display`, or animation. Where Popover is unsupported, the element is ordinary
 visible content in the page and still reads correctly. Do not put content that
 users must reach behind a popover alone.
+
+The `details[open]` spacing is a compatible visual refinement of the existing
+`details`/`summary` public-preview subjects, not a new hook, token, component,
+or API. Closed disclosures retain their ordinary flow spacing. No transition or
+reduced-motion rule is needed because the base introduces no motion.
 
 ## Exclusions
 

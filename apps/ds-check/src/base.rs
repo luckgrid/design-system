@@ -37,7 +37,7 @@ const PSEUDO_CLASSES: [&str; 9] = [
     "where",
 ];
 /// Native attributes a base selector may test.
-const ATTRIBUTES: [&str; 4] = ["type", "popover", "multiple", "size"];
+const ATTRIBUTES: [&str; 5] = ["type", "popover", "multiple", "size", "open"];
 /// Pseudo-elements that may follow a base `:where()`.
 const PSEUDO_ELEMENTS: [&str; 2] = ["placeholder", "file-selector-button"];
 /// Value functions a base declaration may call.
@@ -810,6 +810,7 @@ public-preview\tcontent\ta
 public-preview\tcontent\tpre
 public-preview\tcontent\tcode
 public-preview\tforms\tinput
+public-preview\tinteractive\tdetails
 public-preview\tinteractive\t[popover]
 excluded\tconsumer\tnav
 ";
@@ -827,8 +828,7 @@ excluded\tconsumer\tnav
 :where(pre) { overflow-x: auto; }
 :where(pre code) { padding: 0; }";
     const FORMS: &str = ":where(input:not([type=\"checkbox\"]))::placeholder { color: var(--ds-color-text-muted); }";
-    const INTERACTIVE: &str =
-        ":where([popover]) { border: var(--ds-border-width) solid var(--ds-color-border); }";
+    const INTERACTIVE: &str = ":where(details[open]) { padding-block-end: var(--ds-space-control-block); }\n:where([popover]) { border: var(--ds-border-width) solid var(--ds-color-border); }";
 
     fn manifest() -> Manifest {
         parse_manifest(MANIFEST).expect("manifest")
@@ -864,7 +864,7 @@ excluded\tconsumer\tnav
     fn accepts_a_conforming_base() {
         let summary = validate_stylesheets(&sheets(CONTENT), &manifest()).expect("base");
         assert_eq!(summary.modules, 4);
-        assert_eq!(summary.rules, 7);
+        assert_eq!(summary.rules, 8);
     }
 
     #[test]
@@ -927,6 +927,15 @@ excluded\tconsumer\tnav
             let error = with_rule(rule).expect_err(rule);
             assert!(error.contains(needle), "{rule}: {error}");
         }
+    }
+
+    #[test]
+    fn permits_the_native_open_attribute_only_on_an_owned_subject() {
+        let accepted = check_selector(":where(details[open])", &manifest()).expect("open state");
+        assert_eq!(accepted, ["details"]);
+
+        let error = check_selector(":where(nav[open])", &manifest()).expect_err("excluded subject");
+        assert!(error.contains("excluded"), "{error}");
     }
 
     #[test]
@@ -1073,7 +1082,7 @@ excluded\tconsumer\tnav
 
 ### interactive
 
-| `[popover]` | surface |
+| `details`, `[popover]` | native surface |
 
 ## Exclusions
 
@@ -1103,8 +1112,8 @@ excluded\tconsumer\tnav
     #[test]
     fn fixture_must_cover_owned_subjects() {
         let html = "<html><body><a href=\"#x\">x</a><pre><code>x</code></pre>\
-<input id=\"x\"><div popover id=\"p\">p</div></body></html>";
-        assert_eq!(validate_fixture(html, &manifest()), Ok(6));
+<input id=\"x\"><details><summary>x</summary></details><div popover id=\"p\">p</div></body></html>";
+        assert_eq!(validate_fixture(html, &manifest()), Ok(7));
         let error =
             validate_fixture(&html.replace("<pre>", "<div>"), &manifest()).expect_err("no pre");
         assert!(error.contains("`pre`"), "{error}");

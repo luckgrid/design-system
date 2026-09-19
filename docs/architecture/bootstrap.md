@@ -8,8 +8,8 @@ boundaries; it is not a runtime requirement for CSS consumers.
 
 ## Current bootstrap surfaces
 
-The compatibility inventory is `bootstrap-surfaces.tsv`. At T3 every listed
-surface was `internal`. The only `public-preview` surface now is the CSS
+The compatibility inventory is `bootstrap-surfaces.tsv`. At `DS-E01.S1.T3` every
+listed surface was `internal`. The only `public-preview` surface now is the CSS
 entrypoint declared in `exports.tsv`, and there is still no `public-stable`
 surface.
 
@@ -66,8 +66,8 @@ incomplete-inventory, and non-lint-inheriting cases.
 
 ## Release premise
 
-There is no supported release at bootstrap. The workspace version is `0.0.0`
-and product maturity is experimental. A later E01 candidate may use an immutable
+There is no supported release at bootstrap. The workspace version is `0.0.0` and
+product maturity is experimental. A later DS-E01 candidate may use an immutable
 source tag plus GitHub release/archive after the portable frontend contract and
 assurance work are accepted. Registry publication remains evidence-driven.
 

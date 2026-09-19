@@ -35,6 +35,13 @@ npx playwright test
 
 A browser check that is skipped or cannot run is not a pass.
 
+## Program references
+
+Use the complete program identifier when durable documentation refers to a story
+or task, for example `DS-E01.S1.T3`. Prefer the durable task/story name when it
+reads more clearly. Do not use bare references such as `T3`, `S2.T1`, or `S2`
+outside a table or list whose parent identifier is explicit in the same entry.
+
 ## Pull requests
 
 Keep changes bounded and explain compatibility impact for any surface that is
@@ -44,7 +51,7 @@ shared source without evidence from materially unlike consumers.
 The only supported CSS surface is the `public-preview` `core.css` entrypoint
 declared in `exports.tsv`. Changes to it, to its layer order, or to what
 `exports.tsv` declares are compatibility changes and must say so. Other files in
-`packages/styles/` stay `internal` until an owning E01 task accepts a public
+`packages/styles/` stay `internal` until an owning DS-E01 task accepts a public
 contract for them.
 
 For vulnerabilities, follow [SECURITY.md](SECURITY.md) rather than publishing

@@ -1,0 +1,29 @@
+/*
+ * Theme contract: which branch every light-dark() semantic role resolves.
+ *
+ * Imported by tokens.css into its `theme` sub-layer, after the semantic roles.
+ * The theme selects `color-scheme` and nothing else. It declares no custom
+ * property, so the token stylesheets stay the only token authority, and a brand
+ * theme stays an ordinary assignment of semantic roles from a consumer layer.
+ *
+ * Default: `color-scheme: light dark` follows the user's OS or browser
+ * preference. User-agent controls, scrollbars, and the canvas follow it too.
+ *
+ * Explicit: the one public hook is `data-ds-scheme` on the root element, with
+ * the values `light` and `dark`. Any other value, or no attribute, keeps the
+ * default. The hook sets `color-scheme` itself, so light-dark() roles and native
+ * controls change together.
+ *
+ * Every hook value and the default are classified in theme.tsv.
+ */
+:root {
+  color-scheme: light dark;
+}
+
+:root[data-ds-scheme="light"] {
+  color-scheme: light;
+}
+
+:root[data-ds-scheme="dark"] {
+  color-scheme: dark;
+}

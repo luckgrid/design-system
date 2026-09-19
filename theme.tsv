@@ -1,0 +1,19 @@
+# Theme contract inventory: <class><TAB><kind><TAB><name><TAB><values>
+#
+# The theme selects the color scheme that every light-dark() semantic role
+# resolves against. `ds-check theme` enforces that packages/styles/tokens/theme.css
+# implements exactly these rows, that no other Design System stylesheet sets
+# color-scheme, and that the theme declares no custom property.
+#
+# Kinds:
+#   default    the `color-scheme` value on :root when no hook value applies.
+#              `light dark` follows the user's OS or browser preference.
+#   attribute  the one public hook, an attribute on the root element. Each
+#              space-separated value selects that `color-scheme` explicitly.
+#              Any other value, or no attribute, keeps the default.
+#
+# Classes follow tokens.tsv: public-preview until a reviewed contract earns
+# public-stable.
+
+public-preview	default	color-scheme	light dark
+public-preview	attribute	data-ds-scheme	light dark

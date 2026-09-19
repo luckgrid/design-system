@@ -41,7 +41,10 @@ jobs:
         run: cargo +1.98.1 run --locked -p design-system-check -- layers exports.tsv bootstrap-surfaces.tsv fixtures/plain-html
 
       - name: Token authority
-        run: cargo +1.98.1 run --locked -p design-system-check -- tokens tokens.tsv exports.tsv docs/architecture/tokens.md fixtures/plain-html tests/browser/probes
+        run: cargo +1.98.1 run --locked -p design-system-check -- tokens tokens.tsv exports.tsv docs/architecture/tokens.md fixtures/plain-html fixtures/brand-theme tests/browser/probes
+
+      - name: Theme contract
+        run: cargo +1.98.1 run --locked -p design-system-check -- theme theme.tsv exports.tsv docs/architecture/theme.md fixtures tests/browser/probes
 
   browser:
     runs-on: ubuntu-latest

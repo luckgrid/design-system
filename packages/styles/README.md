@@ -18,4 +18,9 @@ stylesheet reached from an export.
 reference values are `internal`. See
 [`docs/architecture/tokens.md`](/docs/architecture/tokens.md).
 
+`tokens/theme.css` is the theme contract. It sets only `color-scheme`: the
+default follows the user's preference, and the `data-ds-scheme` hook on
+`<html>` selects light or dark. Its default and hook are classified in
+`theme.tsv`. See [`docs/architecture/theme.md`](/docs/architecture/theme.md).
+
 Do not copy Luna CSS here wholesale.

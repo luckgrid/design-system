@@ -44,8 +44,9 @@ rules:
 | anything nested below a `ds.*` child | `internal` | No compatibility promise. |
 
 The entrypoint imports the token authority, `tokens.css`, into `ds.tokens`; see
-[`tokens.md`](tokens.md). Later tasks populate the other layers with the theme
-contract and the classless base. The entrypoint itself holds only the order
+[`tokens.md`](tokens.md). `tokens.css` also imports the theme contract into the
+internal sub-layer `ds.tokens.theme`; see [`theme.md`](theme.md). A later task
+populates `ds.base` with the classless base. The entrypoint itself holds only the order
 statement and that import. It adds no `ds.reset` layer; reset behavior belongs to the base. Adding a new
 `ds.*` child later is a reviewed public-preview change.
 

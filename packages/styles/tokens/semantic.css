@@ -7,7 +7,7 @@
  * Color roles that model a light/dark pair use light-dark() over two reference
  * values. light-dark() resolves against the used `color-scheme` of the element
  * that consumes the role. This stylesheet does not set `color-scheme`; the
- * theme contract selects it.
+ * theme stylesheet (tokens/theme.css) selects it.
  *
  * Fixed roles are deliberately not fluid: border and focus geometry, minimum
  * target size, content measure, radius, line height, and weight keep one value

@@ -2,7 +2,8 @@
 # No surface is public-stable. The only public-preview file is the core CSS
 # entrypoint declared in exports.tsv; every other path is internal. The token
 # stylesheets are internal files: the custom properties they declare are
-# classified one by one in tokens.tsv.
+# classified one by one in tokens.tsv, and the theme default and hook are
+# classified in theme.tsv.
 #
 # Every tracked file in this repository is classified here exactly once.
 # Duplicate paths, dot-segment aliases, a directory row that overlaps another
@@ -32,11 +33,13 @@ internal	WORKSTREAMS.md	scan-exempt:planning-provenance-pointer
 internal	apps/ds-check/Cargo.toml
 internal	apps/ds-check/src/css.rs
 internal	apps/ds-check/src/main.rs	scan-exempt:checker-owns-the-marker-constants
+internal	apps/ds-check/src/theme.rs
 internal	apps/ds-check/src/tokens.rs
 internal	bootstrap-surfaces.tsv
 internal	design-system.descriptor.toml	scan-exempt:planning-provenance-metadata
 internal	docs/architecture/bootstrap.md
 internal	docs/architecture/css-entrypoint.md
+internal	docs/architecture/theme.md
 internal	docs/architecture/tokens.md
 internal	exports.tsv
 internal	fixtures/bootstrap-boundary/accepted-directory.tsv
@@ -65,6 +68,9 @@ internal	fixtures/layer-ownership/rejected-prefix-qualified/components.css
 internal	fixtures/layer-ownership/rejected-prefix-qualified/index.css
 internal	fixtures/layer-ownership/rejected-tailwind-directive/index.css
 internal	fixtures/layer-ownership/rejected-unlayered-rule/index.css
+internal	fixtures/brand-theme/README.md
+internal	fixtures/brand-theme/brand.css
+internal	fixtures/brand-theme/index.html
 internal	fixtures/plain-html/README.md
 internal	fixtures/plain-html/consumer.css
 internal	fixtures/plain-html/index.html
@@ -73,6 +79,7 @@ public-preview	packages/styles/index.css
 internal	packages/styles/tokens.css
 internal	packages/styles/tokens/reference.css
 internal	packages/styles/tokens/semantic.css
+internal	packages/styles/tokens/theme.css
 internal	rust-toolchain.toml
 internal	tests/browser/package-lock.json
 internal	tests/browser/package.json
@@ -88,5 +95,7 @@ internal	tests/browser/specs/consumer-fixture.spec.mjs
 internal	tests/browser/specs/entrypoint.spec.mjs
 internal	tests/browser/specs/layer-ownership.spec.mjs
 internal	tests/browser/specs/support.mjs
+internal	tests/browser/specs/theme.spec.mjs
 internal	tests/browser/specs/tokens.spec.mjs
+internal	theme.tsv
 internal	tokens.tsv

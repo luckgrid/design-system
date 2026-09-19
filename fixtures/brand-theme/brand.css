@@ -1,0 +1,61 @@
+/*
+ * Consumer-owned brand theme for a fictional product, "Tidewater".
+ *
+ * The brand keeps its own palette and font in its own `--tidewater-*` custom
+ * properties and maps them into public semantic roles from the consumer layer
+ * `app`, declared after `ds`. It overrides no `--ds-ref-*` value, uses no
+ * `!important`, and edits no Design System file.
+ *
+ * The brand's light/dark pairs are ordinary light-dark() assignments. It does
+ * not set `color-scheme`: the Design System default follows the user's
+ * preference, and `data-ds-scheme` on <html> selects light or dark explicitly.
+ */
+@layer app;
+
+@layer app {
+  :root {
+    --tidewater-sand-98: oklch(98% 0.012 85);
+    --tidewater-sand-92: oklch(92% 0.02 85);
+    --tidewater-slate-18: oklch(18% 0.02 240);
+    --tidewater-slate-26: oklch(26% 0.025 240);
+    --tidewater-slate-45: oklch(45% 0.03 240);
+    --tidewater-slate-75: oklch(75% 0.025 240);
+    --tidewater-slate-95: oklch(95% 0.01 240);
+    --tidewater-teal-42: oklch(42% 0.09 195);
+    --tidewater-teal-80: oklch(80% 0.1 195);
+    --tidewater-font: "Tidewater Grotesk", system-ui, sans-serif;
+
+    --ds-color-canvas: light-dark(var(--tidewater-sand-98), var(--tidewater-slate-18));
+    --ds-color-surface: light-dark(var(--tidewater-sand-92), var(--tidewater-slate-26));
+    --ds-color-text: light-dark(var(--tidewater-slate-18), var(--tidewater-slate-95));
+    --ds-color-text-muted: light-dark(var(--tidewater-slate-45), var(--tidewater-slate-75));
+    --ds-color-accent: light-dark(var(--tidewater-teal-42), var(--tidewater-teal-80));
+    --ds-color-on-accent: light-dark(var(--tidewater-sand-98), var(--tidewater-slate-18));
+    --ds-font-body: var(--tidewater-font);
+    --ds-radius-control: 0px;
+  }
+
+  body {
+    margin: 0;
+    padding: 2rem;
+    font-family: var(--ds-font-body);
+    background-color: var(--ds-color-canvas);
+    color: var(--ds-color-text);
+  }
+
+  .panel {
+    padding: 1rem;
+    background-color: var(--ds-color-surface);
+    border-radius: var(--ds-radius-control);
+  }
+
+  .cta {
+    background-color: var(--ds-color-accent);
+    color: var(--ds-color-on-accent);
+    border-radius: var(--ds-radius-control);
+  }
+
+  .note {
+    color: var(--ds-color-text-muted);
+  }
+}

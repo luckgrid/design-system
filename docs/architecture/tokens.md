@@ -56,10 +56,10 @@ The default values meet WCAG 2.2 AA contrast in both schemes:
 `light-dark()` picks its branch from the used `color-scheme` of the element that
 **consumes** the role, not of `:root`. Custom properties carry the unresolved
 function, so a subtree with a different `color-scheme` resolves the other branch.
-The token stylesheets do not set `color-scheme`: every role resolves its light
-branch until a theme or consumer sets `color-scheme` (for example
-`color-scheme: light dark`). The theme contract owns default and explicit scheme
-selection.
+The token stylesheets themselves do not set `color-scheme`. The theme stylesheet
+does: by default the roles follow the user's preference, and
+`data-ds-scheme="light"` or `"dark"` on `<html>` selects one explicitly. See the
+[theme document](theme.md).
 
 Forced-colors and high-contrast modes are a separate accessibility obligation.
 The light/dark pairs do not address them.
@@ -142,7 +142,8 @@ specificity is needed.
 - A mapping replaces a role's whole value, so the new value must keep the role's
   value type.
 - A brand's own light/dark pairs are ordinary `light-dark()` assignments. Brand
-  identity is not a `color-scheme`.
+  identity is not a `color-scheme`. The pairs follow the theme default and the
+  `data-ds-scheme` hook with no extra work; see the [theme document](theme.md).
 
 Map roles on `:root`. A role such as `--ds-color-focus` resolves its alias where
 it is declared, so assigning `--ds-color-accent` only on a descendant does not

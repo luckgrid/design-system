@@ -37,14 +37,14 @@ const PSEUDO_CLASSES: [&str; 9] = [
     "where",
 ];
 /// Native attributes a base selector may test.
-const ATTRIBUTES: [&str; 2] = ["type", "popover"];
+const ATTRIBUTES: [&str; 4] = ["type", "popover", "multiple", "size"];
 /// Pseudo-elements that may follow a base `:where()`.
 const PSEUDO_ELEMENTS: [&str; 2] = ["placeholder", "file-selector-button"];
 /// Value functions a base declaration may call.
 const FUNCTIONS: [&str; 4] = ["var", "calc", "min", "max"];
-/// Units a base value may use: glyph-relative lengths and percentages. Every
+/// Units a base value may use: font-relative lengths and percentages. Every
 /// other length comes from a semantic role.
-const UNITS: [&str; 3] = ["em", "ch", "%"];
+const UNITS: [&str; 4] = ["em", "ch", "lh", "%"];
 /// Keywords a base value may use. A named color is not a keyword here, so a
 /// color can only come from a role, `currentcolor`, or `transparent`.
 const KEYWORDS: [&str; 30] = [
@@ -331,7 +331,7 @@ fn check_selector(selector: &str, manifest: &Manifest) -> Result<Vec<String>, St
                     Simple::Attribute(name) if !ATTRIBUTES.contains(&name.as_str()) => {
                         return Err(format!(
                             "attribute `[{name}]`: only the native {} attributes are base hooks",
-                            ATTRIBUTES.join(" and ")
+                            ATTRIBUTES.join(", ")
                         ));
                     }
                     Simple::Pseudo(name) if !PSEUDO_CLASSES.contains(&name.as_str()) => {

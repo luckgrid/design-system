@@ -19,6 +19,16 @@
 }
 
 /*
+ * WebKit draws a single-line <select> natively and ignores its padding and
+ * min-block-size, so it would fall below the target size. An explicit block
+ * size of one line plus the control padding and border, never below the
+ * target, gives every engine at least its natural height.
+ */
+:where(select:not([multiple], [size])) {
+  block-size: max(var(--ds-size-target-min), calc(1lh + 2 * var(--ds-space-control-block) + 2 * var(--ds-border-width)));
+}
+
+/*
  * Buttons are neutral. A primary or branded action is a product role, so it
  * belongs to a primitive or component contract, not to every <button>.
  */

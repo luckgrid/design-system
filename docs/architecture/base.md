@@ -19,12 +19,13 @@ is unchanged.
 - **No product hooks.** Selectors use element names, native pseudo-classes
   (`:any-link`, `:hover`, `:visited`, `:focus-visible`, `:disabled`,
   `:user-invalid`, and the logical `:not()`, `:is()`, `:where()`), and the
-  native `type` and `popover` attributes. They use no class, id, `data-*`
-  attribute, or `role`, and they make no assumption about the page's wrappers.
+  native `type`, `popover`, `multiple`, and `size` attributes. They use no
+  class, id, `data-*` attribute, or `role`, and they make no assumption about
+  the page's wrappers.
 - **Values come from the token authority.** Colors, fonts, sizes, spacing,
   radius, and focus geometry come from the public `--ds-*` roles in
-  [`tokens.md`](tokens.md). Only glyph-relative offsets use `em`, `ch`, or `%`.
-  The base declares no custom property and reads no `--ds-ref-*` value.
+  [`tokens.md`](tokens.md). Only font-relative offsets use `em`, `ch`, `lh`, or
+  `%`. The base declares no custom property and reads no `--ds-ref-*` value.
 - **Native behavior stays native.** The base sets no transition or animation.
   It never removes an outline, and it keeps native control appearance.
 
@@ -77,12 +78,12 @@ role and a `not-allowed` cursor. `:user-invalid` fields take the critical border
 `:user-invalid` waits for user interaction, so an untouched required field is
 not flagged.
 
-**Known limit:** WebKit draws a single-line `<select>` with its native
-appearance at its own height and ignores `min-block-size`. There it measures
-about 27 CSS pixels. That meets the WCAG 2.5.8 minimum of 24, but not the
-`--ds-size-target-min` goal. A fixed `block-size` would clip the fluid text at
-its largest size, and changing `appearance` is a custom-control decision outside
-the base.
+WebKit draws a single-line `<select>` natively and ignores its padding and
+`min-block-size`, so it would measure 23 to 31 CSS pixels. Single-line selects
+therefore get an explicit block size: one line (`1lh`) plus the control padding
+and border, never below `--ds-size-target-min`. That keeps native appearance
+and gives every engine at least its natural height. `lh` is supported at the
+accepted floor (Chromium 109, Firefox 120, Safari 16.4).
 
 ### interactive
 
@@ -173,8 +174,8 @@ public-preview change. `ds-check base` fails when:
   spelling (escaped, spaced, or with a comment);
 - a selector styles an excluded element, or a subject `base.tsv` does not own,
   or an owned subject has no rule;
-- a value uses a color literal or named color, a unit other than `em`, `ch`, or
-  `%`, a `--ds-ref-*` reference, a non-Design-System `var()`, a `var()`
+- a value uses a color literal or named color, a unit other than `em`, `ch`,
+  `lh`, or `%`, a `--ds-ref-*` reference, a non-Design-System `var()`, a `var()`
   fallback, a string, or a function other than `var()`, `calc()`, `min()`, and
   `max()`;
 - a rule declares a custom property, `color-scheme`, a transition, or an

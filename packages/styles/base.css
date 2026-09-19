@@ -11,8 +11,9 @@
  *
  *   - each selector is one :where(...), optionally followed by a pseudo-element,
  *     so every base rule has zero specificity and any consumer rule wins;
- *   - selectors use element names, native pseudo-classes, and the native `type`
- *     and `popover` attributes only: no class, id, data-* or role hook;
+ *   - selectors use element names, native pseudo-classes, and the native
+ *     `type`, `popover`, `multiple`, and `size` attributes only: no class, id,
+ *     data-* or role hook;
  *   - values bind to public semantic roles (`--ds-*`), relative units, and
  *     keywords, so the token authority stays the only source of visual values;
  *   - no motion, no custom property, and no rule that removes focus indication.

@@ -315,28 +315,29 @@ test.describe("classless semantic base", () => {
     await expect(note).toBeHidden();
   });
 
-  test("controls meet the minimum target size", async ({ page, browserName }) => {
-    await openFixture(page, { preference: "light", hook: null });
-    await installHelpers(page);
-    const result = await page.evaluate(() => {
-      const target = Number.parseFloat(window.__role("--ds-size-target-min", "min-height"));
-      const controls = [
-        ...document.querySelectorAll("button, input[type=text], input[type=email], input[type=reset], select, textarea"),
-      ].filter((element) => element.checkVisibility());
-      return {
-        target,
-        heights: controls.map((element) => [element.outerHTML.slice(0, 50), element.getBoundingClientRect().height]),
-      };
+  // The fluid control padding and body text already clear the minimum on wide
+  // viewports, so the narrowest viewport is where min-block-size must bind.
+  for (const width of [320, 1280]) {
+    test(`controls meet the minimum target size at ${width} CSS pixels`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await openFixture(page, { preference: "light", hook: null });
+      await installHelpers(page);
+      const result = await page.evaluate(() => {
+        const target = Number.parseFloat(window.__role("--ds-size-target-min", "min-height"));
+        const controls = [
+          ...document.querySelectorAll("button, input[type=text], input[type=email], input[type=reset], select, textarea"),
+        ].filter((element) => element.checkVisibility());
+        return {
+          target,
+          heights: controls.map((element) => [element.outerHTML.slice(0, 50), element.getBoundingClientRect().height]),
+        };
+      });
+      expect(result.target).toBeGreaterThan(40);
+      for (const [label, height] of result.heights) {
+        expect(height, label).toBeGreaterThanOrEqual(result.target - 0.5);
+      }
     });
-    expect(result.target).toBeGreaterThan(40);
-    for (const [label, height] of result.heights) {
-      // WebKit draws a native single-line <select> at its own height and
-      // ignores min-block-size; the base keeps native appearance, so there it
-      // is held to the WCAG 2.5.8 minimum instead (S049-P3-1).
-      const minimum = browserName === "webkit" && label.startsWith("<select") ? 24 : result.target - 0.5;
-      expect(height, label).toBeGreaterThanOrEqual(minimum);
-    }
-  });
+  }
 
   test("the fixture reflows at 320 CSS pixels without horizontal page scrolling", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });

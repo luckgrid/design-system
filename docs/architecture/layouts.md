@@ -159,7 +159,7 @@ one with its disposition and a reason code. None is a backlog commitment.
 
 | Candidate | Disposition | Reason |
 |---|---|---|
-| `page-shell` | consumer | Luna's and Luckgrid.net's body/landmark shells (flex-column `header`/`main`/`footer`, full-height body, sticky header) are page composition. The landmarks stay unstyled by the base and by the layouts |
+| `page-shell` | consumer | Luna's and Luckgrid.net's body/landmark shells (flex-column `header`/`main`/`footer`, full-height body, sticky header) are page composition. No Design System rule selects a landmark; a consumer may put a layout hook on one |
 | `article-layout` | consumer | Luna's article and collection layouts (named areas, sidebar panel, sticky offsets) are one product's page arrangement |
 | `column-grid` | consumer | the 12- and 16-column page grids with spans are a page-template framework, which this contract excludes |
 | `scroll-timeline` | consumer | Luna's and Luckgrid.net's scroll-driven page effects are product behavior, not layout |

@@ -1,0 +1,14 @@
+/* Import-owned by ds.components: local sub-layer names stay unqualified. */
+@layer base, variants;
+
+@layer variants {
+  .probe {
+    color: rgb(0 0 255);
+  }
+}
+
+@layer base {
+  .probe {
+    color: rgb(255 0 0);
+  }
+}

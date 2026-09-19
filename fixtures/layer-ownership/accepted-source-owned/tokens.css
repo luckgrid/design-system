@@ -1,0 +1,6 @@
+/* Source-owned: this file places its own rules in ds.tokens exactly once. */
+@layer ds.tokens {
+  .probe {
+    color: rgb(0 128 0);
+  }
+}

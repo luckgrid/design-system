@@ -1,12 +1,15 @@
-# Styles source boundary
+# Styles source
 
-This directory is the authored shared styles source boundary for the Design
-System.
+This directory holds the authored shared styles source for the Design System.
 
-At the `DS-E01.S1.T3` bootstrap it contains **no supported Design System CSS
-entrypoint**. Its contents are classified `internal`. DS-E01.S2 owns the first
-portable CSS entrypoint, cascade/layer contract, token/theme surface, and
-classless base.
+`index.css` is the one supported CSS entrypoint. It is declared as the
+`core.css` export in `exports.tsv` and classified **`public-preview`**. See
+[`docs/architecture/css-entrypoint.md`](/docs/architecture/css-entrypoint.md)
+for the layer order, override pattern, and authoring rules.
 
-Do not copy Luna CSS here wholesale or treat this path as a supported consumer
-import merely because the directory exists.
+Everything else here is `internal`. A stylesheet becomes a consumer surface only
+when it is declared in `exports.tsv`, not because it appears in this public
+directory. `ds-check layers` enforces the layer-ownership rules on every
+stylesheet reached from an export.
+
+Do not copy Luna CSS here wholesale.

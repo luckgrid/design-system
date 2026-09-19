@@ -1,0 +1,18 @@
+/*
+ * Design System core entrypoint.
+ *
+ * Export: core.css (public-preview). Declared in exports.tsv.
+ *
+ * This file publishes the shared cascade layer order before any Design System
+ * layer is populated. Consumers load it first and then declare their own layers,
+ * for example `@layer app;`. A layer declared after `ds` outranks every
+ * Design System layer, so normal overrides need neither higher specificity nor
+ * `!important`.
+ *
+ * Only the top-level `ds` layer is a consumer target. The order of its children
+ * is documented precedence; consumers do not author rules into them.
+ *
+ * Tokens, theme, and the classless base populate these layers in later tasks.
+ * This entrypoint intentionally contains no rules yet.
+ */
+@layer ds.tokens, ds.base, ds.layouts, ds.primitives, ds.components, ds.utilities;

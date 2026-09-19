@@ -1,0 +1,18 @@
+/*
+ * Rejected: prefix-qualified names under an import-owned parent. A browser
+ * nests this statement as ds.components.ds.components.*, so the unqualified
+ * blocks below fall back to first-appearance order and base wins.
+ */
+@layer ds.components.base, ds.components.variants;
+
+@layer variants {
+  .probe {
+    color: rgb(0 0 255);
+  }
+}
+
+@layer base {
+  .probe {
+    color: rgb(255 0 0);
+  }
+}

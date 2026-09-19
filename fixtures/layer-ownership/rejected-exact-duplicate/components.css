@@ -1,0 +1,6 @@
+/* Rejected: the import already supplies ds.components. */
+@layer ds.components {
+  .probe {
+    color: rgb(255 0 0);
+  }
+}

@@ -9,8 +9,9 @@ boundaries; it is not a runtime requirement for CSS consumers.
 ## Current bootstrap surfaces
 
 The compatibility inventory is `bootstrap-surfaces.tsv`. At `DS-E01.S1.T3` every
-listed surface is `internal`. The bootstrap intentionally exposes no
-`public-stable` surface and no supported portable CSS entrypoint.
+listed surface was `internal`. The only `public-preview` surface now is the CSS
+entrypoint declared in `exports.tsv`, and there is still no `public-stable`
+surface.
 
 Every tracked path in this repository is classified there, and the checker
 enforces that rather than trusting it: it reads Git's exact tracked-file set
@@ -19,9 +20,9 @@ This avoids both build/editor output and false exclusions caused by approximatin
 `.gitignore` with directory-name skips. Classification states a compatibility
 position; it does not claim a path is a build input.
 
-The first frontend source seam is `packages/styles/`. DS-E01.S2 will
-define the first supported CSS contract; this directory's existence does not do
-so early.
+The frontend source root is `packages/styles/`. Its first supported CSS
+entrypoint and cascade contract are described in
+[`css-entrypoint.md`](css-entrypoint.md) and checked by `ds-check layers`.
 
 ## Contributor check
 

@@ -4,7 +4,8 @@
 # stylesheets are internal files: the custom properties they declare are
 # classified one by one in tokens.tsv, the theme default and hook are
 # classified in theme.tsv, the classless base subjects are classified in
-# base.tsv, and the layout hooks are classified in layouts.tsv.
+# base.tsv, the layout hooks are classified in layouts.tsv, and the primitive
+# hooks and states are classified in primitives.tsv.
 #
 # Every tracked file in this repository is classified here exactly once.
 # Duplicate paths, dot-segment aliases, a directory row that overlaps another
@@ -35,6 +36,7 @@ internal	apps/ds-check/Cargo.toml
 internal	apps/ds-check/src/base.rs
 internal	apps/ds-check/src/css.rs
 internal	apps/ds-check/src/layout.rs
+internal	apps/ds-check/src/primitive.rs
 internal	apps/ds-check/src/main.rs	scan-exempt:checker-owns-the-marker-constants
 internal	apps/ds-check/src/theme.rs
 internal	apps/ds-check/src/tokens.rs
@@ -44,6 +46,7 @@ internal	docs/architecture/base.md
 internal	docs/architecture/bootstrap.md
 internal	docs/architecture/css-entrypoint.md
 internal	docs/architecture/layouts.md
+internal	docs/architecture/primitives.md
 internal	docs/architecture/theme.md
 internal	docs/architecture/tokens.md
 internal	exports.tsv
@@ -79,11 +82,15 @@ internal	fixtures/brand-theme/index.html
 internal	fixtures/layouts/README.md
 internal	fixtures/layouts/consumer.css
 internal	fixtures/layouts/index.html
+internal	fixtures/primitives/README.md
+internal	fixtures/primitives/consumer.css
+internal	fixtures/primitives/index.html
 internal	fixtures/plain-html/README.md
 internal	fixtures/plain-html/consumer.css
 internal	fixtures/plain-html/figure.svg
 internal	fixtures/plain-html/index.html
 internal	layouts.tsv
+internal	primitives.tsv
 internal	packages/styles/README.md
 internal	packages/styles/base.css
 internal	packages/styles/base/content.css
@@ -95,6 +102,9 @@ internal	packages/styles/layouts.css
 internal	packages/styles/layouts/cluster.css
 internal	packages/styles/layouts/grid.css
 internal	packages/styles/layouts/stack.css
+internal	packages/styles/primitives.css
+internal	packages/styles/primitives/action.css
+internal	packages/styles/primitives/surface.css
 internal	packages/styles/tokens.css
 internal	packages/styles/tokens/reference.css
 internal	packages/styles/tokens/semantic.css
@@ -113,6 +123,8 @@ internal	tests/browser/probes/ds-layers-reversed.css
 internal	tests/browser/probes/layouts-override.css
 internal	tests/browser/probes/layouts-reorder.css
 internal	tests/browser/probes/layouts-unlayered.css
+internal	tests/browser/probes/primitives-override.css
+internal	tests/browser/probes/primitives-unlayered.css
 internal	tests/browser/server.mjs
 internal	tests/browser/specs/base.spec.mjs
 internal	tests/browser/specs/cascade.spec.mjs
@@ -120,6 +132,7 @@ internal	tests/browser/specs/consumer-fixture.spec.mjs
 internal	tests/browser/specs/entrypoint.spec.mjs
 internal	tests/browser/specs/layer-ownership.spec.mjs
 internal	tests/browser/specs/layouts.spec.mjs
+internal	tests/browser/specs/primitives.spec.mjs
 internal	tests/browser/specs/support.mjs
 internal	tests/browser/specs/theme.spec.mjs
 internal	tests/browser/specs/tokens.spec.mjs

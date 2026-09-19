@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Design System primitives fixture</title>
+    <link rel="stylesheet" href="/packages/styles/index.css">
+    <link rel="stylesheet" href="./consumer.css">
+  </head>
+  <body>
+    <header class="app-banner">
+      <nav aria-label="Fixture sections">
+        <ul class="ds-cluster" id="nav">
+          <li><a class="ds-action ds-action-quiet" id="nav-surface" href="#surfaces">Surfaces</a></li>
+          <li><a class="ds-action ds-action-quiet" id="current" href="#actions" aria-current="page">Actions</a></li>
+          <li><a class="ds-action ds-action-quiet" id="nav-states" href="#states">States</a></li>
+          <li><a class="ds-action ds-action-quiet" id="nav-override" href="#override">Override</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main class="ds-stack" id="page">
+      <h1>Primitives fixture</h1>
+      <p>This page loads only the declared Design System export and its own consumer stylesheet. The page shell is consumer-owned. The surface base primitive composes with the layouts, and the action UI primitive sits on native buttons and links.</p>
+
+      <section class="ds-stack" id="surfaces" aria-labelledby="surfaces-title">
+        <h2 id="surfaces-title">Surfaces</h2>
+        <article class="ds-surface ds-stack" id="card">
+          <h3>A surface with a stack</h3>
+          <p>The surface bounds the region; the stack arranges its children and removes their block margins, so the padding is the only inner edge.</p>
+          <p class="ds-cluster" id="card-actions">
+            <button class="ds-action ds-action-primary" id="card-primary" type="button">Continue</button>
+            <a class="ds-action" id="card-link" href="#actions">Learn more</a>
+          </p>
+        </article>
+        <ul class="ds-grid" id="cards">
+          <li class="ds-surface ds-stack"><h3>First</h3><p>Surfaces in a grid.</p></li>
+          <li class="ds-surface ds-stack"><h3>Second</h3><p>Pneumonoultramicroscopicsilicovolcanoconiosispneumonoultramicroscopicsilicovolcanoconiosis</p></li>
+          <li class="ds-surface ds-stack"><h3>Third</h3><p>Each keeps the same edges.</p></li>
+        </ul>
+        <div class="ds-surface" id="plain-surface">
+          <p>A surface with no layout keeps its children's own flow.</p>
+        </div>
+        <section class="ds-surface ds-cluster" id="rtl" dir="rtl" lang="ar" aria-label="اتجاه من اليمين إلى اليسار">
+          <button class="ds-action" type="button">أول</button>
+          <button class="ds-action ds-action-primary" type="button">ثانٍ</button>
+        </section>
+      </section>
+
+      <section class="ds-stack" id="actions" aria-labelledby="actions-title">
+        <h2 id="actions-title">Actions</h2>
+        <div class="ds-cluster" id="variants">
+          <button class="ds-action" id="default" type="button">Default</button>
+          <button class="ds-action ds-action-primary" id="primary" type="button">Primary</button>
+          <button class="ds-action ds-action-quiet" id="quiet" type="button">Quiet</button>
+          <button class="ds-action ds-action-icon" id="icon" type="button" aria-label="Close">
+            <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2"/></svg>
+          </button>
+          <a class="ds-action" id="link-action" href="#surfaces">Link action</a>
+          <a class="ds-action ds-action-primary" id="link-primary" href="#states">Primary link</a>
+        </div>
+        <form class="ds-cluster" id="form" action="#actions">
+          <label for="query">Search</label>
+          <input id="query" name="q" type="search">
+          <button class="ds-action ds-action-primary" id="submit" type="submit">Search</button>
+        </form>
+      </section>
+
+      <section class="ds-stack" id="states" aria-labelledby="states-title">
+        <h2 id="states-title">States</h2>
+        <div class="ds-cluster" id="state-actions">
+          <button class="ds-action" id="disabled" type="button" disabled>Unavailable</button>
+          <button class="ds-action ds-action-primary" id="disabled-primary" type="button" disabled>Unavailable primary</button>
+          <a class="ds-action" id="unlinked">Unavailable link</a>
+          <a class="ds-action ds-action-quiet" id="current-quiet" href="#states" aria-current="step">Current step</a>
+          <a class="ds-action" id="not-current" href="#states" aria-current="false">Not current</a>
+        </div>
+      </section>
+
+      <section class="ds-stack" id="override" aria-labelledby="override-title">
+        <h2 id="override-title">Override</h2>
+        <div class="ds-cluster">
+          <button class="ds-action app-pill" id="pill" type="button">Consumer pill</button>
+          <div class="ds-surface app-flat" id="flat-surface"><p>A consumer-flattened surface.</p></div>
+        </div>
+      </section>
+    </main>
+    <footer class="app-footer">
+      <p>Primitives fixture footer.</p>
+    </footer>
+  </body>
+</html>

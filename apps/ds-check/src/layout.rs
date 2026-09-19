@@ -29,7 +29,7 @@ const HOOK_PREFIX: &str = "ds-";
 /// Properties a layout may declare: its display model, gaps, alignment, track
 /// sizes, and the child margin and minimum-size resets. Every one is logical
 /// or axis-neutral.
-const PROPERTIES: [&str; 10] = [
+pub(crate) const PROPERTIES: [&str; 10] = [
     "display",
     "flex-direction",
     "flex-wrap",

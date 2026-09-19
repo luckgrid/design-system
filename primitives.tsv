@@ -1,0 +1,53 @@
+# Primitive inventory.
+# <class>	<primitive, variant, state, or candidate>	<kind or reason>
+# public-preview rows promote the public surface, in sub-layer and rule order:
+#   base-primitive  a composition or presentation relationship; its module is
+#                   packages/styles/primitives/<name>.css and its one hook is .ds-<name>;
+#                   it has no variant and no state
+#   ui-primitive    a native element contract; same module and hook rule
+#   variant         <ui-primitive>-<variant>, hook .ds-<ui-primitive>-<variant>, used
+#                   together with the primitive's own hook
+#   state           <ui-primitive>-<state>, a native or ARIA state with no hook:
+#                   hover (:hover), current ([aria-current]), disabled (:disabled),
+#                   unlinked (an <a> without href)
+# The other rows record each candidate that was evaluated and not promoted:
+#   consumer  product-composition | product-identity
+#   deferred  native-pattern-refinement (DS-E01.S3.T5) | no-repeat-evidence
+#   rejected  covered-by-promoted | covered-by-base | duplicates-native-state |
+#             conflicts-with-native-semantics
+# None is a backlog commitment. Contracts are in docs/architecture/primitives.md.
+# ds-check primitive keeps primitives/*.css, this file, the document, and
+# fixtures/primitives in agreement.
+public-preview	surface	base-primitive
+public-preview	action	ui-primitive
+public-preview	action-primary	variant
+public-preview	action-quiet	variant
+public-preview	action-icon	variant
+public-preview	action-hover	state
+public-preview	action-current	state
+public-preview	action-disabled	state
+public-preview	action-unlinked	state
+consumer	breadcrumbs	product-composition
+consumer	hero	product-composition
+consumer	nav	product-composition
+consumer	brand	product-identity
+consumer	icon	product-identity
+deferred	disclosure	native-pattern-refinement
+deferred	dialog	native-pattern-refinement
+deferred	popover	native-pattern-refinement
+deferred	tooltip	native-pattern-refinement
+deferred	progress	native-pattern-refinement
+deferred	field	no-repeat-evidence
+deferred	select	no-repeat-evidence
+deferred	table	no-repeat-evidence
+deferred	tag	no-repeat-evidence
+deferred	alert	no-repeat-evidence
+deferred	action-critical	no-repeat-evidence
+deferred	action-pressed	no-repeat-evidence
+rejected	card	covered-by-promoted
+rejected	action-text	covered-by-promoted
+rejected	action-outline	covered-by-base
+rejected	link	covered-by-base
+rejected	disabled-data-hook	duplicates-native-state
+rejected	nav-active-data-hook	duplicates-native-state
+rejected	link-role-button	conflicts-with-native-semantics

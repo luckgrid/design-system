@@ -51,17 +51,23 @@ The repository currently provides:
   hooks, with no breakpoint and no visual reordering, classified in
   `layouts.tsv`; page shells stay consumer-owned; see
   [`docs/architecture/layouts.md`](docs/architecture/layouts.md);
+- the primitives in `ds.primitives`: the `.ds-surface` base primitive, which
+  composes with any layout, and the `.ds-action` UI primitive for native
+  buttons and links, with primary, quiet, and icon variants and native or ARIA
+  state only, classified in `primitives.tsv`; see
+  [`docs/architecture/primitives.md`](docs/architecture/primitives.md);
 - a brand theme fixture that maps one fictional consumer brand into the public
   semantic roles;
 - a plain HTML consumer fixture that loads only that export and exercises every
-  owned base default, and a layouts fixture that uses the layouts inside a
-  consumer-owned page shell;
+  owned base default, a layouts fixture that uses the layouts inside a
+  consumer-owned page shell, and a primitives fixture that exercises every
+  primitive hook and state;
 - browser contract tests in Chromium, Firefox, and WebKit under `tests/browser/`;
 - explicit compatibility classification in `bootstrap-surfaces.tsv`;
 - least-privilege GitHub Actions quality checks.
 
-Primitives, components, and utilities are not defined yet; their layers stay
-empty until later DS-E01 work fills them.
+Components and utilities are not defined yet; their layers stay empty until
+later DS-E01 work fills them.
 
 ## Contributor checks
 
@@ -78,7 +84,8 @@ cargo run --locked -p design-system-check -- layers \
   exports.tsv bootstrap-surfaces.tsv fixtures/plain-html
 cargo run --locked -p design-system-check -- tokens \
   tokens.tsv exports.tsv docs/architecture/tokens.md \
-  fixtures/plain-html fixtures/brand-theme fixtures/layouts tests/browser/probes
+  fixtures/plain-html fixtures/brand-theme fixtures/layouts fixtures/primitives \
+  tests/browser/probes
 cargo run --locked -p design-system-check -- theme \
   theme.tsv exports.tsv docs/architecture/theme.md \
   fixtures tests/browser/probes
@@ -86,6 +93,9 @@ cargo run --locked -p design-system-check -- base \
   base.tsv exports.tsv docs/architecture/base.md fixtures/plain-html
 cargo run --locked -p design-system-check -- layout \
   layouts.tsv exports.tsv docs/architecture/layouts.md fixtures/layouts
+cargo run --locked -p design-system-check -- primitive \
+  primitives.tsv layouts.tsv exports.tsv docs/architecture/primitives.md \
+  fixtures/primitives
 (cd tests/browser && npm ci && npx playwright install chromium firefox webkit && npx playwright test)
 ```
 
@@ -102,7 +112,7 @@ Repository paths are not API by default.
 | Class | Meaning |
 |---|---|
 | `public-stable` | Supported compatibility surface. None exists yet. |
-| `public-preview` | Deliberately exposed but still moving. Currently the `core.css` entrypoint, its layer order, the semantic token roles in `tokens.tsv`, the theme default and `data-ds-scheme` hook in `theme.tsv`, the classless base defaults in `base.tsv`, and the layout hooks in `layouts.tsv`. |
+| `public-preview` | Deliberately exposed but still moving. Currently the `core.css` entrypoint, its layer order, the semantic token roles in `tokens.tsv`, the theme default and `data-ds-scheme` hook in `theme.tsv`, the classless base defaults in `base.tsv`, the layout hooks in `layouts.tsv`, and the primitive hooks and states in `primitives.tsv`. |
 | `internal` | Not API; may change or disappear. Every other path uses this class. |
 
 Product maturity and compatibility classification are separate. Experimental

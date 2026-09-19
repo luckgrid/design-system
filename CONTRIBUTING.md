@@ -32,7 +32,7 @@ classified beyond `internal`. Do not promote consumer-specific behavior into
 shared source without evidence from materially unlike consumers.
 
 The bootstrap does not yet define a supported CSS API. Changes to
-`packages/styles/` must preserve that boundary until the owning E01 task
+`packages/styles/` must preserve that boundary until the owning DS-E01 task
 accepts a public contract.
 
 For vulnerabilities, follow [SECURITY.md](SECURITY.md) rather than publishing

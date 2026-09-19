@@ -66,7 +66,7 @@ incomplete-inventory, and non-lint-inheriting cases.
 ## Release premise
 
 There is no supported release at bootstrap. The workspace version is `0.0.0`
-and product maturity is experimental. A later E01 candidate may use an immutable
+and product maturity is experimental. A later DS-E01 candidate may use an immutable
 source tag plus GitHub release/archive after the portable frontend contract and
 assurance work are accepted. Registry publication remains evidence-driven.
 

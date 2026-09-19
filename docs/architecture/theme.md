@@ -117,8 +117,14 @@ fails when:
   authority;
 - any other Design System stylesheet sets `color-scheme`;
 - any stylesheet uses a theme hook other than `data-ds-scheme`, such as a
-  `.dark` class;
-- this document stops naming the default, the hook, or a hook value.
+  `.dark` class, in any spelling: escaped, spaced, namespaced, or inside
+  `:is()`, `:where()`, `:not()`, or `:has()`. A selector the check cannot
+  classify fails rather than passing;
+- a consumer fixture sets `color-scheme` on a selector whose subject is the
+  root, including `html:root` and `:where(:root)`;
+- this document's `Default` block is not exactly the default rule, its behavior
+  table does not give each state the scheme in `theme.tsv`, or it names a hook
+  value, hook attribute, or alias that `theme.tsv` does not classify.
 
 The browser suite (`tests/browser/specs/theme.spec.mjs`) checks the default,
 explicit, invalid-value, runtime-switch, native-control, brand, and precedence

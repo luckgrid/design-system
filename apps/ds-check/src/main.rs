@@ -833,7 +833,7 @@ fn run_theme(
     Ok(format!(
         "validated theme contract in {}: default color-scheme `{}`, one root hook [{}] with {} value(s) ({}); \
 {} Design System stylesheet(s) set no other color-scheme, assign no token from the theme, and use no alias hook; \
-theme document {} names the default, hook, and values; \
+theme document {} states the default rule and the hook behavior table and names no unclassified hook, value, or alias; \
 {} consumer stylesheet(s) use no alias hook and leave the root color-scheme to the hook",
         theme::THEME_FILE,
         manifest.default,

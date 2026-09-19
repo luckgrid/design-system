@@ -22,9 +22,9 @@ const SCHEMES: [&str; 2] = ["light", "dark"];
 /// The default values the contract may declare: follow the preference, or one
 /// fixed scheme.
 const DEFAULTS: [&str; 3] = ["light dark", "light", "dark"];
-/// Selector fragments of theme hooks that are not this contract's. Luna's
-/// `.dark` class and `data-theme` attribute are evidence, not portable API.
-const ALIAS_HOOKS: [&str; 3] = [".dark", "[data-theme", "[data-color-scheme"];
+/// Attribute hooks that are not this contract's. Luna's `.dark` class and
+/// `data-theme` attribute are evidence, not portable API.
+const ALIAS_ATTRIBUTES: [&str; 2] = ["data-theme", "data-color-scheme"];
 
 /// The validated `theme.tsv` contract.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -182,26 +182,392 @@ fn is_color_scheme(name: &str) -> bool {
     name.eq_ignore_ascii_case(COLOR_SCHEME)
 }
 
-fn alias_hook(selector: &str, manifest: &Manifest) -> Option<String> {
-    let lower = selector.to_ascii_lowercase();
-    if let Some(alias) = ALIAS_HOOKS.iter().find(|alias| {
-        lower.match_indices(*alias).any(|(index, _)| {
-            lower[index + alias.len()..]
-                .chars()
-                .next()
-                .is_none_or(|next| !(next.is_ascii_alphanumeric() || next == '-' || next == '_'))
-        })
-    }) {
-        return Some((*alias).to_owned());
+/// One simple selector the theme contract classifies. Simple selectors inside
+/// functional pseudo-classes such as `:where()` count as part of the compound
+/// that holds them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Simple {
+    /// `.name`, with escapes decoded.
+    Class(String),
+    /// `[name ...]`, lowercased, with escapes decoded and any namespace dropped.
+    Attribute(String),
+    /// `:name` or `::name`, lowercased.
+    Pseudo(String),
+    /// A type selector, lowercased.
+    Type(String),
+    /// `#id`, `*`, or `&`, which the contract does not classify further.
+    Other,
+}
+
+/// A selector list: complex selectors, each a sequence of compounds.
+type SelectorList = Vec<Vec<Vec<Simple>>>;
+
+/// Scan a selector list into its simple selectors. The scan recognizes the
+/// selector grammar the stylesheets use and rejects anything else, so an
+/// escaped, spaced, or namespaced spelling cannot hide a theme hook.
+fn scan_selector(selector: &str) -> Result<SelectorList, String> {
+    let mut scanner = Scanner {
+        chars: selector.chars().collect(),
+        pos: 0,
+    };
+    scanner
+        .list(false)
+        .map_err(|reason| format!("cannot classify selector `{}`: {reason}", selector.trim()))
+}
+
+struct Scanner {
+    chars: Vec<char>,
+    pos: usize,
+}
+
+impl Scanner {
+    fn peek(&self) -> Option<char> {
+        self.chars.get(self.pos).copied()
     }
-    let own = format!("[{}", manifest.attribute);
-    lower.match_indices("[data-ds-").find_map(|(index, _)| {
-        let rest = &lower[index..];
-        let end = rest
-            .find(|c: char| !(c.is_ascii_alphanumeric() || c == '-' || c == '[' || c == '_'))
-            .unwrap_or(rest.len());
-        (rest[..end] != own).then(|| rest[..end].to_owned())
-    })
+
+    fn peek_at(&self, offset: usize) -> Option<char> {
+        self.chars.get(self.pos + offset).copied()
+    }
+
+    fn skip_whitespace(&mut self) -> bool {
+        let start = self.pos;
+        while self.peek().is_some_and(char::is_whitespace) {
+            self.pos += 1;
+        }
+        self.pos > start
+    }
+
+    /// A selector list, ending at the end of input or, when `nested`, at `)`.
+    fn list(&mut self, nested: bool) -> Result<SelectorList, String> {
+        let mut list = Vec::new();
+        let mut complex: Vec<Vec<Simple>> = Vec::new();
+        let mut compound: Vec<Simple> = Vec::new();
+        loop {
+            if self.skip_whitespace() && !compound.is_empty() {
+                complex.push(std::mem::take(&mut compound));
+            }
+            let Some(c) = self.peek() else {
+                if nested {
+                    return Err("unterminated `(`".to_owned());
+                }
+                break;
+            };
+            match c {
+                ')' if nested => {
+                    self.pos += 1;
+                    break;
+                }
+                ',' => {
+                    self.pos += 1;
+                    if !compound.is_empty() {
+                        complex.push(std::mem::take(&mut compound));
+                    }
+                    if complex.is_empty() {
+                        return Err("empty selector in a list".to_owned());
+                    }
+                    list.push(std::mem::take(&mut complex));
+                }
+                '>' | '+' | '~' => {
+                    self.pos += 1;
+                    if !compound.is_empty() {
+                        complex.push(std::mem::take(&mut compound));
+                    }
+                }
+                '.' => {
+                    self.pos += 1;
+                    compound.push(Simple::Class(self.ident()?));
+                }
+                '#' => {
+                    self.pos += 1;
+                    self.name()?;
+                    compound.push(Simple::Other);
+                }
+                '[' => {
+                    self.pos += 1;
+                    compound.push(Simple::Attribute(self.attribute()?));
+                }
+                ':' => {
+                    self.pos += 1;
+                    if self.peek() == Some(':') {
+                        self.pos += 1;
+                    }
+                    let name = self.ident()?.to_ascii_lowercase();
+                    if self.peek() == Some('(') {
+                        self.pos += 1;
+                        if SELECTOR_PSEUDOS.contains(&name.as_str()) {
+                            for inner in self.list(true)? {
+                                compound.extend(inner.into_iter().flatten());
+                            }
+                        } else {
+                            self.plain_arguments()?;
+                        }
+                    }
+                    compound.push(Simple::Pseudo(name));
+                }
+                '&' => {
+                    self.pos += 1;
+                    compound.push(Simple::Other);
+                }
+                '*' | '|' => {
+                    self.namespace_prefix()?;
+                    if self.peek() == Some('*') {
+                        self.pos += 1;
+                        compound.push(Simple::Other);
+                    } else {
+                        compound.push(Simple::Type(self.ident()?.to_ascii_lowercase()));
+                    }
+                }
+                _ if starts_ident(c, self.peek_at(1)) => {
+                    let name = self.ident()?;
+                    if self.peek() == Some('|') && self.peek_at(1) != Some('=') {
+                        self.pos += 1;
+                        if self.peek() == Some('*') {
+                            self.pos += 1;
+                            compound.push(Simple::Other);
+                        } else {
+                            compound.push(Simple::Type(self.ident()?.to_ascii_lowercase()));
+                        }
+                    } else {
+                        compound.push(Simple::Type(name.to_ascii_lowercase()));
+                    }
+                }
+                other => return Err(format!("unexpected `{other}`")),
+            }
+        }
+        if !compound.is_empty() {
+            complex.push(compound);
+        }
+        if complex.is_empty() {
+            return Err("empty selector".to_owned());
+        }
+        list.push(complex);
+        Ok(list)
+    }
+
+    /// Consume `*|` or `|` when it prefixes a type selector.
+    fn namespace_prefix(&mut self) -> Result<(), String> {
+        match (self.peek(), self.peek_at(1)) {
+            (Some('*'), Some('|')) if self.peek_at(2) != Some('=') => self.pos += 2,
+            (Some('|'), next) if next != Some('=') && next != Some('|') => self.pos += 1,
+            (Some('|'), _) => return Err("unexpected `|`".to_owned()),
+            _ => {}
+        }
+        Ok(())
+    }
+
+    /// `[name]` or `[name op value flag]`, after the `[`; returns the name.
+    fn attribute(&mut self) -> Result<String, String> {
+        self.skip_whitespace();
+        self.namespace_prefix()?;
+        let first = self.ident()?;
+        let name = if self.peek() == Some('|') && self.peek_at(1) != Some('=') {
+            self.pos += 1;
+            self.ident()?
+        } else {
+            first
+        };
+        self.skip_whitespace();
+        match self.peek() {
+            Some(']') => {
+                self.pos += 1;
+                return Ok(name.to_ascii_lowercase());
+            }
+            Some('=') => self.pos += 1,
+            Some('~' | '|' | '^' | '$' | '*') if self.peek_at(1) == Some('=') => self.pos += 2,
+            _ => return Err(format!("malformed attribute selector [{name}")),
+        }
+        self.skip_whitespace();
+        match self.peek() {
+            Some(quote @ ('"' | '\'')) => {
+                self.pos += 1;
+                self.string(quote)?;
+            }
+            Some(c) if starts_ident(c, self.peek_at(1)) => {
+                self.ident()?;
+            }
+            _ => return Err(format!("attribute selector [{name}] has no value")),
+        }
+        self.skip_whitespace();
+        if self
+            .peek()
+            .is_some_and(|c| starts_ident(c, self.peek_at(1)))
+        {
+            self.ident()?;
+            self.skip_whitespace();
+        }
+        if self.peek() != Some(']') {
+            return Err(format!("unterminated attribute selector [{name}"));
+        }
+        self.pos += 1;
+        Ok(name.to_ascii_lowercase())
+    }
+
+    /// Skip a quoted string after its opening quote.
+    fn string(&mut self, quote: char) -> Result<(), String> {
+        loop {
+            match self.peek() {
+                None | Some('\n') => return Err("unterminated string".to_owned()),
+                Some('\\') => self.pos += 2,
+                Some(c) => {
+                    self.pos += 1;
+                    if c == quote {
+                        return Ok(());
+                    }
+                }
+            }
+        }
+    }
+
+    /// Skip the arguments of a functional pseudo-class that takes no selector,
+    /// such as `:lang(en)` or `:nth-child(2n + 1)`. An argument that could hold a
+    /// selector (for example `:nth-child(2n of .dark)`) is rejected.
+    fn plain_arguments(&mut self) -> Result<(), String> {
+        let mut depth = 1usize;
+        while depth > 0 {
+            match self.peek() {
+                None => return Err("unterminated `(`".to_owned()),
+                Some('(') => depth += 1,
+                Some(')') => depth -= 1,
+                Some(quote @ ('"' | '\'')) => {
+                    self.pos += 1;
+                    self.string(quote)?;
+                    continue;
+                }
+                Some(c @ ('.' | '#' | '[' | ':' | '\\')) => {
+                    return Err(format!(
+                        "`{c}` in the arguments of a pseudo-class this check does not classify"
+                    ));
+                }
+                Some(c) if c.is_ascii_alphabetic() => {
+                    let word = self.ident()?;
+                    if word.eq_ignore_ascii_case("of") {
+                        return Err(
+                            "a selector argument (`of`) this check does not classify".to_owned()
+                        );
+                    }
+                    continue;
+                }
+                Some(_) => {}
+            }
+            self.pos += 1;
+        }
+        Ok(())
+    }
+
+    /// An identifier with its escapes decoded.
+    fn ident(&mut self) -> Result<String, String> {
+        match self.peek() {
+            Some(c) if starts_ident(c, self.peek_at(1)) => self.name(),
+            Some(c) => Err(format!("expected a name, found `{c}`")),
+            None => Err("expected a name".to_owned()),
+        }
+    }
+
+    /// A run of name code points with escapes decoded.
+    fn name(&mut self) -> Result<String, String> {
+        let mut name = String::new();
+        while let Some(c) = self.peek() {
+            if c == '\\' {
+                self.pos += 1;
+                name.push(self.escape()?);
+            } else if is_name_char(c) {
+                self.pos += 1;
+                name.push(c);
+            } else {
+                break;
+            }
+        }
+        if name.is_empty() {
+            return Err("expected a name".to_owned());
+        }
+        Ok(name)
+    }
+
+    /// The code point of an escape, after its backslash.
+    fn escape(&mut self) -> Result<char, String> {
+        match self.peek() {
+            None | Some('\n' | '\r' | '\u{c}') => Err("invalid escape".to_owned()),
+            Some(c) if c.is_ascii_hexdigit() => {
+                let mut value = 0u32;
+                let mut digits = 0;
+                while digits < 6 && self.peek().is_some_and(|c| c.is_ascii_hexdigit()) {
+                    value = value * 16 + self.peek().and_then(|c| c.to_digit(16)).unwrap_or(0);
+                    self.pos += 1;
+                    digits += 1;
+                }
+                if self.peek().is_some_and(char::is_whitespace) {
+                    self.pos += 1;
+                }
+                Ok(char::from_u32(value)
+                    .filter(|&c| c != '\0')
+                    .unwrap_or('\u{fffd}'))
+            }
+            Some(c) => {
+                self.pos += 1;
+                Ok(c)
+            }
+        }
+    }
+}
+
+/// Functional pseudo-classes whose arguments are selectors.
+const SELECTOR_PSEUDOS: [&str; 9] = [
+    "is",
+    "where",
+    "not",
+    "has",
+    "matches",
+    "-webkit-any",
+    "-moz-any",
+    "host",
+    "host-context",
+];
+
+fn is_name_char(c: char) -> bool {
+    c.is_ascii_alphanumeric() || c == '-' || c == '_' || !c.is_ascii()
+}
+
+fn starts_ident(c: char, next: Option<char>) -> bool {
+    c.is_ascii_alphabetic()
+        || c == '_'
+        || c == '\\'
+        || !c.is_ascii()
+        || (c == '-' && next.is_some_and(|n| is_name_char(n) || n == '\\'))
+}
+
+/// The theme hook a selector uses other than the public one, if any: a `.dark`
+/// class, a Luna `data-theme` or `data-color-scheme` attribute, or another
+/// `data-ds-*` attribute.
+fn alias_hook(selector: &str, manifest: &Manifest) -> Result<Option<String>, String> {
+    for simple in scan_selector(selector)?.iter().flatten().flatten() {
+        match simple {
+            Simple::Class(name) if name.eq_ignore_ascii_case("dark") => {
+                return Ok(Some(".dark".to_owned()));
+            }
+            Simple::Attribute(name)
+                if ALIAS_ATTRIBUTES.contains(&name.as_str())
+                    || (name.starts_with(HOOK_PREFIX) && *name != manifest.attribute) =>
+            {
+                return Ok(Some(format!("[{name}]")));
+            }
+            _ => {}
+        }
+    }
+    Ok(None)
+}
+
+/// Whether any selector in the list targets the root element: its subject
+/// compound holds `:root` or `html`, including inside `:is()` or `:where()`.
+fn targets_root(selector: &str) -> Result<bool, String> {
+    Ok(scan_selector(selector)?.iter().any(|complex| {
+        complex.last().is_some_and(|subject| {
+            subject.iter().any(|simple| match simple {
+                Simple::Pseudo(name) => name == "root",
+                Simple::Type(name) => name == "html",
+                _ => false,
+            })
+        })
+    }))
 }
 
 /// What a validated theme contract covers.
@@ -224,7 +590,9 @@ pub fn validate_stylesheets(
         theme_seen |= is_theme;
         let found = rules(file, source)?;
         for rule in &found {
-            if let Some(alias) = alias_hook(&rule.selector, manifest) {
+            if let Some(alias) =
+                alias_hook(&rule.selector, manifest).map_err(|error| format!("{file}: {error}"))?
+            {
                 return Err(format!(
                     "{file} selects `{}` with theme hook `{alias}`; the only public theme hook is [{}] on :root",
                     rule.selector, manifest.attribute
@@ -328,18 +696,16 @@ fn validate_theme_rules(file: &str, found: &[Rule], manifest: &Manifest) -> Resu
 /// `ds`, so a root `color-scheme` there silently disables the public hook.
 pub fn validate_consumer(file: &str, source: &str, manifest: &Manifest) -> Result<(), String> {
     for rule in rules(file, source)? {
-        if let Some(alias) = alias_hook(&rule.selector, manifest) {
+        if let Some(alias) = alias_hook(&rule.selector, manifest)
+            .map_err(|error| format!("consumer stylesheet {file}: {error}"))?
+        {
             return Err(format!(
                 "consumer stylesheet {file} selects `{}` with theme hook `{alias}`; use [{}] on :root",
                 rule.selector, manifest.attribute
             ));
         }
-        let root = rule
-            .selector
-            .split(',')
-            .map(str::trim)
-            .any(|selector| selector == ":root" || selector.eq_ignore_ascii_case("html"));
-        if root
+        if targets_root(&rule.selector)
+            .map_err(|error| format!("consumer stylesheet {file}: {error}"))?
             && rule
                 .declarations
                 .iter()
@@ -354,19 +720,22 @@ pub fn validate_consumer(file: &str, source: &str, manifest: &Manifest) -> Resul
     Ok(())
 }
 
-/// The theme document names the default, the hook, and every hook value.
+/// Heading of the theme document section that shows the default rule.
+const DEFAULT_SECTION: &str = "## Default";
+/// Heading of the theme document section whose table states the hook behavior.
+const HOOK_SECTION: &str = "## Explicit light or dark";
+
+/// The theme document states the contract, not just its names: the default
+/// section shows exactly the default rule, the hook section's behavior table
+/// has exactly one row per theme state with the scheme `theme.tsv` classifies,
+/// and the document names no hook value, `data-ds-*` attribute, or alias
+/// outside the contract.
 pub fn validate_document(document: &str, manifest: &Manifest) -> Result<(), String> {
-    let mut required = vec![format!("{COLOR_SCHEME}: {}", manifest.default)];
-    for value in &manifest.values {
-        required.push(format!("{}=\"{value}\"", manifest.attribute));
-    }
-    for phrase in required {
-        if !document.contains(&phrase) {
-            return Err(format!("the theme document does not document `{phrase}`"));
-        }
-    }
+    validate_default_section(section(document, DEFAULT_SECTION)?, manifest)?;
+    validate_hook_table(section(document, HOOK_SECTION)?, manifest)?;
+
     let lower = document.to_ascii_lowercase();
-    for alias in ["data-theme", "data-color-scheme"] {
+    for alias in ALIAS_ATTRIBUTES {
         if lower.contains(alias) {
             return Err(format!(
                 "the theme document names `{alias}`; document only the public hook {}",
@@ -374,7 +743,203 @@ pub fn validate_document(document: &str, manifest: &Manifest) -> Result<(), Stri
             ));
         }
     }
+    for (index, _) in lower.match_indices(HOOK_PREFIX) {
+        let name: String = lower[index..]
+            .chars()
+            .take_while(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_')
+            .collect();
+        if name != manifest.attribute {
+            return Err(format!(
+                "the theme document names `{name}`; the only public hook is {}",
+                manifest.attribute
+            ));
+        }
+        let rest = &lower[index + name.len()..];
+        if let Some(quoted) = rest.strip_prefix("=\"") {
+            let value = quoted.split('"').next().unwrap_or_default();
+            if !manifest.values.iter().any(|known| known == value) {
+                return Err(format!(
+                    "the theme document shows {name}=\"{value}\", which theme.tsv does not classify"
+                ));
+            }
+        } else if rest.starts_with('=') {
+            return Err(format!(
+                "the theme document shows an unquoted {name} value; quote hook values as theme.tsv classifies them"
+            ));
+        }
+    }
     Ok(())
+}
+
+/// The body of the one `heading` section, up to the next `#` or `##` heading.
+fn section<'a>(document: &'a str, heading: &str) -> Result<&'a str, String> {
+    let mut starts = Vec::new();
+    let mut offset = 0;
+    for line in document.split_inclusive('\n') {
+        if line.trim_end() == heading {
+            starts.push(offset + line.len());
+        }
+        offset += line.len();
+    }
+    let [start] = starts.as_slice() else {
+        return Err(format!(
+            "the theme document must have exactly one `{heading}` section, found {}",
+            starts.len()
+        ));
+    };
+    let body = &document[*start..];
+    let mut end = 0;
+    for line in body.split_inclusive('\n') {
+        if line.starts_with("# ") || line.starts_with("## ") {
+            break;
+        }
+        end += line.len();
+    }
+    Ok(&body[..end])
+}
+
+/// The default section holds exactly one `css` block: `:root` with only the
+/// default `color-scheme`.
+fn validate_default_section(body: &str, manifest: &Manifest) -> Result<(), String> {
+    let mut blocks = Vec::new();
+    let mut current: Option<String> = None;
+    for line in body.lines() {
+        let fence = line.trim();
+        match current.as_mut() {
+            None if fence.starts_with("```") => {
+                if fence != "```css" {
+                    return Err(format!(
+                        "the theme document `{DEFAULT_SECTION}` section has a non-css code block `{fence}`"
+                    ));
+                }
+                current = Some(String::new());
+            }
+            None => {}
+            Some(_) if fence == "```" => blocks.extend(current.take()),
+            Some(text) => {
+                text.push_str(line);
+                text.push('\n');
+            }
+        }
+    }
+    if current.is_some() {
+        return Err(format!(
+            "the theme document `{DEFAULT_SECTION}` section has an unterminated code block"
+        ));
+    }
+    let [css_text] = blocks.as_slice() else {
+        return Err(format!(
+            "the theme document `{DEFAULT_SECTION}` section must show exactly one css block, found {}",
+            blocks.len()
+        ));
+    };
+    let expected = format!(":root {{ {COLOR_SCHEME}: {}; }}", manifest.default);
+    let wrong =
+        || format!("the theme document `{DEFAULT_SECTION}` block must be exactly `{expected}`");
+    let nodes = css::parse(css_text).map_err(|error| format!("{}: {error}", wrong()))?;
+    let [Node::Style { prelude, body }] = nodes.as_slice() else {
+        return Err(wrong());
+    };
+    let declarations = tokens::split_declarations("theme document", body)?;
+    let [(name, value)] = declarations.as_slice() else {
+        return Err(wrong());
+    };
+    if normalize_selector(prelude) != ":root" || name != COLOR_SCHEME || *value != manifest.default
+    {
+        return Err(wrong());
+    }
+    Ok(())
+}
+
+/// The hook section's behavior table has exactly the rows `no attribute`, one
+/// per hook value, and `any other value`, each with the `color-scheme` that
+/// `theme.tsv` gives it and a matching resolution.
+fn validate_hook_table(body: &str, manifest: &Manifest) -> Result<(), String> {
+    let lines: Vec<&str> = body
+        .lines()
+        .map(str::trim)
+        .filter(|line| line.starts_with('|'))
+        .collect();
+    let context = format!("the theme document `{HOOK_SECTION}` table");
+    let [_header, separator, rows @ ..] = lines.as_slice() else {
+        return Err(format!("{context} is missing"));
+    };
+    if !cells(separator)
+        .iter()
+        .all(|cell| !cell.is_empty() && cell.chars().all(|c| c == '-' || c == ':'))
+    {
+        return Err(format!("{context} has no header separator row"));
+    }
+
+    let default_resolution = if manifest.default == "light dark" {
+        "the user's preference".to_owned()
+    } else {
+        manifest.default.clone()
+    };
+    let mut expected: Vec<(String, String, String)> = vec![(
+        "no attribute".to_owned(),
+        format!("`{}`", manifest.default),
+        default_resolution.clone(),
+    )];
+    for value in &manifest.values {
+        expected.push((
+            format!("`{}=\"{value}\"`", manifest.attribute),
+            format!("`{value}`"),
+            value.clone(),
+        ));
+    }
+    expected.push((
+        "any other value".to_owned(),
+        format!("`{}`", manifest.default),
+        default_resolution,
+    ));
+
+    let mut seen = BTreeSet::new();
+    for row in rows {
+        let row_cells = cells(row);
+        let [markup, scheme, resolves] = row_cells.as_slice() else {
+            return Err(format!(
+                "{context} row `{row}` must have markup, color-scheme, and resolution cells"
+            ));
+        };
+        let Some((_, want_scheme, want_resolution)) =
+            expected.iter().find(|(want, _, _)| want == markup)
+        else {
+            return Err(format!(
+                "{context} has row `{markup}`, which theme.tsv does not classify"
+            ));
+        };
+        if !seen.insert(markup.clone()) {
+            return Err(format!("{context} repeats row `{markup}`"));
+        }
+        if scheme != want_scheme {
+            return Err(format!(
+                "{context} gives `{markup}` color-scheme {scheme}; theme.tsv gives {want_scheme}"
+            ));
+        }
+        if !resolves.starts_with(want_resolution.as_str()) {
+            return Err(format!(
+                "{context} says `{markup}` resolves `{resolves}`; it resolves {want_resolution}"
+            ));
+        }
+    }
+    if let Some((markup, _, _)) = expected
+        .iter()
+        .find(|(markup, _, _)| !seen.contains(markup))
+    {
+        return Err(format!("{context} has no row for `{markup}`"));
+    }
+    Ok(())
+}
+
+/// The trimmed cells of one Markdown table row.
+fn cells(row: &str) -> Vec<String> {
+    let inner = row.trim().trim_start_matches('|');
+    let inner = inner.strip_suffix('|').unwrap_or(inner);
+    inner
+        .split('|')
+        .map(|cell| cell.trim().to_owned())
+        .collect()
 }
 
 #[cfg(test)]
@@ -557,19 +1122,184 @@ public-preview\tattribute\tdata-ds-scheme\tlight dark
         }
     }
 
+    const DOCUMENT: &str = "\
+# Theme contract
+
+## Default
+
+```css
+:root {
+  color-scheme: light dark;
+}
+```
+
+## Explicit light or dark
+
+| Markup | `color-scheme` on the root | `light-dark()` roles resolve |
+|---|---|---|
+| no attribute | `light dark` | the user's preference |
+| `data-ds-scheme=\"light\"` | `light` | light, whatever the preference |
+| `data-ds-scheme=\"dark\"` | `dark` | dark, whatever the preference |
+| any other value | `light dark` | the user's preference |
+
+```html
+<html lang=\"en\" data-ds-scheme=\"dark\">
+```
+
+## Classification and checks
+
+Rejects a `.dark` class.
+";
+
     #[test]
-    fn document_names_default_hook_and_values_only() {
+    fn document_states_the_contract() {
         let manifest = manifest();
-        let document =
-            "color-scheme: light dark\ndata-ds-scheme=\"light\"\ndata-ds-scheme=\"dark\"\n";
-        validate_document(document, &manifest).expect("document");
-        let missing = document.replace("data-ds-scheme=\"dark\"", "");
-        assert!(validate_document(&missing, &manifest).is_err());
-        let alias = format!("{document}data-theme\n");
-        assert!(
-            validate_document(&alias, &manifest)
-                .unwrap_err()
-                .contains("data-theme")
-        );
+        validate_document(DOCUMENT, &manifest).expect("document");
+        for (from, to, expected) in [
+            // The behavior table must give each state its classified scheme.
+            (
+                "`data-ds-scheme=\"dark\"` | `dark` | dark",
+                "`data-ds-scheme=\"dark\"` | `light` | dark",
+                "theme.tsv gives `dark`",
+            ),
+            (
+                "`data-ds-scheme=\"dark\"` | `dark` | dark,",
+                "`data-ds-scheme=\"dark\"` | `dark` | light,",
+                "resolves",
+            ),
+            (
+                "| any other value | `light dark` |",
+                "| any other value | `dark` |",
+                "theme.tsv gives",
+            ),
+            (
+                "| `data-ds-scheme=\"dark\"` | `dark` | dark, whatever the preference |\n",
+                "",
+                "no row for",
+            ),
+            (
+                "| no attribute |",
+                "| `data-ds-scheme=\"system\"` | `light dark` | the user's preference |\n| no attribute |",
+                "does not classify",
+            ),
+            (
+                "| no attribute | `light dark` | the user's preference |\n",
+                "| no attribute | `light dark` | the user's preference |\n| no attribute | `light dark` | the user's preference |\n",
+                "repeats",
+            ),
+            // The default block must be exactly the default rule.
+            (
+                "color-scheme: light dark;\n}",
+                "color-scheme: light;\n}",
+                "exactly",
+            ),
+            (":root {\n  color", "html {\n  color", "exactly"),
+            ("```css\n:root", "```scss\n:root", "non-css"),
+            // No undocumented value, hook, or alias anywhere.
+            (
+                "data-ds-scheme=\"dark\">",
+                "data-ds-scheme=\"system\">",
+                "does not classify",
+            ),
+            (
+                "Rejects a `.dark` class.",
+                "Set `data-ds-theme`.",
+                "data-ds-theme",
+            ),
+            (
+                "Rejects a `.dark` class.",
+                "Luna used `data-theme`.",
+                "data-theme",
+            ),
+            ("## Default\n", "## Defaults\n", "`## Default` section"),
+        ] {
+            assert!(DOCUMENT.contains(from), "{from}");
+            let changed = DOCUMENT.replacen(from, to, 1);
+            let error = validate_document(&changed, &manifest).expect_err(to);
+            assert!(error.contains(expected), "{to}: {error}");
+        }
+    }
+
+    #[test]
+    fn spelled_alias_hooks_are_rejected() {
+        let manifest = manifest();
+        for selector in [
+            "[ data-theme=\"dark\"] p",
+            "[data\\-theme=\"dark\"] p",
+            "[data-\\74 heme] p",
+            ".d\\61rk p",
+            ".\\64 ark p",
+            ".DARK p",
+            "[*|data-theme] p",
+            "[svg|data-color-scheme] p",
+            "[DATA-DS-THEME] p",
+            "[ data-ds-mode ] p",
+            ":is(main, :where(.dark)) p",
+            ":not([data-theme]) p",
+        ] {
+            let source = format!("@layer app {{ {selector} {{ color: red; }} }}");
+            let error = validate_consumer("c.css", &source, &manifest).expect_err(selector);
+            assert!(error.contains("theme hook"), "{selector}: {error}");
+        }
+    }
+
+    #[test]
+    fn hook_names_inside_values_or_longer_names_are_not_aliases() {
+        let manifest = manifest();
+        for selector in [
+            "[aria-label=\".dark\"] p",
+            "a[href=\"[data-theme]\"] p",
+            "a[title='data-color-scheme'] p",
+            ".darkroom p",
+            ".dark-mode-toggle p",
+            "[data-themes] p",
+            "#dark p",
+            ":root[data-ds-scheme=\"dark\"] img",
+            ":root[ data-ds-scheme = dark i ] img",
+            "li:nth-child(2n + 1):lang(en)",
+            "svg|rect, *|*",
+        ] {
+            let source = format!("@layer app {{ {selector} {{ color: red; }} }}");
+            validate_consumer("c.css", &source, &manifest).expect(selector);
+        }
+    }
+
+    #[test]
+    fn unclassifiable_selectors_fail_closed() {
+        let manifest = manifest();
+        for selector in [
+            "[data-theme",
+            "li:nth-child(2n of .dark)",
+            "li:nth-child(2n + \\31)",
+            "[=x] p",
+            "a, , b",
+            "p ::",
+        ] {
+            let source = format!("@layer app {{ {selector} {{ color: red; }} }}");
+            let error = validate_consumer("c.css", &source, &manifest).expect_err(selector);
+            assert!(error.contains("cannot classify"), "{selector}: {error}");
+        }
+    }
+
+    #[test]
+    fn spelled_root_color_scheme_overrides_are_rejected() {
+        let manifest = manifest();
+        for selector in [
+            ":where(:root)",
+            ":is(html)",
+            "html:root",
+            "HTML",
+            ":ROOT",
+            "main, :root",
+            "body > p, html",
+        ] {
+            let source = format!("@layer app {{ {selector} {{ color-scheme: dark; }} }}");
+            let error = validate_consumer("c.css", &source, &manifest).expect_err(selector);
+            assert!(error.contains("disables"), "{selector}: {error}");
+        }
+        for selector in [":where(:root) main", ":root > body", "html body", "main"] {
+            let source = format!("@layer app {{ {selector} {{ color-scheme: dark; }} }}");
+            validate_consumer("c.css", &source, &manifest).expect(selector);
+        }
     }
 }

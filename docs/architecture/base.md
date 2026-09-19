@@ -19,9 +19,10 @@ is unchanged.
 - **No product hooks.** Selectors use element names, native pseudo-classes
   (`:any-link`, `:hover`, `:visited`, `:focus-visible`, `:disabled`,
   `:user-invalid`, and the logical `:not()`, `:is()`, `:where()`), and the
-  native `type`, `popover`, `multiple`, and `size` attributes. They use no
-  class, id, `data-*` attribute, or `role`, and they make no assumption about
-  the page's wrappers.
+  native `type`, `popover`, `multiple`, and `size` attributes, plus the
+  literal `details[open]` native-state refinement. They use no class, id,
+  `data-*` attribute, or `role`, and they make no assumption about the page's
+  wrappers.
 - **Values come from the token authority.** Colors, fonts, sizes, spacing,
   radius, and focus geometry come from the public `--ds-*` roles in
   [`tokens.md`](tokens.md). Only font-relative offsets use `em`, `ch`, `lh`, or

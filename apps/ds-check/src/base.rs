@@ -37,7 +37,7 @@ const PSEUDO_CLASSES: [&str; 9] = [
     "where",
 ];
 /// Native attributes a base selector may test.
-const ATTRIBUTES: [&str; 5] = ["type", "popover", "multiple", "size", "open"];
+const ATTRIBUTES: [&str; 4] = ["type", "popover", "multiple", "size"];
 /// Pseudo-elements that may follow a base `:where()`.
 const PSEUDO_ELEMENTS: [&str; 2] = ["placeholder", "file-selector-button"];
 /// Value functions a base declaration may call.
@@ -353,6 +353,7 @@ fn check_selector(selector: &str, manifest: &Manifest) -> Result<Vec<String>, St
                                 .to_owned(),
                         );
                     }
+                    Simple::Attribute(name) if name == "open" => {}
                     Simple::Attribute(name) if !ATTRIBUTES.contains(&name.as_str()) => {
                         return Err(format!(
                             "attribute `[{name}]`: only the native {} attributes are base hooks",
@@ -379,6 +380,17 @@ fn check_selector(selector: &str, manifest: &Manifest) -> Result<Vec<String>, St
                 .last()
                 .and_then(|compound| subject_of(compound))
                 .ok_or("cannot tell which subject this selector styles")?;
+            if complex
+                .iter()
+                .flatten()
+                .any(|simple| matches!(simple, Simple::Attribute(name) if name == "open"))
+                && (complex.len() != 1 || !is_details_open(&complex[0]))
+            {
+                return Err(
+                    "`[open]` is reserved for the literal native `details[open]` base refinement"
+                        .to_owned(),
+                );
+            }
             if !manifest.is_owned(&subject) {
                 return Err(format!("subject `{subject}` is not owned in base.tsv"));
             }
@@ -386,6 +398,16 @@ fn check_selector(selector: &str, manifest: &Manifest) -> Result<Vec<String>, St
         }
     }
     Ok(subjects)
+}
+
+/// T5 permits one native open-state refinement: `details[open]`. It is not a
+/// general attribute hook or a state API for other base subjects.
+fn is_details_open(compound: &[Simple]) -> bool {
+    matches!(
+        compound,
+        [Simple::Type(element), Simple::Attribute(attribute)]
+            if element == "details" && attribute == "open"
+    )
 }
 
 /// The subject a compound styles: its element, else its attribute, else its
@@ -930,12 +952,31 @@ excluded\tconsumer\tnav
     }
 
     #[test]
-    fn permits_the_native_open_attribute_only_on_an_owned_subject() {
+    fn permits_open_only_for_the_literal_details_refinement() {
         let accepted = check_selector(":where(details[open])", &manifest()).expect("open state");
         assert_eq!(accepted, ["details"]);
 
         let error = check_selector(":where(nav[open])", &manifest()).expect_err("excluded subject");
         assert!(error.contains("excluded"), "{error}");
+
+        let open_manifest = parse_manifest(
+            "public-preview\tinteractive\tdetails\npublic-preview\tinteractive\tsummary\npublic-preview\tinteractive\tdialog",
+        )
+        .expect("open-state manifest");
+
+        for selector in [
+            ":where(dialog[open])",
+            ":where(summary[open])",
+            ":where([open])",
+            ":where(details[open] summary)",
+            ":where(details:is([open]))",
+        ] {
+            let error = check_selector(selector, &open_manifest).expect_err(selector);
+            assert!(
+                error.contains("`[open]` is reserved"),
+                "{selector}: {error}"
+            );
+        }
     }
 
     #[test]

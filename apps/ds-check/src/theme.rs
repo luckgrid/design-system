@@ -146,10 +146,78 @@ struct Rule {
 }
 
 fn rules(file: &str, source: &str) -> Result<Vec<Rule>, String> {
+    reject_selector_comments(file, source)?;
     let nodes = css::parse(source).map_err(|error| format!("stylesheet {file}: {error}"))?;
     let mut found = Vec::new();
     collect(file, &nodes, false, &mut found)?;
     Ok(found)
+}
+
+/// CSS comments are replaced with whitespace by the structural parser. That
+/// is correct for declarations, but a comment embedded in a selector can make
+/// an alias or root subject look like unrelated selector pieces to the theme
+/// scanner. Reject comments that occur inside a prelude rather than guessing
+/// which selector spelling the author intended.
+fn reject_selector_comments(file: &str, source: &str) -> Result<(), String> {
+    let chars: Vec<char> = source.chars().collect();
+    let mut segment_has_text = false;
+    let mut index = 0;
+    let mut quote = None;
+    while index < chars.len() {
+        let character = chars[index];
+        if let Some(open) = quote {
+            if character == '\\' {
+                index += 2;
+            } else {
+                if character == open {
+                    quote = None;
+                }
+                index += 1;
+            }
+            continue;
+        }
+        if character == '"' || character == '\'' {
+            quote = Some(character);
+            segment_has_text = true;
+            index += 1;
+            continue;
+        }
+        if character == '/' && chars.get(index + 1) == Some(&'*') {
+            let comment_start = index;
+            index += 2;
+            while index + 1 < chars.len() && !(chars[index] == '*' && chars[index + 1] == '/') {
+                index += 1;
+            }
+            if index + 1 >= chars.len() {
+                return Err(format!(
+                    "stylesheet {file}: cannot classify selector comment starting at byte-like position {comment_start}"
+                ));
+            }
+            index += 2;
+            if segment_has_text {
+                let mut next = index;
+                while chars
+                    .get(next)
+                    .is_some_and(|character| !matches!(character, '{' | ';' | '}'))
+                {
+                    next += 1;
+                }
+                if chars.get(next) == Some(&'{') {
+                    return Err(format!(
+                        "stylesheet {file}: cannot classify selector containing an embedded comment"
+                    ));
+                }
+            }
+            continue;
+        }
+        if matches!(character, '{' | '}' | ';') {
+            segment_has_text = false;
+        } else if !character.is_whitespace() {
+            segment_has_text = true;
+        }
+        index += 1;
+    }
+    Ok(())
 }
 
 fn collect(
@@ -1274,6 +1342,8 @@ Rejects a `.dark` class.
             "[=x] p",
             "a, , b",
             "p ::",
+            ".d/* comment */ark p",
+            ":r/* comment */oot",
         ] {
             let source = format!("@layer app {{ {selector} {{ color: red; }} }}");
             let error = validate_consumer("c.css", &source, &manifest).expect_err(selector);

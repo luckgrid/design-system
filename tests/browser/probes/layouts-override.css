@@ -1,0 +1,15 @@
+/*
+ * Harness-only consumer layer over the layouts: the layout's own properties
+ * set through plain element selectors, no !important and no Design System
+ * class. Every rule here must win over the layouts.
+ */
+@layer app {
+  ul {
+    gap: 3px;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  section {
+    gap: 5px;
+  }
+}

@@ -23,7 +23,7 @@ test.describe("core.css export", () => {
     expect(response.status()).toBe(404);
   });
 
-  test("publishes the documented layer order, then imports the tokens and the base", async ({ page }) => {
+  test("publishes the documented layer order, then imports the tokens, the base, and the layouts", async ({ page }) => {
     await page.goto("/tests/browser/probes/blank.html");
     await loadStylesheets(page, [CORE_EXPORT]);
     const rules = await page.evaluate((href) => {
@@ -41,17 +41,19 @@ test.describe("core.css export", () => {
       { type: "CSSLayerStatementRule", names: DS_LAYER_ORDER, layer: null, href: null },
       { type: "CSSImportRule", names: null, layer: "ds.tokens", href: "./tokens.css" },
       { type: "CSSImportRule", names: null, layer: "ds.base", href: "./base.css" },
+      { type: "CSSImportRule", names: null, layer: "ds.layouts", href: "./layouts.css" },
     ]);
   });
 
-  test("populates only ds.tokens and ds.base; every later layer is still empty", async ({ page }) => {
+  test("populates only ds.tokens, ds.base, and ds.layouts; every later layer is still empty", async ({ page }) => {
     await page.goto("/tests/browser/probes/blank.html");
     await loadStylesheets(page, [CORE_EXPORT]);
     const rules = await publishedRules(page, CORE_EXPORT);
     expect(rules.some((rule) => rule.layer.startsWith("ds.tokens."))).toBe(true);
     expect(rules.some((rule) => rule.layer.startsWith("ds.base."))).toBe(true);
+    expect(rules.some((rule) => rule.layer.startsWith("ds.layouts."))).toBe(true);
     for (const rule of rules) {
-      expect(rule.layer, `${rule.sheet} ${rule.selector}`).toMatch(/^ds\.(tokens|base)\./);
+      expect(rule.layer, `${rule.sheet} ${rule.selector}`).toMatch(/^ds\.(tokens|base|layouts)\./);
     }
   });
 });

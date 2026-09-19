@@ -1,0 +1,37 @@
+/*
+ * Consumer-owned stylesheet, loaded after the Design System core entrypoint.
+ * Declaring `app` after `ds` makes every rule here outrank every Design System
+ * layer through layer order alone.
+ *
+ * The page shell is consumer-owned: the Design System ships no page, header,
+ * footer, or measure layout. This sheet sets the shell, and one consumer class
+ * overrides a layout by setting the layout's own properties.
+ */
+@layer app;
+
+@layer app {
+  body {
+    margin: 0;
+    padding: 2rem;
+    background-color: var(--ds-color-canvas);
+    color: var(--ds-color-text);
+  }
+
+  .app-banner,
+  main,
+  .app-footer {
+    max-inline-size: 64rem;
+    margin-inline: auto;
+  }
+
+  ul,
+  ol {
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
+  .app-tight {
+    gap: 0.25rem;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

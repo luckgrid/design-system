@@ -1,0 +1,24 @@
+/*
+ * Layout primitives.
+ *
+ * Imported by the core entrypoint into `ds.layouts`. Each layout arranges the
+ * direct children of one element that opts in with a class hook. The hooks and
+ * their contracts are classified in layouts.tsv; candidates that were not
+ * promoted are listed there with their disposition. Every module follows the
+ * same rules, which `ds-check layout` enforces:
+ *
+ *   - each selector is `:where(.ds-<layout>)` or `:where(.ds-<layout>) > :where(*)`,
+ *     so every layout rule has zero specificity and any consumer rule wins;
+ *   - no rule reorders content: no `order`, reversed direction, dense packing,
+ *     or explicit placement, so visual order always follows source order;
+ *   - layouts are intrinsic: no media query, container query, or breakpoint;
+ *   - values bind to public semantic roles, keywords, and `fr`/`%` track sizes;
+ *     no custom property is declared.
+ *
+ * The modules sit in internal sub-layers in this order.
+ */
+@layer stack, cluster, grid;
+
+@import "./layouts/stack.css" layer(stack);
+@import "./layouts/cluster.css" layer(cluster);
+@import "./layouts/grid.css" layer(grid);

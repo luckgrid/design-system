@@ -80,6 +80,28 @@ const KEYWORDS: [&str; 30] = [
     "inline-block",
 ];
 
+/// The value vocabulary of the classless base.
+const BASE_VALUES: Vocabulary = Vocabulary {
+    label: "the base",
+    functions: &FUNCTIONS,
+    units: &UNITS,
+    keywords: &KEYWORDS,
+};
+
+/// Owner of an exclusion that no Design System task styles: the consumer keeps
+/// it, as it keeps page layout.
+pub(crate) const CONSUMER_OWNER: &str = "consumer";
+
+/// What a checked value may be built from, besides numbers, `var(--ds-*)`
+/// references, and separators.
+pub(crate) struct Vocabulary {
+    /// How errors name the surface, for example "the base".
+    pub label: &'static str,
+    pub functions: &'static [&'static str],
+    pub units: &'static [&'static str],
+    pub keywords: &'static [&'static str],
+}
+
 /// The validated `base.tsv` inventory.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Manifest {
@@ -137,9 +159,9 @@ pub fn parse_manifest(text: &str) -> Result<Manifest, String> {
                 owned.push(((*subject).to_owned(), (*group).to_owned()));
             }
             EXCLUDED => {
-                if !group.starts_with("DS-E") {
+                if !group.starts_with("DS-E") && *group != CONSUMER_OWNER {
                     return Err(format!(
-                        "base line {line_number} excludes '{subject}' without an owning program task (DS-E...)"
+                        "base line {line_number} excludes '{subject}' without an owning program task (DS-E...) or the {CONSUMER_OWNER} owner"
                     ));
                 }
                 if !is_element(subject) {
@@ -505,6 +527,9 @@ fn check_declaration(name: &str, value: &str) -> Result<(), String> {
     if property == "color-scheme" {
         return Err("sets color-scheme; only the theme contract selects the scheme".to_owned());
     }
+    if property == "appearance" || property.ends_with("-appearance") {
+        return Err("sets appearance; the base keeps native control appearance".to_owned());
+    }
     let lower = value.to_ascii_lowercase();
     let words: Vec<&str> = lower.split_whitespace().collect();
     let removes_outline = match property.as_str() {
@@ -516,11 +541,13 @@ fn check_declaration(name: &str, value: &str) -> Result<(), String> {
     if removes_outline {
         return Err("removes the outline; the base never defeats focus indication".to_owned());
     }
-    check_value(&lower)
+    check_value(&lower, &BASE_VALUES)
 }
 
-/// A base value is built from semantic roles, relative units, and keywords.
-fn check_value(value: &str) -> Result<(), String> {
+/// A checked value is built from semantic roles and the vocabulary's units,
+/// functions, and keywords. `value` is lowercase.
+pub(crate) fn check_value(value: &str, vocabulary: &Vocabulary) -> Result<(), String> {
+    let label = vocabulary.label;
     let chars: Vec<char> = value.chars().collect();
     let mut index = 0;
     while index < chars.len() {
@@ -531,7 +558,7 @@ fn check_value(value: &str) -> Result<(), String> {
         } else if c == '#' {
             return Err("uses a hex color; colors come from semantic roles".to_owned());
         } else if c == '"' || c == '\'' {
-            return Err("uses a string; the base generates no content".to_owned());
+            return Err(format!("uses a string; {label} generates no content"));
         } else if c.is_ascii_digit()
             || (c == '.' && next.is_some_and(|n| n.is_ascii_digit()))
             || (matches!(c, '+' | '-') && next.is_some_and(|n| n.is_ascii_digit() || n == '.'))
@@ -551,10 +578,10 @@ fn check_value(value: &str) -> Result<(), String> {
                 index += 1;
             }
             let unit: String = chars[start..index].iter().collect();
-            if !unit.is_empty() && !UNITS.contains(&unit.as_str()) {
+            if !unit.is_empty() && !vocabulary.units.contains(&unit.as_str()) {
                 return Err(format!(
                     "uses the unit `{unit}`; lengths come from semantic roles or {}",
-                    UNITS.join(", ")
+                    vocabulary.units.join(", ")
                 ));
             }
         } else if matches!(c, '+' | '-') && next.is_none_or(char::is_whitespace) {
@@ -569,10 +596,11 @@ fn check_value(value: &str) -> Result<(), String> {
             }
             let word: String = chars[start..index].iter().collect();
             if chars.get(index) == Some(&'(') {
-                if !FUNCTIONS.contains(&word.as_str()) {
+                if !vocabulary.functions.contains(&word.as_str()) {
                     return Err(format!(
-                        "calls `{word}()`; base values use only {}",
-                        FUNCTIONS
+                        "calls `{word}()`; {label} uses only {}",
+                        vocabulary
+                            .functions
                             .iter()
                             .map(|name| format!("{name}()"))
                             .collect::<Vec<_>>()
@@ -591,12 +619,12 @@ fn check_value(value: &str) -> Result<(), String> {
                     let reference: String = chars[start..index].iter().collect();
                     if reference.starts_with("--ds-ref-") {
                         return Err(format!(
-                            "reads internal reference value {reference}; the base binds to public semantic roles"
+                            "reads internal reference value {reference}; {label} binds to public semantic roles"
                         ));
                     }
                     if !reference.starts_with("--ds-") {
                         return Err(format!(
-                            "reads var({reference}); the base binds to Design System semantic roles only"
+                            "reads var({reference}); {label} binds to Design System semantic roles only"
                         ));
                     }
                     if chars.get(index) != Some(&')') {
@@ -605,14 +633,14 @@ fn check_value(value: &str) -> Result<(), String> {
                         ));
                     }
                 }
-            } else if !KEYWORDS.contains(&word.as_str()) {
+            } else if !vocabulary.keywords.contains(&word.as_str()) {
                 return Err(format!(
-                    "uses `{word}`, which is not a base keyword; colors and fonts come from semantic roles"
+                    "uses `{word}`, which is not a keyword {label} classifies; colors and fonts come from semantic roles"
                 ));
             }
         } else {
             return Err(format!(
-                "uses `{c}`, which the base value check does not classify"
+                "uses `{c}`, which the value check for {label} does not classify"
             ));
         }
     }
@@ -673,7 +701,7 @@ pub fn validate_document(document: &str, manifest: &Manifest) -> Result<(), Stri
     Ok(())
 }
 
-fn backticked(text: &str) -> Vec<String> {
+pub(crate) fn backticked(text: &str) -> Vec<String> {
     text.split('`')
         .skip(1)
         .step_by(2)
@@ -687,7 +715,7 @@ fn backticked(text: &str) -> Vec<String> {
 }
 
 /// The body of the one `heading` section, up to the next `#` or `##` heading.
-fn section<'a>(document: &'a str, heading: &str) -> Result<&'a str, String> {
+pub(crate) fn section<'a>(document: &'a str, heading: &str) -> Result<&'a str, String> {
     let mut starts = Vec::new();
     let mut offset = 0;
     for line in document.split_inclusive('\n') {
@@ -698,7 +726,7 @@ fn section<'a>(document: &'a str, heading: &str) -> Result<&'a str, String> {
     }
     let [start] = starts.as_slice() else {
         return Err(format!(
-            "the base document must have exactly one `{heading}` section, found {}",
+            "the document must have exactly one `{heading}` section, found {}",
             starts.len()
         ));
     };
@@ -714,8 +742,17 @@ fn section<'a>(document: &'a str, heading: &str) -> Result<&'a str, String> {
 }
 
 /// The plain fixture exercises every owned element and attribute subject.
+///
+/// The plain fixture is classless: it carries no `class` attribute, so the base
+/// is proven on ordinary HTML alone.
 pub fn validate_fixture(html: &str, manifest: &Manifest) -> Result<usize, String> {
     let lower = html.to_ascii_lowercase();
+    if has_attribute(&lower, "class") {
+        return Err(
+            "the plain fixture carries a class attribute; it proves the base on classless HTML"
+                .to_owned(),
+        );
+    }
     let mut covered = 0;
     for (subject, _) in &manifest.owned {
         let present = if let Some(attribute) = subject
@@ -738,7 +775,7 @@ pub fn validate_fixture(html: &str, manifest: &Manifest) -> Result<usize, String
     Ok(covered)
 }
 
-fn has_element(html: &str, name: &str) -> bool {
+pub(crate) fn has_element(html: &str, name: &str) -> bool {
     let open = format!("<{name}");
     html.match_indices(&open).any(|(index, _)| {
         html[index + open.len()..]
@@ -835,6 +872,7 @@ excluded\tDS-E01.S3.T1\tnav
             ("public-preview\tdocument\tHTML", "not a lowercase"),
             ("public-preview\tdocument\t.card", "not a lowercase"),
             ("excluded\tlater\tnav", "owning program task"),
+            ("excluded\tconsumers\tnav", "owning program task"),
             (
                 "excluded\tDS-E01.S3.T1\t[popover]",
                 "exclusions name elements",
@@ -942,6 +980,9 @@ excluded\tDS-E01.S3.T1\tnav
             ("animation-name: pulse;", "motion"),
             ("color-scheme: dark;", "color-scheme"),
             ("content: \"x\";", "string"),
+            ("appearance: none;", "appearance"),
+            ("-webkit-appearance: none;", "appearance"),
+            ("APPEARANCE: auto;", "appearance"),
         ] {
             let error = with_rule(&format!(":where(a:any-link) {{ {declaration} }}"))
                 .expect_err(declaration);
@@ -1070,5 +1111,18 @@ excluded\tDS-E01.S3.T1\tnav
         let error = validate_fixture(&html.replace("<a href", "<abbr href"), &manifest())
             .expect_err("abbr is not a");
         assert!(error.contains("`a`"), "{error}");
+        for classed in [
+            html.replace("<pre>", "<pre class=\"x\">"),
+            html.replace("<pre>", "<pre\nCLASS=x>"),
+        ] {
+            let error = validate_fixture(&classed, &manifest()).expect_err("class");
+            assert!(error.contains("class attribute"), "{error}");
+        }
+        let consumer = parse_manifest("public-preview\tcontent\ta\nexcluded\tconsumer\tnav")
+            .expect("consumer owner");
+        assert_eq!(
+            consumer.excluded,
+            [("nav".to_owned(), "consumer".to_owned())]
+        );
     }
 }

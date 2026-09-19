@@ -29,4 +29,11 @@ selectors, and values bound to the semantic roles. The owned subjects and the
 exclusions are classified in `base.tsv`. See
 [`docs/architecture/base.md`](/docs/architecture/base.md).
 
+`layouts.css` and `layouts/` are the layout primitives in `ds.layouts`: one
+module per layout (stack, cluster, grid), each opted into by a class hook
+(`.ds-stack`, `.ds-cluster`, `.ds-grid`) under a zero-specificity `:where()`.
+The hooks are classified in `layouts.tsv`, which also records the candidates
+that stay consumer-owned, deferred, or rejected. See
+[`docs/architecture/layouts.md`](/docs/architecture/layouts.md).
+
 Do not copy Luna CSS here wholesale.

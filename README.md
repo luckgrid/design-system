@@ -61,6 +61,10 @@ The repository currently provides:
   it (a layout also reaches its direct children), with no `@scope` and every
   other `data-*` name reserved; see
   [`docs/architecture/hooks.md`](docs/architecture/hooks.md);
+- an exhaustive Luna/Luckgrid.net migration comparison that accounts for every
+  selected module, candidate family, token, hook, and native-platform handoff
+  without promoting new components; see
+  [`docs/architecture/migration-comparison.md`](docs/architecture/migration-comparison.md);
 - a brand theme fixture that maps one fictional consumer brand into the public
   semantic roles;
 - a plain HTML consumer fixture that loads only that export and exercises every

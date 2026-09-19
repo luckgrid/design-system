@@ -23,6 +23,9 @@ position; it does not claim a path is a build input.
 The frontend source root is `packages/styles/`. Its first supported CSS
 entrypoint and cascade contract are described in
 [`css-entrypoint.md`](css-entrypoint.md) and checked by `ds-check layers`.
+Revision-pinned internal implementation evidence may live under
+`resources/evidence/`; it remains privacy-scanned, compatibility-classified,
+and outside the published CSS artifact.
 
 ## Contributor check
 

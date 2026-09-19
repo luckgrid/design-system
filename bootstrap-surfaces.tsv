@@ -49,6 +49,7 @@ internal	docs/architecture/bootstrap.md
 internal	docs/architecture/css-entrypoint.md
 internal	docs/architecture/hooks.md
 internal	docs/architecture/layouts.md
+internal	docs/architecture/migration-comparison.md
 internal	docs/architecture/primitives.md
 internal	docs/architecture/theme.md
 internal	docs/architecture/tokens.md
@@ -97,6 +98,7 @@ internal	fixtures/plain-html/figure.svg
 internal	fixtures/plain-html/index.html
 internal	layouts.tsv
 internal	primitives.tsv
+internal	resources/evidence/e01-s3-t4-migration-comparison.md
 internal	packages/styles/README.md
 internal	packages/styles/base.css
 internal	packages/styles/base/content.css

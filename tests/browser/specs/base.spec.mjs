@@ -119,7 +119,8 @@ test.describe("classless semantic base", () => {
         expect(property, rule.selector).not.toMatch(/^--|^transition|^animation|^color-scheme$/);
       }
     }
-    // The T1 order is unchanged by the base.
+    // The DS-E01.S2.T1 — Portable Layer and Entrypoint Contract order is
+    // unchanged by the base.
     const order = await page.evaluate(() => {
       const sheet = [...document.styleSheets].find((candidate) => candidate.href?.endsWith("/index.css"));
       return [...sheet.cssRules[0].nameList];

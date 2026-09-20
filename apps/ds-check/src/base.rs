@@ -400,8 +400,9 @@ fn check_selector(selector: &str, manifest: &Manifest) -> Result<Vec<String>, St
     Ok(subjects)
 }
 
-/// T5 permits one native open-state refinement: `details[open]`. It is not a
-/// general attribute hook or a state API for other base subjects.
+/// DS-E01.S3.T5 — Native Platform Pattern Refinement permits one native
+/// open-state refinement: `details[open]`. It is not a general attribute hook
+/// or a state API for other base subjects.
 fn is_details_open(compound: &[Simple]) -> bool {
     matches!(
         compound,

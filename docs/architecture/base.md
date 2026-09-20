@@ -8,8 +8,9 @@ wrapper, script, or framework.
 The base ships inside the core export. The entrypoint imports
 `packages/styles/base.css` into `ds.base`. That file imports one module per
 group into internal sub-layers, in this order: `ds.base.document`,
-`ds.base.content`, `ds.base.forms`, `ds.base.interactive`. The T1 layer order
-is unchanged.
+`ds.base.content`, `ds.base.forms`, `ds.base.interactive`. The layer order
+established by **DS-E01.S2.T1 — Portable Layer and Entrypoint Contract** is
+unchanged.
 
 ## Rules every base selector and value follows
 

@@ -6,6 +6,7 @@ mod css;
 mod hooks;
 mod layout;
 mod primitive;
+mod tailwind;
 mod theme;
 mod tokens;
 
@@ -16,10 +17,12 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
-const ALLOWED_ROOTS: [&str; 21] = [
+const ALLOWED_ROOTS: [&str; 23] = [
     ".github",
     ".gitignore",
     "apps",
+    "adapters",
+    "adapter-exports.tsv",
     "base.tsv",
     "packages",
     "fixtures",
@@ -105,7 +108,7 @@ struct Export {
     path: PathBuf,
 }
 
-const USAGE: &str = "usage: ds-check audit [styles-root]\n       ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>\n       ds-check hooks <layouts.tsv> <primitives.tsv> <theme.tsv> <exports.tsv> <hooks-doc.md> <scoping-fixture-dir>";
+const USAGE: &str = "usage: ds-check audit [styles-root]\n       ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tailwind <projection.tsv> <tokens.tsv> <adapter-exports.tsv> <bootstrap-surfaces.tsv> <adapter-dir> <generated.css>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>\n       ds-check hooks <layouts.tsv> <primitives.tsv> <theme.tsv> <exports.tsv> <hooks-doc.md> <scoping-fixture-dir>";
 
 fn run(args: &[String]) -> Result<String, String> {
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
@@ -120,6 +123,23 @@ fn run(args: &[String]) -> Result<String, String> {
             Path::new(exports),
             Path::new(manifest),
             Path::new(fixture),
+        ),
+        [
+            command,
+            projection,
+            inventory,
+            adapter_exports,
+            manifest,
+            adapter,
+            generated,
+        ] if command == "tailwind" => tailwind::run(
+            &root,
+            Path::new(projection),
+            Path::new(inventory),
+            Path::new(adapter_exports),
+            Path::new(manifest),
+            Path::new(adapter),
+            Path::new(generated),
         ),
         [command, inventory, exports, document, consumers @ ..]
             if command == "tokens" && !consumers.is_empty() =>
@@ -1259,6 +1279,7 @@ fn validate_export_classification(
         let is_stylesheet = surface.path.extension().is_some_and(|ext| ext == "css");
         if surface.class != "internal"
             && is_stylesheet
+            && surface.path.starts_with(STYLES_ROOT)
             && !exports.iter().any(|export| export.path == surface.path)
         {
             return Err(format!(

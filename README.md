@@ -71,6 +71,9 @@ The repository currently provides:
   against nested and lookalike markup;
 - browser contract tests in Chromium, Firefox, and WebKit under `tests/browser/`;
 - explicit compatibility classification in `bootstrap-surfaces.tsv`;
+- an optional `public-preview` Tailwind v4 adapter that maps the same public
+  semantic roles through `@theme inline`, has no Preflight, and keeps provider
+  tooling isolated under `adapters/tailwind/`;
 - least-privilege GitHub Actions quality checks.
 
 Components and utilities are not defined yet; their layers stay empty until a
@@ -117,6 +120,10 @@ cargo run --locked -p design-system-check -- primitive \
 cargo run --locked -p design-system-check -- hooks \
   layouts.tsv primitives.tsv theme.tsv exports.tsv docs/architecture/hooks.md \
   fixtures/scoping
+(cd adapters/tailwind && npm ci --no-audit --no-fund && npm run build)
+cargo run --locked -p design-system-check -- tailwind \
+  adapters/tailwind/projection.tsv tokens.tsv adapter-exports.tsv \
+  bootstrap-surfaces.tsv adapters/tailwind adapters/tailwind/fixture/output.css
 (cd tests/browser && npm ci && npx playwright install chromium firefox webkit && npx playwright test)
 ```
 

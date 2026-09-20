@@ -1,0 +1,14 @@
+{
+  "name": "design-system-tailwind-adapter",
+  "private": true,
+  "description": "Optional, locked Tailwind v4 projection tooling; not a portable-core dependency.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "tailwindcss -i ./fixture/input.css -o ./fixture/output.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.0",
+    "tailwindcss": "4.3.0"
+  }
+}

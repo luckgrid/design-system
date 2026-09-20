@@ -58,6 +58,15 @@ jobs:
       - name: Hooks and scoping
         run: cargo +1.98.1 run --locked -p design-system-check -- hooks layouts.tsv primitives.tsv theme.tsv exports.tsv docs/architecture/hooks.md fixtures/scoping
 
+      - name: Install locked Tailwind adapter tooling
+        working-directory: adapters/tailwind
+        run: npm ci --no-audit --no-fund
+
+      - name: Build and verify Tailwind adapter
+        run: |
+          npm --prefix adapters/tailwind run build
+          cargo +1.98.1 run --locked -p design-system-check -- tailwind adapters/tailwind/projection.tsv tokens.tsv adapter-exports.tsv bootstrap-surfaces.tsv adapters/tailwind adapters/tailwind/fixture/output.css
+
   browser:
     runs-on: ubuntu-latest
     defaults:
@@ -75,6 +84,11 @@ jobs:
 
       - name: Install browsers
         run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Build Tailwind adapter fixture
+        run: |
+          npm --prefix "$GITHUB_WORKSPACE/adapters/tailwind" ci --no-audit --no-fund
+          npm --prefix "$GITHUB_WORKSPACE/adapters/tailwind" run build
 
       - name: Browser contract (Chromium, Firefox, WebKit)
         run: npx playwright test

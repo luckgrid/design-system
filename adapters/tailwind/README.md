@@ -27,3 +27,14 @@ theme shorthand candidates are either native/provider behavior, consumer-local,
 or incompatible with the portable hook contract. Consumers may add local
 utilities and variants after this entrypoint; those extensions are not Design
 System API.
+
+## Consumer fixture
+
+`fixture/` is the bounded T3 consumer proof. Its input disables Tailwind's
+default source scan with `source(none)` and opts back into only its sibling
+`index.html` with `@source`. The fixture imports the declared adapter entrypoint,
+uses projected semantic roles in default/light/dark schemes, and defines a
+consumer-owned semantic override plus local utility and variant. Generated CSS
+is checked for semantic aliases, local extension output, and the absence of
+Preflight. The plain HTML fixture remains a separate CSS-only consumer and does
+not use this provider or its Node tooling.

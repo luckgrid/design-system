@@ -1,5 +1,6 @@
 //! Deterministic, dependency-free measurements for authored CSS.
 
+use crate::tokens;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -37,10 +38,8 @@ pub fn run(root: &Path, styles_root: &Path) -> Result<String, String> {
             .lines()
             .filter(|line| line.trim_start().starts_with('@'))
             .count();
-        metrics.custom_properties += source
-            .lines()
-            .filter(|line| line.contains("--ds-") && line.contains(':'))
-            .count();
+        metrics.custom_properties +=
+            tokens::declarations(&file.display().to_string(), &source)?.len();
     }
 
     Ok(format!(
@@ -82,8 +81,17 @@ fn collect_css(path: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::collect_css;
+    use super::{Metrics, collect_css};
     use std::fs;
+
+    fn metrics_for(source: &str) -> Metrics {
+        Metrics {
+            custom_properties: crate::tokens::declarations("test.css", source)
+                .expect("parse declarations")
+                .len(),
+            ..Metrics::default()
+        }
+    }
 
     #[test]
     fn collects_only_css_in_sorted_tree() {
@@ -102,5 +110,17 @@ mod tests {
         assert!(files[1].ends_with("z.css"));
 
         let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn counts_custom_property_declarations_not_var_uses() {
+        let metrics = metrics_for(
+            "@layer ds.example {\n\
+               :root { --ds-space-flow: 1rem; }\n\
+               .stack { gap: var(--ds-space-flow); color: var(--ds-color-text); }\n\
+             }",
+        );
+
+        assert_eq!(metrics.custom_properties, 1);
     }
 }

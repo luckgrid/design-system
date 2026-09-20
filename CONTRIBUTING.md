@@ -24,7 +24,7 @@ cargo run --locked -p design-system-check -- layers \
 cargo run --locked -p design-system-check -- tokens \
   tokens.tsv exports.tsv docs/architecture/tokens.md \
   fixtures/plain-html fixtures/brand-theme fixtures/layouts fixtures/primitives \
-  tests/browser/probes
+  fixtures/scoping tests/browser/probes
 cargo run --locked -p design-system-check -- theme \
   theme.tsv exports.tsv docs/architecture/theme.md \
   fixtures tests/browser/probes
@@ -35,6 +35,9 @@ cargo run --locked -p design-system-check -- layout \
 cargo run --locked -p design-system-check -- primitive \
   primitives.tsv layouts.tsv exports.tsv docs/architecture/primitives.md \
   fixtures/primitives
+cargo run --locked -p design-system-check -- hooks \
+  layouts.tsv primitives.tsv theme.tsv exports.tsv docs/architecture/hooks.md \
+  fixtures/scoping
 ```
 
 Browser contract tests need Node 20 or later and live only in `tests/browser/`.
@@ -68,7 +71,8 @@ declared in `exports.tsv`, the `public-preview` semantic token roles in
 defaults in `base.tsv`, the layout hooks in `layouts.tsv`, and the primitive hooks and states in `primitives.tsv`. Changes to the entrypoint, its layer order, what `exports.tsv`
 declares, or a public role's name, meaning, value type, or alias relationship
 are compatibility changes and must say so. So are changes to a base default or
-to a layout hook or its documented contract. Reference tokens (`--ds-ref-*`) are
+to a layout hook or its documented contract, and to the public hook vocabulary
+and scoping boundary in `docs/architecture/hooks.md`. Reference tokens (`--ds-ref-*`) are
 internal. Other files in
 `packages/styles/` stay `internal` until an owning DS-E01 task accepts a public
 contract for them.

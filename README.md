@@ -56,12 +56,18 @@ The repository currently provides:
   buttons and links, with primary, quiet, and icon variants and native or ARIA
   state only, classified in `primitives.tsv`; see
   [`docs/architecture/primitives.md`](docs/architecture/primitives.md);
+- one public hook vocabulary: the layout and primitive classes plus the
+  `data-ds-scheme` theme attribute, each styling only the element that carries
+  it (a layout also reaches its direct children), with no `@scope` and every
+  other `data-*` name reserved; see
+  [`docs/architecture/hooks.md`](docs/architecture/hooks.md);
 - a brand theme fixture that maps one fictional consumer brand into the public
   semantic roles;
 - a plain HTML consumer fixture that loads only that export and exercises every
   owned base default, a layouts fixture that uses the layouts inside a
-  consumer-owned page shell, and a primitives fixture that exercises every
-  primitive hook and state;
+  consumer-owned page shell, a primitives fixture that exercises every
+  primitive hook and state, and a scoping fixture that checks each hook's reach
+  against nested and lookalike markup;
 - browser contract tests in Chromium, Firefox, and WebKit under `tests/browser/`;
 - explicit compatibility classification in `bootstrap-surfaces.tsv`;
 - least-privilege GitHub Actions quality checks.
@@ -85,7 +91,7 @@ cargo run --locked -p design-system-check -- layers \
 cargo run --locked -p design-system-check -- tokens \
   tokens.tsv exports.tsv docs/architecture/tokens.md \
   fixtures/plain-html fixtures/brand-theme fixtures/layouts fixtures/primitives \
-  tests/browser/probes
+  fixtures/scoping tests/browser/probes
 cargo run --locked -p design-system-check -- theme \
   theme.tsv exports.tsv docs/architecture/theme.md \
   fixtures tests/browser/probes
@@ -96,6 +102,9 @@ cargo run --locked -p design-system-check -- layout \
 cargo run --locked -p design-system-check -- primitive \
   primitives.tsv layouts.tsv exports.tsv docs/architecture/primitives.md \
   fixtures/primitives
+cargo run --locked -p design-system-check -- hooks \
+  layouts.tsv primitives.tsv theme.tsv exports.tsv docs/architecture/hooks.md \
+  fixtures/scoping
 (cd tests/browser && npm ci && npx playwright install chromium firefox webkit && npx playwright test)
 ```
 
@@ -112,7 +121,7 @@ Repository paths are not API by default.
 | Class | Meaning |
 |---|---|
 | `public-stable` | Supported compatibility surface. None exists yet. |
-| `public-preview` | Deliberately exposed but still moving. Currently the `core.css` entrypoint, its layer order, the semantic token roles in `tokens.tsv`, the theme default and `data-ds-scheme` hook in `theme.tsv`, the classless base defaults in `base.tsv`, the layout hooks in `layouts.tsv`, and the primitive hooks and states in `primitives.tsv`. |
+| `public-preview` | Deliberately exposed but still moving. Currently the `core.css` entrypoint, its layer order, the semantic token roles in `tokens.tsv`, the theme default and `data-ds-scheme` hook in `theme.tsv`, the classless base defaults in `base.tsv`, the layout hooks in `layouts.tsv`, and the primitive hooks and states in `primitives.tsv`, together forming the hook vocabulary in `docs/architecture/hooks.md`. |
 | `internal` | Not API; may change or disappear. Every other path uses this class. |
 
 Product maturity and compatibility classification are separate. Experimental

@@ -150,7 +150,12 @@ same works in unlayered CSS. Do not reorder children visually with `order` or
 grid placement; if the order must change, change the source.
 
 Put one layout hook on an element. To combine layouts, nest them: a stack
-inside a grid cell, or a cluster inside a stack.
+inside a grid cell, or a cluster inside a stack. A layout may share its element
+with the surface base primitive, which declares no layout property, but never
+with an action, which owns its `display`. [`hooks.md`](hooks.md) states this
+composition rule and the scoping boundary of every hook. The child rule
+`:where(.ds-<layout>) > :where(*)` is internal: to change one child, put a
+consumer class on it.
 
 ## Rejected and deferred
 

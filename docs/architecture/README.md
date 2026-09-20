@@ -18,6 +18,8 @@ pages in order when integrating it:
 8. [CSS authoring and processing toolchain](css-toolchain.md) — understand
    source authority, deterministic audit measurements, and the bounded
    low-level processing evaluation.
+9. [Tailwind v4 adapter](tailwind.md) — optionally project public semantic
+   roles without a second token source or Preflight.
 
 [Bootstrap architecture](bootstrap.md) describes repository classification and
 the checks that keep internal files out of the public contract.

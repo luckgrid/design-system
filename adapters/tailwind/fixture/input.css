@@ -1,0 +1,7 @@
+@import "../index.css";
+@source "./index.html";
+
+@layer app;
+@layer app {
+  .consumer-accent { --ds-color-accent: oklch(50% 0.16 300); }
+}

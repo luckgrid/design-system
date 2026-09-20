@@ -22,6 +22,7 @@ const servedDirectories = [
   "fixtures/primitives/",
   "fixtures/scoping/",
   "fixtures/layer-ownership/",
+  "adapters/tailwind/fixture/",
   "tests/browser/probes/",
 ];
 

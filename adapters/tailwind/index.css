@@ -1,0 +1,54 @@
+/*
+ * Optional Tailwind v4 adapter (public-preview).
+ *
+ * Load this processed entrypoint instead of loading core.css separately. It
+ * loads the portable core first, then Tailwind theme and utilities. It does not
+ * import Tailwind's aggregate entrypoint, so it does not include Preflight.
+ * Consumer source detection is intentionally absent; each consumer supplies
+ * its own @source boundary to its build input.
+ */
+@import "../../packages/styles/index.css";
+@import "tailwindcss/theme" layer(tailwind.theme);
+@import "tailwindcss/utilities" layer(tailwind.utilities);
+
+/* Every value is an alias to a public semantic role. See projection.tsv. */
+@theme inline {
+  --color-ds-canvas: var(--ds-color-canvas);
+  --color-ds-surface: var(--ds-color-surface);
+  --color-ds-text: var(--ds-color-text);
+  --color-ds-text-muted: var(--ds-color-text-muted);
+  --color-ds-border: var(--ds-color-border);
+  --color-ds-accent: var(--ds-color-accent);
+  --color-ds-on-accent: var(--ds-color-on-accent);
+  --color-ds-critical: var(--ds-color-critical);
+  --color-ds-highlight: var(--ds-color-highlight);
+  --color-ds-focus: var(--ds-color-focus);
+  --font-ds-body: var(--ds-font-body);
+  --font-ds-heading: var(--ds-font-heading);
+  --font-ds-code: var(--ds-font-code);
+  --text-ds-small: var(--ds-text-small);
+  --text-ds-body: var(--ds-text-body);
+  --text-ds-lead: var(--ds-text-lead);
+  --text-ds-heading-1: var(--ds-text-heading-1);
+  --text-ds-heading-2: var(--ds-text-heading-2);
+  --text-ds-heading-3: var(--ds-text-heading-3);
+  --text-ds-heading-4: var(--ds-text-heading-4);
+  --text-ds-heading-5: var(--ds-text-heading-5);
+  --text-ds-heading-6: var(--ds-text-heading-6);
+  --leading-ds-body: var(--ds-leading-body);
+  --leading-ds-heading: var(--ds-leading-heading);
+  --font-weight-ds-body: var(--ds-weight-body);
+  --font-weight-ds-strong: var(--ds-weight-strong);
+  --font-weight-ds-heading: var(--ds-weight-heading);
+  --spacing-ds-control-block: var(--ds-space-control-block);
+  --spacing-ds-control-inline: var(--ds-space-control-inline);
+  --spacing-ds-flow: var(--ds-space-flow);
+  --spacing-ds-gutter: var(--ds-space-gutter);
+  --spacing-ds-section: var(--ds-space-section);
+  --spacing-ds-border-width: var(--ds-border-width);
+  --radius-ds-control: var(--ds-radius-control);
+  --spacing-ds-focus-width: var(--ds-focus-width);
+  --spacing-ds-focus-offset: var(--ds-focus-offset);
+  --spacing-ds-target-min: var(--ds-size-target-min);
+  --container-ds-measure: var(--ds-size-measure);
+}

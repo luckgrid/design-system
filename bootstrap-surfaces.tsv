@@ -33,6 +33,14 @@ internal	Cargo.toml
 internal	README.md
 internal	SECURITY.md
 internal	apps/README.md
+public-preview	adapters/tailwind/index.css	scan-exempt:adapter-entrypoint-imports-declared-core-export
+internal	adapters/tailwind/.gitignore
+internal	adapters/tailwind/README.md
+internal	adapters/tailwind/fixture/index.html
+internal	adapters/tailwind/fixture/input.css	scan-exempt:adapter-fixture-imports-local-entrypoint
+internal	adapters/tailwind/package.json
+internal	adapters/tailwind/package-lock.json
+internal	adapters/tailwind/projection.tsv
 internal	apps/ds-check/Cargo.toml
 internal	apps/ds-check/README.md
 internal	apps/ds-check/src/base.rs
@@ -43,6 +51,7 @@ internal	apps/ds-check/src/layout.rs
 internal	apps/ds-check/src/primitive.rs
 internal	apps/ds-check/src/main.rs	scan-exempt:checker-owns-the-marker-constants
 internal	apps/ds-check/src/theme.rs
+internal	apps/ds-check/src/tailwind.rs	scan-exempt:checker-owns-adapter-private-path-guards
 internal	apps/ds-check/src/tokens.rs
 internal	bootstrap-surfaces.tsv
 internal	design-system.descriptor.toml	scan-exempt:repository-remote-metadata
@@ -56,6 +65,7 @@ internal	docs/architecture/hooks.md
 internal	docs/architecture/layouts.md
 internal	docs/architecture/primitives.md
 internal	docs/architecture/theme.md
+internal	docs/architecture/tailwind.md
 internal	docs/architecture/tokens.md
 internal	exports.tsv
 internal	fixtures/README.md
@@ -153,7 +163,9 @@ internal	tests/browser/specs/primitives.spec.mjs
 internal	tests/browser/specs/scoping.spec.mjs
 internal	tests/browser/specs/support.mjs
 internal	tests/browser/specs/theme.spec.mjs
+internal	tests/browser/specs/tailwind.spec.mjs
 internal	tests/browser/specs/tokens.spec.mjs
 internal	base.tsv
+internal	adapter-exports.tsv
 internal	theme.tsv
 internal	tokens.tsv

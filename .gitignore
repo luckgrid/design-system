@@ -8,6 +8,8 @@
 
 # Rust
 /target/
+/adapters/tailwind/node_modules/
+/adapters/tailwind/fixture/output.css
 
 # Node (adapter and fixture subtrees only)
 node_modules/

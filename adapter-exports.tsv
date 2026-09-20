@@ -1,0 +1,2 @@
+# Optional adapter exports: <class><TAB><export-name><TAB>repository-relative path>
+public-preview	tailwind.css	adapters/tailwind/index.css

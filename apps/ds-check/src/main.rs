@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+mod audit;
 mod base;
 mod css;
 mod hooks;
@@ -104,11 +105,13 @@ struct Export {
     path: PathBuf,
 }
 
-const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>\n       ds-check hooks <layouts.tsv> <primitives.tsv> <theme.tsv> <exports.tsv> <hooks-doc.md> <scoping-fixture-dir>";
+const USAGE: &str = "usage: ds-check audit [styles-root]\n       ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>\n       ds-check hooks <layouts.tsv> <primitives.tsv> <theme.tsv> <exports.tsv> <hooks-doc.md> <scoping-fixture-dir>";
 
 fn run(args: &[String]) -> Result<String, String> {
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
     match args {
+        [command] if command == "audit" => audit::run(&root, Path::new(STYLES_ROOT)),
+        [command, styles_root] if command == "audit" => audit::run(&root, Path::new(styles_root)),
         [command, manifest, fixture] if command == "check" => {
             run_check(&root, Path::new(manifest), Path::new(fixture))
         }

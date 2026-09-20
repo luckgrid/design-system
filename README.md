@@ -30,7 +30,8 @@ The repository currently provides:
 
 - a Rust 2024 / resolver-3 Cargo workspace pinned to Rust 1.98.1;
 - one contributor tool, `ds-check`, for source-boundary, CSS layer-contract,
-  token-authority, theme-contract, and classless-base validation;
+  token-authority, theme-contract, classless-base validation, and deterministic
+  stylesheet measurement;
 - the first portable CSS entrypoint, `core.css` at `packages/styles/index.css`
   (`public-preview`), which publishes the shared cascade layer order; see
   [`docs/architecture/css-entrypoint.md`](docs/architecture/css-entrypoint.md);
@@ -94,6 +95,7 @@ cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 cargo test --workspace --all-features --locked
 cargo +1.98.1 check --workspace --all-targets --locked
+cargo run --locked -p design-system-check -- audit packages/styles
 cargo run --locked -p design-system-check -- check \
   bootstrap-surfaces.tsv fixtures/plain-html
 cargo run --locked -p design-system-check -- layers \

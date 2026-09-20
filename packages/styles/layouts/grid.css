@@ -1,9 +1,4 @@
-/*
- * Grid: direct children in equal columns, filled in source order. The column
- * count comes from the available space: each column is at least a third of the
- * reading measure, or the full width when less space is available, so the grid
- * needs no breakpoint.
- */
+/* Grid owns intrinsic columns and its direct-child reset. */
 :where(.ds-grid) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--ds-size-measure) / 3)), 1fr));

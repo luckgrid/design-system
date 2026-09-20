@@ -36,6 +36,7 @@ internal	apps/README.md
 internal	apps/ds-check/Cargo.toml
 internal	apps/ds-check/README.md
 internal	apps/ds-check/src/base.rs
+internal	apps/ds-check/src/audit.rs
 internal	apps/ds-check/src/css.rs
 internal	apps/ds-check/src/hooks.rs
 internal	apps/ds-check/src/layout.rs
@@ -50,6 +51,7 @@ internal	docs/architecture/README.md
 internal	docs/architecture/base.md
 internal	docs/architecture/bootstrap.md
 internal	docs/architecture/css-entrypoint.md
+internal	docs/architecture/css-toolchain.md
 internal	docs/architecture/hooks.md
 internal	docs/architecture/layouts.md
 internal	docs/architecture/primitives.md

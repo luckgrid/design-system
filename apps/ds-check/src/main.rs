@@ -3,6 +3,7 @@
 mod base;
 mod css;
 mod layout;
+mod primitive;
 mod theme;
 mod tokens;
 
@@ -13,7 +14,7 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
-const ALLOWED_ROOTS: [&str; 21] = [
+const ALLOWED_ROOTS: [&str; 22] = [
     ".github",
     ".gitignore",
     "apps",
@@ -22,6 +23,7 @@ const ALLOWED_ROOTS: [&str; 21] = [
     "fixtures",
     "docs",
     "layouts.tsv",
+    "primitives.tsv",
     "Cargo.toml",
     "Cargo.lock",
     "rust-toolchain.toml",
@@ -102,7 +104,7 @@ struct Export {
     path: PathBuf,
 }
 
-const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>";
+const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>";
 
 fn run(args: &[String]) -> Result<String, String> {
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
@@ -154,6 +156,16 @@ fn run(args: &[String]) -> Result<String, String> {
             Path::new(document),
             Path::new(fixture),
         ),
+        [command, inventory, layouts, exports, document, fixture] if command == "primitive" => {
+            run_primitive(
+                &root,
+                Path::new(inventory),
+                Path::new(layouts),
+                Path::new(exports),
+                Path::new(document),
+                Path::new(fixture),
+            )
+        }
         _ => Err(USAGE.to_owned()),
     }
 }
@@ -992,6 +1004,80 @@ layouts fixture {} uses every hook on {} element(s)",
     ))
 }
 
+/// Validate the primitives reached from the declared exports against the
+/// `primitives.tsv` inventory, the public primitives document, and the
+/// primitives fixture. `layouts.tsv` supplies the layout hooks a primitive may
+/// compose with.
+fn run_primitive(
+    root: &Path,
+    inventory: &Path,
+    layouts: &Path,
+    exports_file: &Path,
+    document: &Path,
+    fixture: &Path,
+) -> Result<String, String> {
+    validate_relative_path(inventory)?;
+    validate_relative_path(layouts)?;
+    validate_relative_path(exports_file)?;
+    validate_relative_path(document)?;
+    validate_relative_path(fixture)?;
+    let root = canonical(root, "repository root")?;
+
+    let inventory_text = fs::read_to_string(root.join(inventory))
+        .map_err(|error| format!("read primitives inventory {}: {error}", inventory.display()))?;
+    let manifest = primitive::parse_manifest(&inventory_text)?;
+    let layouts_text = fs::read_to_string(root.join(layouts))
+        .map_err(|error| format!("read layouts inventory {}: {error}", layouts.display()))?;
+    let layout_hooks = primitive::layout_hooks(&layout::parse_manifest(&layouts_text)?);
+
+    let exports_text = fs::read_to_string(root.join(exports_file))
+        .map_err(|error| format!("read exports {}: {error}", exports_file.display()))?;
+    let mut reached = BTreeSet::new();
+    for export in parse_exports(&exports_text)? {
+        let graph = css::validate_graph(&root, &export.path, Path::new(STYLES_ROOT))?;
+        reached.extend(graph.stylesheets);
+    }
+    let mut stylesheets = Vec::new();
+    for file in &reached {
+        let source = fs::read_to_string(file)
+            .map_err(|error| format!("read stylesheet {}: {error}", file.display()))?;
+        stylesheets.push((relative_to(&root, file).display().to_string(), source));
+    }
+    let summary = primitive::validate_stylesheets(&stylesheets, &manifest)?;
+
+    let document_text = fs::read_to_string(root.join(document))
+        .map_err(|error| format!("read primitives document {}: {error}", document.display()))?;
+    primitive::validate_document(&document_text, &manifest, &layout_hooks)
+        .map_err(|error| format!("{}: {error}", document.display()))?;
+
+    let index = root.join(fixture).join("index.html");
+    let html = fs::read_to_string(&index)
+        .map_err(|error| format!("read primitives fixture {}: {error}", index.display()))?;
+    let hooked = primitive::validate_fixture(&html, &manifest, &layout_hooks)
+        .map_err(|error| format!("{}: {error}", fixture.display()))?;
+
+    Ok(format!(
+        "validated primitives from {}: {} module(s), {} rule(s), {} declaration(s); \
+{} promoted primitive(s) ({}) with {} variant and state row(s), and {} other candidate(s) in {}; \
+every selector is derived from the inventory as a zero-specificity :where(), base primitives own no state or layout property, \
+UI primitive state is native or ARIA, and every value binds to a public semantic role or a keyword; \
+primitives document {} states each contract and every candidate's disposition and reason; \
+primitives fixture {} uses every hook and state on {} element(s)",
+        primitive::PRIMITIVES_ENTRY,
+        summary.modules,
+        summary.rules,
+        summary.declarations,
+        manifest.primitives.len(),
+        manifest.names(),
+        manifest.members(),
+        manifest.candidates.len(),
+        inventory.display(),
+        document.display(),
+        fixture.display(),
+        hooked
+    ))
+}
+
 fn parse_exports(text: &str) -> Result<Vec<Export>, String> {
     let mut exports: Vec<Export> = Vec::new();
 
@@ -1419,6 +1505,23 @@ mod tests {
         .expect("repository layout contract");
         assert!(
             output.starts_with("validated layouts from packages/styles/layouts.css"),
+            "{output}"
+        );
+    }
+
+    #[test]
+    fn repository_primitive_contract_passes() {
+        let output = run_primitive(
+            &repository_root(),
+            Path::new("primitives.tsv"),
+            Path::new("layouts.tsv"),
+            Path::new("exports.tsv"),
+            Path::new("docs/architecture/primitives.md"),
+            Path::new("fixtures/primitives"),
+        )
+        .expect("repository primitive contract");
+        assert!(
+            output.starts_with("validated primitives from packages/styles/primitives.css"),
             "{output}"
         );
     }

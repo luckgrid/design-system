@@ -1,0 +1,40 @@
+/*
+ * Consumer-owned stylesheet, loaded after the Design System core entrypoint.
+ * Declaring `app` after `ds` makes every rule here outrank every Design System
+ * layer through layer order alone.
+ *
+ * The page shell is consumer-owned. Two consumer classes override a primitive
+ * by setting the primitive's own properties.
+ */
+@layer app;
+
+@layer app {
+  body {
+    margin: 0;
+    padding: 2rem;
+    background-color: var(--ds-color-canvas);
+    color: var(--ds-color-text);
+  }
+
+  .app-banner,
+  main,
+  .app-footer {
+    max-inline-size: 64rem;
+    margin-inline: auto;
+  }
+
+  ul {
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
+  .app-pill {
+    border-radius: 999px;
+    padding-inline: 2rem;
+  }
+
+  .app-flat {
+    border-color: transparent;
+    background-color: var(--ds-color-canvas);
+  }
+}

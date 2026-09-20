@@ -1,0 +1,16 @@
+/*
+ * Harness-only consumer layer over the primitives: the primitives' own
+ * properties set through plain element selectors, no !important and no Design
+ * System class. Every rule here must win over every primitive rule, including
+ * variant and state rules.
+ */
+@layer app {
+  button,
+  a {
+    background-color: rgb(1, 2, 3);
+  }
+
+  article {
+    padding-inline: 3px;
+  }
+}

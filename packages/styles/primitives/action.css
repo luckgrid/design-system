@@ -1,0 +1,85 @@
+/*
+ * Action (UI primitive): a native <button> or a link that reads as a control.
+ * Keyboard activation, focus, and the focus outline stay native; the base's
+ * `:focus-visible` outline applies unchanged. A link keeps link semantics: it
+ * takes no `role="button"`.
+ *
+ * Rules run from the default, through the variants, to the states, and every
+ * selector has zero specificity, so a later rule in this list wins over an
+ * earlier one: a disabled primary action looks disabled.
+ */
+:where(.ds-action) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-space-control-inline);
+  min-block-size: var(--ds-size-target-min);
+  min-inline-size: var(--ds-size-target-min);
+  padding-block: var(--ds-space-control-block);
+  padding-inline: var(--ds-space-control-inline);
+  border-width: var(--ds-border-width);
+  border-style: solid;
+  border-color: var(--ds-color-border);
+  border-radius: var(--ds-radius-control);
+  background-color: var(--ds-color-surface);
+  color: var(--ds-color-text);
+  text-decoration-line: none;
+  cursor: pointer;
+}
+
+/* Primary: the one emphasized action in a group. */
+:where(.ds-action.ds-action-primary) {
+  border-color: var(--ds-color-accent);
+  background-color: var(--ds-color-accent);
+  color: var(--ds-color-on-accent);
+}
+
+/*
+ * Quiet: no fill and no visible border until hovered. The border keeps its
+ * width, so the box does not move, and forced-colors mode still draws it.
+ */
+:where(.ds-action.ds-action-quiet) {
+  border-color: transparent;
+  background-color: transparent;
+}
+
+/* Icon: a square control at the minimum target size; the consumer names it. */
+:where(.ds-action.ds-action-icon) {
+  padding-block: 0;
+  padding-inline: 0;
+  aspect-ratio: 1;
+}
+
+:where(.ds-action:hover) {
+  border-color: var(--ds-color-accent);
+}
+
+/*
+ * Current: the link or control for the current page, step, or item. The weight
+ * is the non-colour cue, so the state survives forced-colors mode.
+ */
+:where(.ds-action[aria-current]:not([aria-current="false"])) {
+  border-color: var(--ds-color-accent);
+  background-color: var(--ds-color-highlight);
+  color: var(--ds-color-text);
+  font-weight: var(--ds-weight-strong);
+}
+
+/* Disabled: the native attribute on a <button>. */
+:where(.ds-action:disabled) {
+  border-color: var(--ds-color-border);
+  background-color: var(--ds-color-surface);
+  color: var(--ds-color-text-muted);
+  cursor: not-allowed;
+}
+
+/*
+ * Unlinked: an <a> without `href` is not a link, is not focusable, and cannot
+ * be activated. It is the native way to show an unavailable link action.
+ */
+:where(a.ds-action:not(:any-link)) {
+  border-color: var(--ds-color-border);
+  background-color: var(--ds-color-surface);
+  color: var(--ds-color-text-muted);
+  cursor: not-allowed;
+}

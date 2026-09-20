@@ -1,7 +1,4 @@
-/*
- * Stack: direct children in one column, in source order, separated by the flow
- * gap. Children lose their own block margins so the gap is the only spacing.
- */
+/* Stack owns one-column flow and its direct-child reset. */
 :where(.ds-stack) {
   display: flex;
   flex-direction: column;

@@ -15,6 +15,9 @@ pages in order when integrating it:
 6. [Primitives](primitives.md) — compose surfaces and native actions.
 7. [Hooks and scoping](hooks.md) — use the complete public hook vocabulary and
    override it safely.
+8. [CSS authoring and processing toolchain](css-toolchain.md) — understand
+   source authority, deterministic audit measurements, and the bounded
+   low-level processing evaluation.
 
 [Bootstrap architecture](bootstrap.md) describes repository classification and
 the checks that keep internal files out of the public contract.

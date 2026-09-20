@@ -1,8 +1,4 @@
-/*
- * Cluster: direct children in a row that wraps onto new lines, in source order,
- * separated by the control gaps. Children may shrink below their content width
- * so long words wrap inside them instead of widening the page.
- */
+/* Cluster owns wrapping control groups and its direct-child reset. */
 :where(.ds-cluster) {
   display: flex;
   flex-wrap: wrap;

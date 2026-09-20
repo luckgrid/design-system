@@ -284,6 +284,31 @@ test.describe("classless semantic base", () => {
     await expect(page.locator("details")).toHaveJSProperty("open", false);
   });
 
+  test("a native disclosure keeps semantic fallback and adds token spacing only while open", async ({ page }) => {
+    await openFixture(page, { preference: "light", hook: null });
+    await installHelpers(page);
+    const disclosure = page.locator("details");
+    const summary = page.locator("summary");
+
+    await expect(summary).toBeVisible();
+    await expect(disclosure).toHaveJSProperty("open", false);
+    expect(await disclosure.evaluate((element) => getComputedStyle(element).paddingBlockEnd)).toBe("0px");
+
+    await summary.focus();
+    await expect(summary).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(disclosure).toHaveJSProperty("open", true);
+    const spacing = await disclosure.evaluate((element) => ({
+      actual: getComputedStyle(element).paddingBlockEnd,
+      expected: window.__role("--ds-space-control-block", "padding-block-end"),
+    }));
+    expect(spacing.actual).toBe(spacing.expected);
+
+    await page.keyboard.press("Enter");
+    await expect(disclosure).toHaveJSProperty("open", false);
+    expect(await disclosure.evaluate((element) => getComputedStyle(element).paddingBlockEnd)).toBe("0px");
+  });
+
   test("a modal dialog takes focus, closes on Escape, and returns focus", async ({ page }) => {
     await openFixture(page, { preference: "light", hook: null });
     const opener = page.getByRole("button", { name: "Native button" });

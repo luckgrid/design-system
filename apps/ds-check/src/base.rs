@@ -353,6 +353,7 @@ fn check_selector(selector: &str, manifest: &Manifest) -> Result<Vec<String>, St
                                 .to_owned(),
                         );
                     }
+                    Simple::Attribute(name) if name == "open" => {}
                     Simple::Attribute(name) if !ATTRIBUTES.contains(&name.as_str()) => {
                         return Err(format!(
                             "attribute `[{name}]`: only the native {} attributes are base hooks",
@@ -379,6 +380,17 @@ fn check_selector(selector: &str, manifest: &Manifest) -> Result<Vec<String>, St
                 .last()
                 .and_then(|compound| subject_of(compound))
                 .ok_or("cannot tell which subject this selector styles")?;
+            if complex
+                .iter()
+                .flatten()
+                .any(|simple| matches!(simple, Simple::Attribute(name) if name == "open"))
+                && (complex.len() != 1 || !is_details_open(&complex[0]))
+            {
+                return Err(
+                    "`[open]` is reserved for the literal native `details[open]` base refinement"
+                        .to_owned(),
+                );
+            }
             if !manifest.is_owned(&subject) {
                 return Err(format!("subject `{subject}` is not owned in base.tsv"));
             }
@@ -386,6 +398,16 @@ fn check_selector(selector: &str, manifest: &Manifest) -> Result<Vec<String>, St
         }
     }
     Ok(subjects)
+}
+
+/// T5 permits one native open-state refinement: `details[open]`. It is not a
+/// general attribute hook or a state API for other base subjects.
+fn is_details_open(compound: &[Simple]) -> bool {
+    matches!(
+        compound,
+        [Simple::Type(element), Simple::Attribute(attribute)]
+            if element == "details" && attribute == "open"
+    )
 }
 
 /// The subject a compound styles: its element, else its attribute, else its
@@ -810,6 +832,7 @@ public-preview\tcontent\ta
 public-preview\tcontent\tpre
 public-preview\tcontent\tcode
 public-preview\tforms\tinput
+public-preview\tinteractive\tdetails
 public-preview\tinteractive\t[popover]
 excluded\tconsumer\tnav
 ";
@@ -827,8 +850,7 @@ excluded\tconsumer\tnav
 :where(pre) { overflow-x: auto; }
 :where(pre code) { padding: 0; }";
     const FORMS: &str = ":where(input:not([type=\"checkbox\"]))::placeholder { color: var(--ds-color-text-muted); }";
-    const INTERACTIVE: &str =
-        ":where([popover]) { border: var(--ds-border-width) solid var(--ds-color-border); }";
+    const INTERACTIVE: &str = ":where(details[open]) { padding-block-end: var(--ds-space-control-block); }\n:where([popover]) { border: var(--ds-border-width) solid var(--ds-color-border); }";
 
     fn manifest() -> Manifest {
         parse_manifest(MANIFEST).expect("manifest")
@@ -864,7 +886,7 @@ excluded\tconsumer\tnav
     fn accepts_a_conforming_base() {
         let summary = validate_stylesheets(&sheets(CONTENT), &manifest()).expect("base");
         assert_eq!(summary.modules, 4);
-        assert_eq!(summary.rules, 7);
+        assert_eq!(summary.rules, 8);
     }
 
     #[test]
@@ -926,6 +948,34 @@ excluded\tconsumer\tnav
         ] {
             let error = with_rule(rule).expect_err(rule);
             assert!(error.contains(needle), "{rule}: {error}");
+        }
+    }
+
+    #[test]
+    fn permits_open_only_for_the_literal_details_refinement() {
+        let accepted = check_selector(":where(details[open])", &manifest()).expect("open state");
+        assert_eq!(accepted, ["details"]);
+
+        let error = check_selector(":where(nav[open])", &manifest()).expect_err("excluded subject");
+        assert!(error.contains("excluded"), "{error}");
+
+        let open_manifest = parse_manifest(
+            "public-preview\tinteractive\tdetails\npublic-preview\tinteractive\tsummary\npublic-preview\tinteractive\tdialog",
+        )
+        .expect("open-state manifest");
+
+        for selector in [
+            ":where(dialog[open])",
+            ":where(summary[open])",
+            ":where([open])",
+            ":where(details[open] summary)",
+            ":where(details:is([open]))",
+        ] {
+            let error = check_selector(selector, &open_manifest).expect_err(selector);
+            assert!(
+                error.contains("`[open]` is reserved"),
+                "{selector}: {error}"
+            );
         }
     }
 
@@ -1073,7 +1123,7 @@ excluded\tconsumer\tnav
 
 ### interactive
 
-| `[popover]` | surface |
+| `details`, `[popover]` | native surface |
 
 ## Exclusions
 
@@ -1103,8 +1153,8 @@ excluded\tconsumer\tnav
     #[test]
     fn fixture_must_cover_owned_subjects() {
         let html = "<html><body><a href=\"#x\">x</a><pre><code>x</code></pre>\
-<input id=\"x\"><div popover id=\"p\">p</div></body></html>";
-        assert_eq!(validate_fixture(html, &manifest()), Ok(6));
+<input id=\"x\"><details><summary>x</summary></details><div popover id=\"p\">p</div></body></html>";
+        assert_eq!(validate_fixture(html, &manifest()), Ok(7));
         let error =
             validate_fixture(&html.replace("<pre>", "<div>"), &manifest()).expect_err("no pre");
         assert!(error.contains("`pre`"), "{error}");

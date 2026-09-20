@@ -36,4 +36,11 @@ test.describe("optional Tailwind adapter", () => {
     expect(after).not.toBe(before);
     await expect(page.locator("a")).toHaveCSS("color", "oklch(0.5 0.16 300)");
   });
+
+  test("allows consumer-local utilities and variants after the adapter", async ({ page }) => {
+    await page.goto(FIXTURE);
+    const link = page.locator("a");
+    await link.hover();
+    await expect(link).toHaveCSS("outline-width", "2px");
+  });
 });

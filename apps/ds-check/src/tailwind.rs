@@ -57,6 +57,7 @@ pub fn run(
     {
         return Err("reusable Tailwind adapter must not embed consumer source scanning".to_owned());
     }
+    ensure_no_shared_extensions(&entry)?;
     if entry.contains("@import \"tailwindcss\";") || entry.contains("preflight") {
         return Err(
             "supported Tailwind adapter must omit aggregate Tailwind import and Preflight"
@@ -164,9 +165,20 @@ fn read(root: &Path, path: &Path) -> Result<String, String> {
     fs::read_to_string(root.join(path)).map_err(|error| format!("read {}: {error}", path.display()))
 }
 
+fn ensure_no_shared_extensions(entry: &str) -> Result<(), String> {
+    for directive in ["@utility", "@custom-variant", "@variant", "@slot"] {
+        if entry.contains(directive) {
+            return Err(format!(
+                "reusable Tailwind adapter must not publish shared extension directive `{directive}`"
+            ));
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
-    use super::parse_ledger;
+    use super::{ensure_no_shared_extensions, parse_ledger};
     use std::collections::BTreeSet;
 
     #[test]
@@ -186,5 +198,13 @@ mod tests {
             )
             .is_err()
         );
+    }
+
+    #[test]
+    fn rejects_shared_extension_directives() {
+        for directive in ["@utility", "@custom-variant", "@variant", "@slot"] {
+            assert!(ensure_no_shared_extensions(directive).is_err());
+        }
+        assert!(ensure_no_shared_extensions("@theme inline { }").is_ok());
     }
 }

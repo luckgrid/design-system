@@ -18,3 +18,12 @@ and Tailwind rules through normal layer precedence.
 variable aliases a `public-preview` `--ds-*` role through `@theme inline`; no
 literal duplicate and no `--ds-ref-*` reference value is allowed. Generic
 Tailwind utilities and defaults remain provider behavior, not Design System API.
+
+## Utilities and variants
+
+The shared adapter intentionally publishes no custom `@utility`, `@variant`,
+or `@custom-variant` surface. Luna's scrollbar, sticky, state, pointer, and
+theme shorthand candidates are either native/provider behavior, consumer-local,
+or incompatible with the portable hook contract. Consumers may add local
+utilities and variants after this entrypoint; those extensions are not Design
+System API.

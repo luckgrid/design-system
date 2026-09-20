@@ -20,3 +20,11 @@ token or utility API.
 The reusable adapter has no `@source` directive. Consumers own source detection
 in their own input stylesheet; the checked-in fixture demonstrates a bounded
 local `@source` only for verification.
+
+## Utility and variant boundary
+
+`tailwind.css` publishes no Design System-owned custom utility or variant. The
+adapter checker rejects `@utility`, `@variant`, `@custom-variant`, and `@slot`
+in its reusable entrypoint. A consumer can define provider extensions after the
+adapter, but such extensions remain consumer-owned and must not recreate a
+reserved `data-*` hook or a second token, theme, component, or state API.

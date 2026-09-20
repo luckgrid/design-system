@@ -72,8 +72,18 @@ The repository currently provides:
 - explicit compatibility classification in `bootstrap-surfaces.tsv`;
 - least-privilege GitHub Actions quality checks.
 
-Components and utilities are not defined yet; their layers stay empty until
-later DS-E01 work fills them.
+Components and utilities are not defined yet; their layers stay empty until a
+reviewed source change defines their contracts.
+
+## Start here
+
+- [Architecture](docs/README.md) explains the CSS entrypoint, cascade, tokens,
+  theme, base styles, layouts, primitives, and public hooks.
+- [Styles source](packages/styles/README.md) maps those contracts to files.
+- [Examples and fixtures](fixtures/README.md) show framework-free integration
+  and the cases enforced by contributor checks.
+- [Browser tests](tests/README.md) describe the cross-engine assurance suite.
+- [Contributor tooling](apps/README.md) documents the repository-local checks.
 
 ## Contributor checks
 
@@ -143,9 +153,3 @@ or redistribute the source.
 
 Open-source licensing is intended but deliberately deferred until before the
 first supported release candidate. No `LICENSE` file exists yet.
-
-## Provenance
-
-Planning/specification provenance is described in
-[WORKSTREAMS.md](WORKSTREAMS.md). That file is human/process metadata only and
-is not required to build, test, or eventually consume this repository.

@@ -58,9 +58,9 @@ excluded	consumer	section
 excluded	consumer	article
 excluded	consumer	search
 excluded	consumer	menu
-excluded	DS-E01.S3.T5	progress
-excluded	DS-E01.S3.T5	meter
-excluded	DS-E01.S3.T5	video
-excluded	DS-E01.S3.T5	audio
-excluded	DS-E01.S3.T5	iframe
-excluded	DS-E01.S3.T5	canvas
+excluded	native-pattern-refinement	progress
+excluded	native-pattern-refinement	meter
+excluded	native-pattern-refinement	video
+excluded	native-pattern-refinement	audio
+excluded	native-pattern-refinement	iframe
+excluded	native-pattern-refinement	canvas

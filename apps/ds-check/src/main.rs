@@ -15,7 +15,7 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
-const ALLOWED_ROOTS: [&str; 22] = [
+const ALLOWED_ROOTS: [&str; 21] = [
     ".github",
     ".gitignore",
     "apps",
@@ -31,7 +31,6 @@ const ALLOWED_ROOTS: [&str; 22] = [
     "README.md",
     "CONTRIBUTING.md",
     "SECURITY.md",
-    "WORKSTREAMS.md",
     "bootstrap-surfaces.tsv",
     "design-system.descriptor.toml",
     "exports.tsv",
@@ -1363,9 +1362,9 @@ mod tests {
         assert_eq!(
             coverage,
             Coverage {
-                surfaces: 2,
+                surfaces: 1,
                 scanned: 1,
-                exempt: 1,
+                exempt: 0,
             }
         );
     }

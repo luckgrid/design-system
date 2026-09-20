@@ -88,9 +88,11 @@ const BASE_VALUES: Vocabulary = Vocabulary {
     keywords: &KEYWORDS,
 };
 
-/// Owner of an exclusion that no Design System task styles: the consumer keeps
-/// it, as it keeps page layout.
+/// Owner of an exclusion that the shared base does not style: the consumer
+/// keeps it, as it keeps page layout.
 pub(crate) const CONSUMER_OWNER: &str = "consumer";
+const NATIVE_PATTERN_OWNER: &str = "native-pattern-refinement";
+const EXCLUSION_OWNERS: [&str; 2] = [CONSUMER_OWNER, NATIVE_PATTERN_OWNER];
 
 /// What a checked value may be built from, besides numbers, `var(--ds-*)`
 /// references, and separators.
@@ -159,9 +161,10 @@ pub fn parse_manifest(text: &str) -> Result<Manifest, String> {
                 owned.push(((*subject).to_owned(), (*group).to_owned()));
             }
             EXCLUDED => {
-                if !group.starts_with("DS-E") && *group != CONSUMER_OWNER {
+                if !EXCLUSION_OWNERS.contains(group) {
                     return Err(format!(
-                        "base line {line_number} excludes '{subject}' without an owning program task (DS-E...) or the {CONSUMER_OWNER} owner"
+                        "base line {line_number} excludes '{subject}' with unknown owner '{group}'; expected {}",
+                        EXCLUSION_OWNERS.join(" or ")
                     ));
                 }
                 if !is_element(subject) {
@@ -808,7 +811,7 @@ public-preview\tcontent\tpre
 public-preview\tcontent\tcode
 public-preview\tforms\tinput
 public-preview\tinteractive\t[popover]
-excluded\tDS-E01.S3.T1\tnav
+excluded\tconsumer\tnav
 ";
 
     const ENTRY: &str = "@layer document, content, forms, interactive;
@@ -871,17 +874,17 @@ excluded\tDS-E01.S3.T1\tnav
             ("public-preview\tlayout\thtml", "group 'layout'"),
             ("public-preview\tdocument\tHTML", "not a lowercase"),
             ("public-preview\tdocument\t.card", "not a lowercase"),
-            ("excluded\tlater\tnav", "owning program task"),
-            ("excluded\tconsumers\tnav", "owning program task"),
+            ("excluded\tlater\tnav", "unknown owner"),
+            ("excluded\tconsumers\tnav", "unknown owner"),
             (
-                "excluded\tDS-E01.S3.T1\t[popover]",
+                "excluded\tnative-pattern-refinement\t[popover]",
                 "exclusions name elements",
             ),
             (
-                "public-preview\tdocument\thtml\nexcluded\tDS-E01.S3.T1\thtml",
+                "public-preview\tdocument\thtml\nexcluded\tconsumer\thtml",
                 "repeats subject",
             ),
-            ("excluded\tDS-E01.S3.T1\tnav", "owns no subject"),
+            ("excluded\tconsumer\tnav", "owns no subject"),
         ] {
             let error = parse_manifest(text).expect_err(text);
             assert!(error.contains(needle), "{text}: {error}");
@@ -1074,7 +1077,7 @@ excluded\tDS-E01.S3.T1\tnav
 
 ## Exclusions
 
-| `nav` | DS-E01.S3.T1 |
+| `nav` | consumer |
 ";
 
     #[test]
@@ -1092,7 +1095,7 @@ excluded\tDS-E01.S3.T1\tnav
         )
         .expect_err("excluded listed as owned");
         assert!(error.contains("lists `nav` as owned"), "{error}");
-        let error = validate_document(&DOC.replace("| `nav` | DS-E01.S3.T1 |\n", ""), &manifest())
+        let error = validate_document(&DOC.replace("| `nav` | consumer |\n", ""), &manifest())
             .expect_err("exclusion");
         assert!(error.contains("excluded `nav`"), "{error}");
     }

@@ -108,8 +108,8 @@ a program task, or `consumer`.
 
 | Excluded | Why | Owner |
 |---|---|---|
-| `header`, `nav`, `main`, `aside`, `footer`, `section`, `article`, `search`, `menu` | landmarks and sectioning are page layout. The layouts task (DS-E01.S3.T1) kept page shells consumer-owned, so no Design System rule selects these elements. A consumer may still put a layout hook on one; see [`layouts.md`](layouts.md) | consumer |
-| `progress`, `meter`, `video`, `audio`, `iframe`, `canvas` | native widgets and embedded media whose styling is a component or pattern choice | native-pattern refinement (DS-E01.S3.T5) |
+| `header`, `nav`, `main`, `aside`, `footer`, `section`, `article`, `search`, `menu` | landmarks and sectioning are page layout, so no Design System rule selects them. A consumer may still put a layout hook on one; see [`layouts.md`](layouts.md) | consumer |
+| `progress`, `meter`, `video`, `audio`, `iframe`, `canvas` | native widgets and embedded media whose styling is a component or pattern choice | native-pattern-refinement |
 
 The base also deliberately does not do these things:
 

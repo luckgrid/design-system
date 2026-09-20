@@ -30,9 +30,8 @@ UI primitives → components and patterns → utilities.
 - A **component or pattern** combines primitives around a product meaning,
   such as a card, a breadcrumb trail, or a hero. None is promoted here.
 
-A candidate is promoted only when both evidence consumers (Luna and
-Luckgrid.net) repeat it, or when a DS-E01 fixture needs it, and its meaning is
-product-neutral. Every other candidate is listed under
+A candidate is promoted only when it expresses a repeated, product-neutral
+relationship that this repository can document and test. Every other candidate is listed under
 [Rejected and deferred](#rejected-and-deferred) with its reason.
 
 ## Rules every primitive follows
@@ -114,24 +113,19 @@ Kind: `ui-primitive`. Hooks: `.ds-action`, and the variants
 | Override | set the real property from a consumer layer or rule; a consumer rule wins over every action rule, including state rules |
 | Compatibility | the hooks, the roots, and the four states are `public-preview`; the exact declarations are `internal` |
 
-## Evidence
+## Selection rationale
 
-Both evidence consumers repeat an action control. Luna's `button.css` and
-Luckgrid.net's `action.css` each style a filled default button and link
-actions, an icon-only variant, a borderless ghost or text variant, an
-`aria-current` current state, a hover state, and a disabled state. Both
-consumers also use `role="button"` or a `data-*` hook where a native element or
-attribute already carries the meaning; those parts are rejected below. Neither
-consumer uses `aria-pressed`, so a pressed state is not promoted.
+Action captures the repeated presentation shared by native buttons and links
+that read as controls: default, primary, quiet, and icon-only variants with
+hover, current, disabled, and unavailable-link states. Native elements and ARIA
+carry the meaning; duplicate roles and custom `data-*` state are deliberately
+excluded. Pressed, busy, and destructive actions are not part of the current
+contract.
 
-Luckgrid.net uses a bordered surface region (`[data-card]`) heavily; Luna uses
-it once and more often composes an article card. Surface is promoted as the
-smallest product-neutral part of that pattern, a bounded region. The card
-arrangement is left to the layouts, and the card meaning to the consumer.
-
-Both evidence consumers share an author. µWiki is the named candidate for a
-materially unlike consumer; the release review re-checks these contracts
-against it.
+Surface captures the smallest reusable part of a card-like region: a bounded
+area separated from the canvas. Layout and product meaning remain separate, so
+a card can be composed as `.ds-surface.ds-stack` without creating another
+primitive.
 
 ## Browser support
 
@@ -186,9 +180,8 @@ in [`tokens.md`](tokens.md); both primitives follow.
 
 ## Rejected and deferred
 
-These candidates came from the Luna primitive and component inventory, the
-Luckgrid.net templates and styles, and the E01 fixtures. Neither consumer
-evidence nor these rows is a backlog commitment.
+These candidates are intentionally outside the current public-preview surface.
+A deferred row is not a backlog commitment.
 
 | Candidate | Disposition | Reason | Why |
 |---|---|---|---|
@@ -197,13 +190,13 @@ evidence nor these rows is a backlog commitment.
 | `nav` | consumer | `product-composition` | landmarks stay consumer-owned (see [`base.md`](base.md)); a navigation list is a cluster of actions or links |
 | `brand` | consumer | `product-identity` | product identity |
 | `icon` | consumer | `product-identity` | icon sets and their assets are product choices; an icon-only control uses `.ds-action-icon` |
-| `disclosure` | deferred | `native-pattern-refinement` | `<details>` open-state styling belongs to DS-E01.S3.T5 native-pattern refinement |
-| `dialog` | deferred | `native-pattern-refinement` | Luna's dialog depends on script; native `<dialog>` refinement is DS-E01.S3.T5 |
-| `popover` | deferred | `native-pattern-refinement` | Popover and anchor positioning are progressive features for DS-E01.S3.T5 |
-| `tooltip` | deferred | `native-pattern-refinement` | depends on popover and anchor positioning; DS-E01.S3.T5 |
-| `progress` | deferred | `native-pattern-refinement` | `progress` and `meter` are excluded from the base and owned by DS-E01.S3.T5 |
+| `disclosure` | deferred | `native-pattern-refinement` | native `<details>` already supplies behavior; additional styling needs its own complete contract |
+| `dialog` | deferred | `native-pattern-refinement` | native `<dialog>` behavior exists, but positioning and composed panel behavior are not shared here |
+| `popover` | deferred | `native-pattern-refinement` | Popover and anchor positioning require a complete progressive baseline |
+| `tooltip` | deferred | `native-pattern-refinement` | semantics, keyboard access, fallback, and positioning need one tested contract |
+| `progress` | deferred | `native-pattern-refinement` | `progress` and `meter` are excluded from the classless base and need focused native-control evidence |
 | `field` | deferred | `no-repeat-evidence` | a label, hint, and error grouping is used by one consumer only |
-| `select` | deferred | `no-repeat-evidence` | used by one consumer only; the customizable select is a DS-E01.S3.T5 candidate |
+| `select` | deferred | `no-repeat-evidence` | the classic native control remains valid; customizable select is not interoperable at the browser floor |
 | `table` | deferred | `no-repeat-evidence` | no consumer uses a table hook; the base styles tables |
 | `tag` | deferred | `no-repeat-evidence` | too few uses in both consumers |
 | `alert` | deferred | `no-repeat-evidence` | few uses in either consumer; alert semantics need an accessibility review first |

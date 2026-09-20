@@ -6,7 +6,7 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 
-use crate::tokens;
+use crate::{css, tokens};
 
 const ADAPTER_ENTRY: &str = "index.css";
 
@@ -57,6 +57,7 @@ pub fn run(
     {
         return Err("reusable Tailwind adapter must not embed consumer source scanning".to_owned());
     }
+    ensure_no_shared_extensions(&entry)?;
     if entry.contains("@import \"tailwindcss\";") || entry.contains("preflight") {
         return Err(
             "supported Tailwind adapter must omit aggregate Tailwind import and Preflight"
@@ -164,9 +165,40 @@ fn read(root: &Path, path: &Path) -> Result<String, String> {
     fs::read_to_string(root.join(path)).map_err(|error| format!("read {}: {error}", path.display()))
 }
 
+fn ensure_no_shared_extensions(entry: &str) -> Result<(), String> {
+    for node in css::parse(entry)
+        .map_err(|error| format!("reusable Tailwind adapter cannot be parsed: {error}"))?
+    {
+        ensure_no_shared_extension_node(&node)?;
+    }
+    Ok(())
+}
+
+fn ensure_no_shared_extension_node(node: &css::Node) -> Result<(), String> {
+    let name = match node {
+        css::Node::Statement { name, .. }
+        | css::Node::Group { name, .. }
+        | css::Node::Opaque { name, .. } => Some(name),
+        css::Node::Style { .. } => None,
+    };
+    if let Some(name) = name
+        && ["utility", "custom-variant", "variant", "slot"].contains(&name.as_str())
+    {
+        return Err(format!(
+            "reusable Tailwind adapter must not publish shared extension directive `@{name}`"
+        ));
+    }
+    if let css::Node::Group { children, .. } = node {
+        for child in children {
+            ensure_no_shared_extension_node(child)?;
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
-    use super::parse_ledger;
+    use super::{ensure_no_shared_extensions, parse_ledger};
     use std::collections::BTreeSet;
 
     #[test]
@@ -186,5 +218,26 @@ mod tests {
             )
             .is_err()
         );
+    }
+
+    #[test]
+    fn rejects_shared_extension_directives_fail_closed() {
+        for directive in [
+            "@utility shared { color: red; }",
+            "@UTILITY shared { color: red; }",
+            "@custom-variant shared (&:hover);",
+            "@CUSTOM-VARIANT shared (&:hover);",
+            "@variant shared;",
+            "@slot;",
+            "@layer app { @utility shared { color: red; } }",
+            "@u\\74ility shared { color: red; }",
+            "@/* comment */utility shared { color: red; }",
+        ] {
+            assert!(
+                ensure_no_shared_extensions(directive).is_err(),
+                "{directive}"
+            );
+        }
+        assert!(ensure_no_shared_extensions("@theme inline { }").is_ok());
     }
 }

@@ -5,3 +5,9 @@
 @layer app {
   .consumer-accent { --ds-color-accent: oklch(50% 0.16 300); }
 }
+
+@utility consumer-outline {
+  outline: 2px solid var(--ds-color-focus);
+}
+
+@custom-variant consumer-hocus (&:is(:hover, :focus-visible));

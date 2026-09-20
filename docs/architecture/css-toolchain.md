@@ -5,7 +5,7 @@ Status: **internal architecture guidance**. Readable CSS under
 
 ## Operation ownership
 
-| Operation | Owner | T6 disposition |
+| Operation | Owner | DS-E01.S3.T6 disposition |
 |---|---|---|
 | Parse and source-boundary validation | `ds-check` | Required; dependency-free Rust validation remains the contributor gate. |
 | Import and layer ownership | `ds-check` | Required; the accepted layered source graph is checked fail-closed. |
@@ -20,8 +20,9 @@ Lightning CSS was evaluated as the first low-level candidate. The Rust crate
 provides the relevant parser, bundler, transform, minifier, and source-map
 operations, but the current package has no compiled CSS artifact, browser
 target matrix, or source-map release contract to exercise. The available crate
-line is also alpha quality. T6 therefore does not add it as an unused root
-dependency. If a release artifact or target transform becomes an accepted
+line is also alpha quality. **DS-E01.S3.T6 — Stylesheet Simplification and
+Toolchain** therefore does not add it as an unused root dependency. If a release
+artifact or target transform becomes an accepted
 operation, Lightning CSS should be re-evaluated against that concrete fixture
 before a framework tool becomes authoritative.
 

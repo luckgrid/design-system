@@ -1281,7 +1281,7 @@ States: `[aria-current]`, `:disabled`, `:not(:any-link)`.
 | Candidate | Disposition | Reason | Why |
 |---|---|---|---|
 | `breadcrumbs` | consumer | `product-composition` | page |
-| `dialog` | deferred | `native-pattern-refinement` | T5 |
+| `dialog` | deferred | `native-pattern-refinement` | DS-E01.S3.T5 — Native Platform Pattern Refinement |
 | `card` | rejected | `covered-by-promoted` | surface |
 ";
 
@@ -1305,7 +1305,7 @@ States: `[aria-current]`, `:disabled`, `:not(:any-link)`.
             (DOC.replace("`.ds-stack`", "`.ds-center`"), "`.ds-center`"),
             (
                 DOC.replace(
-                    "| `dialog` | deferred | `native-pattern-refinement` | T5 |\n",
+                    "| `dialog` | deferred | `native-pattern-refinement` | DS-E01.S3.T5 — Native Platform Pattern Refinement |\n",
                     "",
                 ),
                 "no row for candidate `dialog`",

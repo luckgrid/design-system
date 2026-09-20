@@ -9,9 +9,10 @@ page shell stays with the consumer.
 The layouts ship inside the core export. The entrypoint imports
 `packages/styles/layouts.css` into `ds.layouts`. That file imports one module
 per layout into internal sub-layers, in this order: `ds.layouts.stack`,
-`ds.layouts.cluster`, `ds.layouts.grid`. The T1 layer order is unchanged, so a
-layout rule outranks a base rule and every later Design System layer and every
-consumer layer outranks a layout rule.
+`ds.layouts.cluster`, `ds.layouts.grid`. The layer order established by
+**DS-E01.S3.T1 — Layout Primitives** is unchanged, so a layout rule outranks a
+base rule and every later Design System layer and every consumer layer outranks
+a layout rule.
 
 ## Rules every layout follows
 

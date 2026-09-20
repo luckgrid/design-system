@@ -2,6 +2,7 @@
 
 mod base;
 mod css;
+mod layout;
 mod theme;
 mod tokens;
 
@@ -12,7 +13,7 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
-const ALLOWED_ROOTS: [&str; 20] = [
+const ALLOWED_ROOTS: [&str; 21] = [
     ".github",
     ".gitignore",
     "apps",
@@ -20,6 +21,7 @@ const ALLOWED_ROOTS: [&str; 20] = [
     "packages",
     "fixtures",
     "docs",
+    "layouts.tsv",
     "Cargo.toml",
     "Cargo.lock",
     "rust-toolchain.toml",
@@ -100,7 +102,7 @@ struct Export {
     path: PathBuf,
 }
 
-const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>";
+const USAGE: &str = "usage: ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>";
 
 fn run(args: &[String]) -> Result<String, String> {
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
@@ -139,6 +141,13 @@ fn run(args: &[String]) -> Result<String, String> {
             )
         }
         [command, inventory, exports, document, fixture] if command == "base" => run_base(
+            &root,
+            Path::new(inventory),
+            Path::new(exports),
+            Path::new(document),
+            Path::new(fixture),
+        ),
+        [command, inventory, exports, document, fixture] if command == "layout" => run_layout(
             &root,
             Path::new(inventory),
             Path::new(exports),
@@ -918,6 +927,71 @@ base document {} lists every owned subject and exclusion; plain fixture {} cover
     ))
 }
 
+/// Validate the layouts reached from the declared exports against the
+/// `layouts.tsv` inventory, the public layouts document, and the layouts fixture.
+fn run_layout(
+    root: &Path,
+    inventory: &Path,
+    exports_file: &Path,
+    document: &Path,
+    fixture: &Path,
+) -> Result<String, String> {
+    validate_relative_path(inventory)?;
+    validate_relative_path(exports_file)?;
+    validate_relative_path(document)?;
+    validate_relative_path(fixture)?;
+    let root = canonical(root, "repository root")?;
+
+    let inventory_text = fs::read_to_string(root.join(inventory))
+        .map_err(|error| format!("read layouts inventory {}: {error}", inventory.display()))?;
+    let manifest = layout::parse_manifest(&inventory_text)?;
+
+    let exports_text = fs::read_to_string(root.join(exports_file))
+        .map_err(|error| format!("read exports {}: {error}", exports_file.display()))?;
+    let mut reached = BTreeSet::new();
+    for export in parse_exports(&exports_text)? {
+        let graph = css::validate_graph(&root, &export.path, Path::new(STYLES_ROOT))?;
+        reached.extend(graph.stylesheets);
+    }
+    let mut stylesheets = Vec::new();
+    for file in &reached {
+        let source = fs::read_to_string(file)
+            .map_err(|error| format!("read stylesheet {}: {error}", file.display()))?;
+        stylesheets.push((relative_to(&root, file).display().to_string(), source));
+    }
+    let summary = layout::validate_stylesheets(&stylesheets, &manifest)?;
+
+    let document_text = fs::read_to_string(root.join(document))
+        .map_err(|error| format!("read layouts document {}: {error}", document.display()))?;
+    layout::validate_document(&document_text, &manifest)
+        .map_err(|error| format!("{}: {error}", document.display()))?;
+
+    let index = root.join(fixture).join("index.html");
+    let html = fs::read_to_string(&index)
+        .map_err(|error| format!("read layouts fixture {}: {error}", index.display()))?;
+    let hooked = layout::validate_fixture(&html, &manifest)
+        .map_err(|error| format!("{}: {error}", fixture.display()))?;
+
+    Ok(format!(
+        "validated layouts from {}: {} module(s), {} rule(s), {} declaration(s); \
+{} promoted layout(s) ({}) and {} other candidate(s) in {}; every selector is the layout's zero-specificity :where() hook \
+or its direct children, no rule reorders content or depends on a query, and every value binds to a public semantic role, \
+a keyword, or a track size; layouts document {} states each contract and every other candidate; \
+layouts fixture {} uses every hook on {} element(s)",
+        layout::LAYOUTS_ENTRY,
+        summary.modules,
+        summary.rules,
+        summary.declarations,
+        manifest.layouts.len(),
+        manifest.layouts.join(", "),
+        manifest.candidates.len(),
+        inventory.display(),
+        document.display(),
+        fixture.display(),
+        hooked
+    ))
+}
+
 fn parse_exports(text: &str) -> Result<Vec<Export>, String> {
     let mut exports: Vec<Export> = Vec::new();
 
@@ -1329,6 +1403,22 @@ mod tests {
         .expect("repository base contract");
         assert!(
             output.starts_with("validated classless base from packages/styles/base.css"),
+            "{output}"
+        );
+    }
+
+    #[test]
+    fn repository_layout_contract_passes() {
+        let output = run_layout(
+            &repository_root(),
+            Path::new("layouts.tsv"),
+            Path::new("exports.tsv"),
+            Path::new("docs/architecture/layouts.md"),
+            Path::new("fixtures/layouts"),
+        )
+        .expect("repository layout contract");
+        assert!(
+            output.starts_with("validated layouts from packages/styles/layouts.css"),
             "{output}"
         );
     }

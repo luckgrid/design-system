@@ -17,6 +17,7 @@ const port = Number(process.env.DS_BROWSER_PORT ?? 4173);
 
 const servedDirectories = [
   "fixtures/brand-theme/",
+  "fixtures/layouts/",
   "fixtures/plain-html/",
   "fixtures/layer-ownership/",
   "tests/browser/probes/",

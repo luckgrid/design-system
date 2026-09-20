@@ -1,0 +1,24 @@
+# Layout inventory.
+# <class>	<layout or candidate>	<hook or reason>
+# public-preview rows promote a layout: its module is packages/styles/layouts/<layout>.css,
+# its hook is the class .ds-<layout>, and its contract is in docs/architecture/layouts.md.
+# The other rows record each candidate that was evaluated and not promoted, with a reason
+# code: consumer (stays consumer-owned), deferred (no multi-consumer evidence yet), or
+# rejected (conflicts with a layout rule). None is a backlog commitment.
+# ds-check layout keeps layouts/*.css, this file, the document, and fixtures/layouts in agreement.
+public-preview	stack	.ds-stack
+public-preview	cluster	.ds-cluster
+public-preview	grid	.ds-grid
+consumer	page-shell	page-composition
+consumer	article-layout	page-composition
+consumer	column-grid	page-composition
+consumer	scroll-timeline	product-behavior
+deferred	center	no-consumer-evidence
+deferred	sidebar	no-consumer-evidence
+deferred	switcher	no-consumer-evidence
+deferred	cover	no-consumer-evidence
+deferred	frame	no-consumer-evidence
+deferred	reel	no-consumer-evidence
+deferred	container	no-consumer-evidence
+rejected	flex-switch	covered-by-cluster-and-grid
+rejected	footer-reorder	breaks-source-order

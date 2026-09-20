@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Design System layouts fixture</title>
+    <link rel="stylesheet" href="/packages/styles/index.css">
+    <link rel="stylesheet" href="./consumer.css">
+  </head>
+  <body>
+    <header class="app-banner">
+      <nav aria-label="Fixture sections">
+        <ul class="ds-cluster" id="nav">
+          <li><a href="#stack">Stack</a></li>
+          <li><a href="#cluster">Cluster</a></li>
+          <li><a href="#grid">Grid</a></li>
+          <li><a href="#nested">Nested</a></li>
+          <li><a href="#override">Override</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main class="ds-stack" id="page">
+      <h1>Layouts fixture</h1>
+      <p>This page loads only the declared Design System export and its own consumer stylesheet. The page shell (header, main, footer, and the page measure) is consumer-owned; the Design System layouts arrange content inside it through the <code>ds-stack</code>, <code>ds-cluster</code>, and <code>ds-grid</code> class hooks.</p>
+
+      <section class="ds-stack" id="stack" aria-labelledby="stack-title">
+        <h2 id="stack-title">Stack</h2>
+        <p>Children follow each other in one column, in source order, separated by the flow gap. Their own block margins are removed so the gap is the only spacing.</p>
+        <p>A long unbroken word and address must wrap instead of widening the page: Pneumonoultramicroscopicsilicovolcanoconiosispneumonoultramicroscopicsilicovolcanoconiosis and <a href="#a-very-long-fragment-identifier-that-keeps-going-without-any-natural-break-point-at-all">#a-very-long-fragment-identifier-that-keeps-going-without-any-natural-break-point-at-all</a>.</p>
+        <blockquote><p>A quote keeps its own inner spacing.</p></blockquote>
+        <button type="button">Stack action</button>
+      </section>
+
+      <section class="ds-stack" id="cluster" aria-labelledby="cluster-title">
+        <h2 id="cluster-title">Cluster</h2>
+        <ul class="ds-cluster" id="tags" aria-label="Tags">
+          <li><a href="#cluster">design</a></li>
+          <li><a href="#cluster">layout</a></li>
+          <li><a href="#cluster">css</a></li>
+          <li><a href="#cluster">intrinsic</a></li>
+          <li><a href="#cluster">source-order</a></li>
+          <li><a href="#cluster">accessibility</a></li>
+          <li><a href="#cluster">Pneumonoultramicroscopicsilicovolcanoconiosispneumonoultramicroscopicsilicovolcanoconiosis</a></li>
+        </ul>
+        <div class="ds-cluster" id="actions">
+          <button type="button">First</button>
+          <button type="button">Second action with a longer label</button>
+          <button type="button">Third</button>
+        </div>
+        <p class="ds-cluster" dir="rtl" lang="ar" id="rtl-cluster"><a href="#cluster">الأول</a> <a href="#cluster">الثاني</a> <a href="#cluster">الثالث</a></p>
+      </section>
+
+      <section class="ds-stack" id="grid" aria-labelledby="grid-title">
+        <h2 id="grid-title">Grid</h2>
+        <ul class="ds-grid" id="cards" aria-label="Cards">
+          <li><h3>One</h3><p>Short card.</p><a href="#grid">Read one</a></li>
+          <li><h3>Two</h3><p>A card with more text, so rows take the height of their tallest card while the columns stay equal.</p><a href="#grid">Read two</a></li>
+          <li><h3>Three</h3><p>Pneumonoultramicroscopicsilicovolcanoconiosispneumonoultramicroscopicsilicovolcanoconiosis</p><a href="#grid">Read three</a></li>
+          <li><h3>Four</h3><p>Short card.</p><a href="#grid">Read four</a></li>
+          <li><h3>Five</h3><p>Short card.</p><a href="#grid">Read five</a></li>
+          <li><h3>Six</h3><p>Short card.</p><a href="#grid">Read six</a></li>
+          <li><h3>Seven</h3><p>Short card.</p><a href="#grid">Read seven</a></li>
+        </ul>
+        <div class="ds-grid" id="single" aria-label="Single item grid">
+          <p>One item keeps its column width instead of stretching across the row.</p>
+        </div>
+        <div class="ds-grid" id="empty"></div>
+        <ol class="ds-grid" dir="rtl" lang="ar" id="rtl-grid" aria-label="RTL grid">
+          <li><a href="#grid">واحد</a></li>
+          <li><a href="#grid">اثنان</a></li>
+          <li><a href="#grid">ثلاثة</a></li>
+          <li><a href="#grid">أربعة</a></li>
+        </ol>
+      </section>
+
+      <section class="ds-stack" id="nested" aria-labelledby="nested-title">
+        <h2 id="nested-title">Nested</h2>
+        <div class="ds-grid" id="nested-grid">
+          <article class="ds-stack">
+            <h3>Nested stack</h3>
+            <p>A stack inside a grid cell.</p>
+            <div class="ds-cluster">
+              <a href="#nested">Alpha</a>
+              <a href="#nested">Beta</a>
+            </div>
+          </article>
+          <article class="ds-stack">
+            <h3>Second stack</h3>
+            <div class="ds-cluster">
+              <button type="button">Gamma</button>
+              <button type="button">Delta</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="ds-stack" id="override" aria-labelledby="override-title">
+        <h2 id="override-title">Consumer override</h2>
+        <p>The consumer stylesheet changes the gap and the column sizing of this grid with ordinary rules in its own layer, with no private selector and no source change.</p>
+        <ul class="ds-grid app-tight" id="overridden" aria-label="Overridden grid">
+          <li>Tight one</li>
+          <li>Tight two</li>
+          <li>Tight three</li>
+          <li>Tight four</li>
+        </ul>
+      </section>
+    </main>
+    <footer class="app-footer">
+      <p class="ds-cluster" id="footer"><a href="#page">Top</a> <a href="#stack">Stack</a> <small>Consumer-owned footer; its order follows the source.</small></p>
+    </footer>
+  </body>
+</html>

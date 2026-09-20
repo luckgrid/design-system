@@ -1,0 +1,12 @@
+/*
+ * Harness-only mutation: a consumer that reorders layout children visually.
+ * The source-order check must catch it; the layouts themselves never do this.
+ */
+#tags > li:first-child {
+  order: 99;
+}
+
+#cards > li:first-child {
+  grid-column: 3;
+  grid-row: 2;
+}

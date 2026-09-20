@@ -103,12 +103,12 @@ users must reach behind a popover alone.
 
 These elements get no base styling beyond the user agent's. Styling them would
 need a layout, primitive, or component decision that the global base cannot
-make for every page. `base.tsv` lists each one as `excluded` with the program
-task that owns it.
+make for every page. `base.tsv` lists each one as `excluded` with its owner:
+a program task, or `consumer`.
 
 | Excluded | Why | Owner |
 |---|---|---|
-| `header`, `nav`, `main`, `aside`, `footer`, `section`, `article`, `search`, `menu` | landmarks and sectioning are page layout | layouts (DS-E01.S3.T1) |
+| `header`, `nav`, `main`, `aside`, `footer`, `section`, `article`, `search`, `menu` | landmarks and sectioning are page layout. The layouts task (DS-E01.S3.T1) kept page shells consumer-owned, so no Design System rule selects these elements. A consumer may still put a layout hook on one; see [`layouts.md`](layouts.md) | consumer |
 | `progress`, `meter`, `video`, `audio`, `iframe`, `canvas` | native widgets and embedded media whose styling is a component or pattern choice | native-pattern refinement (DS-E01.S3.T5) |
 
 The base also deliberately does not do these things:
@@ -122,7 +122,9 @@ The base also deliberately does not do these things:
   component contracts.
 - **No popover positioning or animation.**
 - **No custom backdrop.** No token models a scrim yet.
-- **No page layout.** It sets no body margin or content measure.
+- **No page layout.** It sets no body margin or content measure. The opt-in
+  layouts in [`layouts.md`](layouts.md) arrange content; the page shell stays
+  with the consumer.
 
 ## Overriding
 
@@ -178,10 +180,11 @@ public-preview change. `ds-check base` fails when:
   `lh`, or `%`, a `--ds-ref-*` reference, a non-Design-System `var()`, a `var()`
   fallback, a string, or a function other than `var()`, `calc()`, `min()`, and
   `max()`;
-- a rule declares a custom property, `color-scheme`, a transition, or an
-  animation, or removes the outline;
+- a rule declares a custom property, `color-scheme`, `appearance`, a
+  transition, or an animation, or removes the outline;
 - this document's owned tables or exclusions do not match `base.tsv`, or the
-  plain fixture lacks an owned element or attribute.
+  plain fixture lacks an owned element or attribute or carries a `class`
+  attribute.
 
 The browser suite (`tests/browser/specs/base.spec.mjs`) checks the base in
 Chromium, Firefox, and WebKit:

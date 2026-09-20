@@ -11,6 +11,8 @@ Fixtures are small, framework-free examples used by static and browser checks.
   native states.
 - [`scoping`](scoping/README.md) proves that public hooks do not leak into
   lookalike or nested markup.
+- The Tailwind consumer fixture lives under `adapters/tailwind/fixture/` so its
+  provider lockfile and generated output stay consumer-owned and optional.
 - [`layer-ownership`](layer-ownership/README.md) contains accepted and rejected
   cascade-layer cases for `ds-check`.
 

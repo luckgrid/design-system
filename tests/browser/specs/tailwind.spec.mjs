@@ -18,12 +18,14 @@ test.describe("optional Tailwind adapter", () => {
         background: getComputedStyle(document.body).backgroundColor,
         canvas: getComputedStyle(canvas).color,
         accent: getComputedStyle(link).color,
+        bodyBoxSizing: getComputedStyle(document.body).boxSizing,
       };
       canvas.remove();
       return value;
     });
     expect(result.background).toBe(result.canvas);
     expect(result.accent).toBe("oklch(0.5 0.16 300)");
+    expect(result.bodyBoxSizing).toBe("content-box");
     expect(result.layers.flat()).toContain("ds.utilities");
     expect(result.layers.flat()).not.toContain("base");
   });
@@ -35,6 +37,9 @@ test.describe("optional Tailwind adapter", () => {
     const after = await page.locator("body").evaluate((element) => getComputedStyle(element).backgroundColor);
     expect(after).not.toBe(before);
     await expect(page.locator("a")).toHaveCSS("color", "oklch(0.5 0.16 300)");
+    await page.locator("html").evaluate((element) => element.setAttribute("data-ds-scheme", "light"));
+    const light = await page.locator("body").evaluate((element) => getComputedStyle(element).backgroundColor);
+    expect(light).toBe(before);
   });
 
   test("allows consumer-local utilities and variants after the adapter", async ({ page }) => {

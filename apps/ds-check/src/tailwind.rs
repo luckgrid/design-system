@@ -101,6 +101,36 @@ pub fn run(
             "generated fixture output does not prove a projected Tailwind utility".to_owned(),
         );
     }
+
+    let fixture_input = read(root, &adapter.join("fixture/input.css"))?;
+    let fixture_html = read(root, &adapter.join("fixture/index.html"))?;
+    for required in [
+        "@import \"../index.css\" source(none);",
+        "@source \"./index.html\";",
+        "@utility consumer-outline",
+        "@custom-variant consumer-hocus",
+    ] {
+        if !fixture_input.contains(required) {
+            return Err(format!("Tailwind consumer fixture is missing `{required}`"));
+        }
+    }
+    if fixture_input.contains("@source \"../")
+        || fixture_input.contains("@source \"../../")
+        || fixture_input.contains("--ds-ref-")
+        || fixture_html.contains("packages/")
+        || fixture_html.contains("private")
+    {
+        return Err(
+            "Tailwind consumer fixture reaches beyond its public/local boundary".to_owned(),
+        );
+    }
+    for required in [".consumer-accent", ".consumer-hocus\\:consumer-outline"] {
+        if !output.contains(required) {
+            return Err(format!(
+                "generated fixture output is missing consumer extension `{required}`"
+            ));
+        }
+    }
     Ok(format!(
         "validated Tailwind adapter: {} public semantic roles project through @theme inline, internal references excluded, no Preflight, and generated output {} resolves semantic variables",
         ledger.len(),

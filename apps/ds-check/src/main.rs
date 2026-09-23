@@ -6,6 +6,7 @@ mod css;
 mod hooks;
 mod layout;
 mod primitive;
+mod static_renderer;
 mod tailwind;
 mod theme;
 mod tokens;
@@ -108,7 +109,7 @@ struct Export {
     path: PathBuf,
 }
 
-const USAGE: &str = "usage: ds-check audit [styles-root]\n       ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check tailwind <projection.tsv> <tokens.tsv> <adapter-exports.tsv> <bootstrap-surfaces.tsv> <adapter-dir> <generated.css>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>\n       ds-check hooks <layouts.tsv> <primitives.tsv> <theme.tsv> <exports.tsv> <hooks-doc.md> <scoping-fixture-dir>";
+const USAGE: &str = "usage: ds-check audit [styles-root]\n       ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check static-renderer <exports.tsv> <layouts.tsv> <primitives.tsv> <theme.tsv> <base.tsv> <fixture-dir>\n       ds-check tailwind <projection.tsv> <tokens.tsv> <adapter-exports.tsv> <bootstrap-surfaces.tsv> <adapter-dir> <generated.css>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>\n       ds-check hooks <layouts.tsv> <primitives.tsv> <theme.tsv> <exports.tsv> <hooks-doc.md> <scoping-fixture-dir>";
 
 fn run(args: &[String]) -> Result<String, String> {
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
@@ -140,6 +141,23 @@ fn run(args: &[String]) -> Result<String, String> {
             Path::new(manifest),
             Path::new(adapter),
             Path::new(generated),
+        ),
+        [
+            command,
+            exports,
+            layouts,
+            primitives,
+            theme,
+            base_inventory,
+            fixture,
+        ] if command == "static-renderer" => static_renderer::run(
+            &root,
+            Path::new(exports),
+            Path::new(layouts),
+            Path::new(primitives),
+            Path::new(theme),
+            Path::new(base_inventory),
+            Path::new(fixture),
         ),
         [command, inventory, exports, document, consumers @ ..]
             if command == "tokens" && !consumers.is_empty() =>

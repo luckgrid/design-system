@@ -1,0 +1,35 @@
+{{ define "main" }}
+<div class="ds-stack">
+  <h1>{{ .Title }}</h1>
+  {{ .Content }}
+
+  <nav aria-label="Breadcrumb">
+    <ol class="ds-cluster">
+      <li><a class="ds-action ds-action-quiet" href="{{ site.Home.RelPermalink }}">Overview</a></li>
+      <li><a class="ds-action ds-action-quiet" href="{{ .RelPermalink }}" aria-current="page">{{ .LinkTitle }}</a></li>
+    </ol>
+  </nav>
+
+  <form class="ds-surface ds-stack" action="#form-sent">
+    <fieldset>
+      <legend>Subscribe</legend>
+      <p>
+        <label for="subscriber">Email</label>
+        <input id="subscriber" name="email" type="email" placeholder="you@example.test" autocomplete="email" required>
+      </p>
+      <p>
+        <label for="cadence">Cadence</label>
+        <select id="cadence" name="cadence">
+          <option>Weekly</option>
+          <option>Monthly</option>
+        </select>
+      </p>
+    </fieldset>
+    <p class="ds-cluster">
+      <button class="ds-action ds-action-primary" type="submit">Subscribe</button>
+      <button class="ds-action ds-action-quiet" type="reset">Reset</button>
+      <button class="ds-action" type="button" disabled>Unavailable</button>
+    </p>
+  </form>
+</div>
+{{ end }}

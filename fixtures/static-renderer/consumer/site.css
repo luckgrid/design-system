@@ -1,0 +1,40 @@
+/*
+ * Consumer-owned page shell and cascade overrides. Everything is in `app`, which
+ * is declared after `ds`, so these plain rules outrank every Design System layer
+ * through layer order alone: no specificity escalation and no !important.
+ */
+@layer app;
+
+@layer app {
+  body {
+    margin: 0;
+    padding: var(--ds-space-gutter);
+  }
+
+  body > header,
+  body > main,
+  body > footer {
+    max-inline-size: var(--ds-size-measure);
+    margin-inline: auto;
+  }
+
+  body > header ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-space-control-inline);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Normal cascade override of the action primitive's shape. */
+  .app-pill {
+    border-radius: 999px;
+  }
+
+  /* Normal cascade override of the surface primitive's edge. */
+  .app-flat {
+    border-style: dashed;
+    background-color: transparent;
+  }
+}

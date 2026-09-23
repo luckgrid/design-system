@@ -106,7 +106,7 @@ cargo run --locked -p design-system-check -- layers \
 cargo run --locked -p design-system-check -- tokens \
   tokens.tsv exports.tsv docs/architecture/tokens.md \
   fixtures/plain-html fixtures/brand-theme fixtures/layouts fixtures/primitives \
-  fixtures/scoping tests/browser/probes
+  fixtures/scoping fixtures/static-renderer/consumer tests/browser/probes
 cargo run --locked -p design-system-check -- theme \
   theme.tsv exports.tsv docs/architecture/theme.md \
   fixtures tests/browser/probes
@@ -124,6 +124,11 @@ cargo run --locked -p design-system-check -- hooks \
 cargo run --locked -p design-system-check -- tailwind \
   adapters/tailwind/projection.tsv tokens.tsv adapter-exports.tsv \
   bootstrap-surfaces.tsv adapters/tailwind adapters/tailwind/fixture/output.css
+sh fixtures/static-renderer/stage.sh
+sh fixtures/static-renderer/build.sh
+sh fixtures/static-renderer/verify-toolchain-free.sh
+cargo run --locked -p design-system-check -- static-renderer \
+  exports.tsv layouts.tsv primitives.tsv theme.tsv base.tsv fixtures/static-renderer
 (cd tests/browser && npm ci && npx playwright install chromium firefox webkit && npx playwright test)
 ```
 

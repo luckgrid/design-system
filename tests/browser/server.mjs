@@ -21,6 +21,7 @@ const servedDirectories = [
   "fixtures/plain-html/",
   "fixtures/primitives/",
   "fixtures/scoping/",
+  "fixtures/static-renderer/public/",
   "fixtures/layer-ownership/",
   "adapters/tailwind/fixture/",
   "tests/browser/probes/",
@@ -85,7 +86,8 @@ function resolve(urlPath) {
   } catch {
     return null;
   }
-  const relative = path.posix.normalize(decoded).replace(/^\/+/, "");
+  const indexed = decoded.endsWith("/") ? `${decoded}index.html` : decoded;
+  const relative = path.posix.normalize(indexed).replace(/^\/+/, "");
   if (relative.split("/").includes("..") || !allowed(relative)) {
     return null;
   }

@@ -13,6 +13,9 @@ Fixtures are small, framework-free examples used by static and browser checks.
   lookalike or nested markup.
 - The Tailwind consumer fixture lives under `adapters/tailwind/fixture/` so its
   provider lockfile and generated output stay consumer-owned and optional.
+- [`static-renderer`](static-renderer/README.md) is a Hugo consumer that renders
+  static pages from a staged copy of the declared exports, with no Rust, Node,
+  or Tailwind in its render path.
 - [`layer-ownership`](layer-ownership/README.md) contains accepted and rejected
   cascade-layer cases for `ds-check`.
 

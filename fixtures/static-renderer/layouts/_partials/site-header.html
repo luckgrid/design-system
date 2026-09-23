@@ -1,0 +1,11 @@
+{{- $current := . -}}
+<header>
+  <nav aria-label="Fixture pages">
+    <ul>
+      <li><a href="{{ site.Home.RelPermalink }}"{{ if $current.IsHome }} aria-current="page"{{ end }}>Overview</a></li>
+      {{- range site.RegularPages.ByWeight }}
+      <li><a href="{{ .RelPermalink }}"{{ if eq . $current }} aria-current="page"{{ end }}>{{ .LinkTitle }}</a></li>
+      {{- end }}
+    </ul>
+  </nav>
+</header>

@@ -24,7 +24,7 @@ cargo run --locked -p design-system-check -- layers \
 cargo run --locked -p design-system-check -- tokens \
   tokens.tsv exports.tsv docs/architecture/tokens.md \
   fixtures/plain-html fixtures/brand-theme fixtures/layouts fixtures/primitives \
-  fixtures/scoping tests/browser/probes
+  fixtures/scoping fixtures/static-renderer/consumer tests/browser/probes
 cargo run --locked -p design-system-check -- theme \
   theme.tsv exports.tsv docs/architecture/theme.md \
   fixtures tests/browser/probes
@@ -38,7 +38,16 @@ cargo run --locked -p design-system-check -- primitive \
 cargo run --locked -p design-system-check -- hooks \
   layouts.tsv primitives.tsv theme.tsv exports.tsv docs/architecture/hooks.md \
   fixtures/scoping
+sh fixtures/static-renderer/stage.sh
+sh fixtures/static-renderer/build.sh
+sh fixtures/static-renderer/verify-toolchain-free.sh
+cargo run --locked -p design-system-check -- static-renderer \
+  exports.tsv layouts.tsv primitives.tsv theme.tsv base.tsv fixtures/static-renderer
 ```
+
+The static-renderer fixture needs the exact Hugo version in
+`fixtures/static-renderer/HUGO_VERSION` and POSIX shell tools; it needs no Rust,
+Node, or Tailwind to stage or render.
 
 Browser contract tests need Node 20 or later and live only in `tests/browser/`.
 Node is not a root workspace tool:

@@ -51,6 +51,7 @@ internal	apps/ds-check/src/layout.rs
 internal	apps/ds-check/src/primitive.rs
 internal	apps/ds-check/src/main.rs	scan-exempt:checker-owns-the-marker-constants
 internal	apps/ds-check/src/theme.rs
+internal	apps/ds-check/src/static_renderer.rs	scan-exempt:checker-owns-static-renderer-private-path-guards
 internal	apps/ds-check/src/tailwind.rs	scan-exempt:checker-owns-adapter-private-path-guards
 internal	apps/ds-check/src/tokens.rs
 internal	bootstrap-surfaces.tsv
@@ -107,6 +108,26 @@ internal	fixtures/primitives/index.html
 internal	fixtures/scoping/README.md
 internal	fixtures/scoping/consumer.css
 internal	fixtures/scoping/index.html
+internal	fixtures/static-renderer/HUGO_VERSION
+internal	fixtures/static-renderer/README.md
+internal	fixtures/static-renderer/build.sh
+internal	fixtures/static-renderer/consumer/site.css
+internal	fixtures/static-renderer/consumer/theme.css
+internal	fixtures/static-renderer/content/_index.md
+internal	fixtures/static-renderer/content/article.md
+internal	fixtures/static-renderer/content/forms.md
+internal	fixtures/static-renderer/content/hooks.md
+internal	fixtures/static-renderer/hugo.toml
+internal	fixtures/static-renderer/layouts/_partials/site-footer.html
+internal	fixtures/static-renderer/layouts/_partials/site-header.html
+internal	fixtures/static-renderer/layouts/baseof.html
+internal	fixtures/static-renderer/layouts/forms.html
+internal	fixtures/static-renderer/layouts/home.html
+internal	fixtures/static-renderer/layouts/hooks.html
+internal	fixtures/static-renderer/layouts/page.html
+internal	fixtures/static-renderer/stage.sh
+internal	fixtures/static-renderer/static/figure.svg
+internal	fixtures/static-renderer/verify-toolchain-free.sh
 internal	fixtures/plain-html/README.md
 internal	fixtures/plain-html/consumer.css
 internal	fixtures/plain-html/figure.svg
@@ -163,6 +184,7 @@ internal	tests/browser/specs/primitives.spec.mjs
 internal	tests/browser/specs/scoping.spec.mjs
 internal	tests/browser/specs/support.mjs
 internal	tests/browser/specs/theme.spec.mjs
+internal	tests/browser/specs/static-renderer.spec.mjs
 internal	tests/browser/specs/tailwind.spec.mjs
 internal	tests/browser/specs/tokens.spec.mjs
 internal	base.tsv

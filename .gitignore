@@ -20,3 +20,9 @@ node_modules/
 
 # Build output
 /dist/
+
+# Static renderer fixture: generated staged boundary and rendered site
+/fixtures/static-renderer/stage/
+/fixtures/static-renderer/public/
+/fixtures/static-renderer/resources/
+/fixtures/static-renderer/.hugo_build.lock

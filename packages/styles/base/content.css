@@ -155,4 +155,10 @@
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
+
+  :where(dialog[open]) {
+    position: static;
+    inset: auto;
+    margin: var(--ds-space-flow) auto;
+  }
 }

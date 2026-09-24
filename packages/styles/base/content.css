@@ -145,3 +145,14 @@
   text-align: start;
   vertical-align: top;
 }
+
+/* Printed code cannot be horizontally scrolled, so preserve long lines by
+ * wrapping them in the print representation without changing screen behavior.
+ */
+@media print {
+  :where(pre) {
+    overflow: visible;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}

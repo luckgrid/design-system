@@ -177,7 +177,10 @@ public-preview change. `ds-check base` fails when:
 
 - `base.css` does anything other than order and import the four group modules,
   or a module is missing or unexpected;
-- a module holds an at-rule, including a conditional group;
+- a module holds an at-rule other than one `@media print` group, which may hold
+  style rules only and whose rules obey every check below; only there may a
+  selector name `dialog[open]`, and the keywords `visible`, `pre-wrap`, and
+  `static` exist for print adaptation;
 - a selector is not one literal `:where(...)`, or uses a class, id, `*`,
   `data-*`, `role`, another attribute, or a non-native pseudo-class, in any
   spelling (escaped, spaced, or with a comment);

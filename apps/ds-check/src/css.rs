@@ -61,6 +61,52 @@ pub enum Node {
     Style { prelude: String, body: String },
 }
 
+/// One style rule found by [`split_print`], with whether it sits in the print
+/// group.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FlatRule {
+    pub prelude: String,
+    pub body: String,
+    pub print: bool,
+}
+
+/// Flatten the top-level nodes of a module into its style rules, in source
+/// order, admitting exactly one environment group: `@media print`.
+///
+/// A print group may hold style rules only. Any other node, including another
+/// at-rule nested in the group, is returned as `Err(kind)` so the caller keeps
+/// its own contract-specific message.
+pub fn split_print(nodes: Vec<Node>) -> Result<Vec<FlatRule>, String> {
+    let mut rules = Vec::new();
+    for node in nodes {
+        match node {
+            Node::Style { prelude, body } => rules.push(FlatRule {
+                prelude,
+                body,
+                print: false,
+            }),
+            Node::Group {
+                name,
+                prelude,
+                children,
+            } if name == "media" && prelude.trim().eq_ignore_ascii_case("print") => {
+                for child in children {
+                    let Node::Style { prelude, body } = child else {
+                        return Err("nested".to_owned());
+                    };
+                    rules.push(FlatRule {
+                        prelude,
+                        body,
+                        print: true,
+                    });
+                }
+            }
+            _ => return Err("at-rule".to_owned()),
+        }
+    }
+    Ok(rules)
+}
+
 /// What a validated stylesheet graph contains.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Graph {

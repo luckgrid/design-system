@@ -150,7 +150,12 @@ test.describe("primitives", () => {
     const rules = (await publishedRules(page, CORE_EXPORT)).filter((rule) =>
       rule.sheet.startsWith("/packages/styles/primitives"),
     );
-    expect(rules.map((rule) => rule.selector)).toEqual([
+    // The one environment group is print, and it only adapts an existing rule.
+    const printed = rules.filter((rule) => rule.media !== "");
+    expect(printed.map((rule) => [rule.media, rule.selector])).toEqual([
+      ["print", ":where(.ds-action.ds-action-primary)"],
+    ]);
+    expect(rules.filter((rule) => rule.media === "").map((rule) => rule.selector)).toEqual([
       ":where(.ds-surface)",
       ":where(.ds-action)",
       ":where(.ds-action.ds-action-primary)",

@@ -35,9 +35,9 @@
  * light text on a white sheet.
  */
 @media print {
+  :root,
   :root[data-ds-scheme="light"],
-  :root[data-ds-scheme="dark"],
-  :root:not([data-ds-scheme]) {
+  :root[data-ds-scheme="dark"] {
     color-scheme: light;
   }
 }

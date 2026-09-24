@@ -69,6 +69,17 @@ A consumer can still style its own content under the hook, for example
 `:root[data-ds-scheme="dark"] img { opacity: 0.9; }`, and can set
 `color-scheme` on its own non-root elements.
 
+## Print
+
+Printers commonly omit backgrounds, which would leave text that a dark scheme
+resolved to a light role on a white sheet. `theme.css` therefore holds one
+`@media print` rule that selects the default and every classified hook value
+and sets `color-scheme: light`, so every `light-dark()` role resolves to its
+light branch in print. The screen theme is unchanged. It sets nothing else and
+names no unclassified state; `ds-check theme` rejects any other print rule, any
+other conditional group, and any print value other than `light`. A consumer's
+own light/dark pairs resolve the same way.
+
 ## Brand themes
 
 A brand theme is not a scheme. A consumer brand maps its own values into the
@@ -112,7 +123,7 @@ meaning may still change through a reviewed preview revision. `ds-check theme`
 fails when:
 
 - `theme.css` differs from `theme.tsv`, or places a rule inside a conditional
-  group;
+  group other than the one `@media print` rule below;
 - `theme.css` assigns any custom property, which would make it a second token
   authority;
 - any other Design System stylesheet sets `color-scheme`;

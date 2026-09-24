@@ -35,6 +35,18 @@
 }
 
 /*
+ * Printed pages commonly omit backgrounds, which would leave the on-accent
+ * label unreadable on white. Print the label in body text inside the accent
+ * border so it reads with or without printed backgrounds.
+ */
+@media print {
+  :where(.ds-action.ds-action-primary) {
+    background-color: transparent;
+    color: var(--ds-color-text);
+  }
+}
+
+/*
  * Quiet: no fill and no visible border until hovered. The border keeps its
  * width, so the box does not move, and forced-colors mode still draws it.
  */

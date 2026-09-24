@@ -53,7 +53,9 @@ relationship that this repository can document and test. Every other candidate i
   The base's single `:focus-visible` outline applies to every primitive
   unchanged.
 - **No query, no custom property.** No primitive uses a media query, container
-  query, `@supports`, or `@scope`, and none declares a custom property.
+  query, `@supports`, or `@scope`, and none declares a custom property. The one
+  exception is print: a rule inside `@media print` may adapt an existing hook or
+  state, follows the rule it adapts, and obeys every other check here.
   Spacing that should scale comes from the bounded fluid spacing roles, and
   the arrangement of children comes from the layouts, which are intrinsic. A
   consumer changes a primitive by setting the real property.
@@ -251,8 +253,9 @@ fails when:
 - `primitives.css` does anything other than declare the sub-layer order and
   import one module per promoted primitive, in inventory order, or a module is
   missing or unexpected;
-- a module holds an at-rule, including a media query, container query,
-  `@supports`, or `@scope`;
+- a module holds an at-rule other than `@media print`, including any other
+  media query, container query, `@supports`, or `@scope`, or a print rule names
+  a selector the inventory does not derive or precedes its own rule;
 - a selector is anything other than the rules the inventory derives, in any
   spelling, or a rule is missing, repeated, or out of order;
 - a selector tests a `data-*` attribute;

@@ -19,23 +19,57 @@ const STAGED = PUBLISHED_STYLESHEETS.map((href) =>
 );
 const CONSUMER = [`${SITE}/consumer/site.css`, `${SITE}/consumer/theme.css`];
 
-/** Resolve a CSS value on a probe element, as the engine computes it. */
-async function computed(page, property, value) {
+/**
+ * Resolve a CSS value on a probe element, as the engine computes it. `companions`
+ * are further declarations the probe needs for the property to compute as it does
+ * on a real element.
+ */
+async function computed(page, property, value, companions = {}) {
   return page.evaluate(
-    ([name, input]) => {
+    ([name, input, extra]) => {
       const probe = document.createElement("span");
       document.body.append(probe);
+      for (const [key, companion] of Object.entries(extra)) {
+        probe.style.setProperty(key, companion);
+      }
       probe.style.setProperty(name, input);
       const result = getComputedStyle(probe).getPropertyValue(name);
       probe.remove();
       return result;
     },
-    [property, value],
+    [property, value, companions],
   );
+}
+
+/**
+ * The focus outline width the token asks for. The probe draws a solid outline, as
+ * the focused control does: an outline whose style is `none` has no width, and
+ * some engines (Chromium and Edge 123, Gecko 121) compute that as `0px`, so a
+ * probe with no style resolves the token to zero there.
+ */
+const focusWidth = (page) => computed(page, "outline-width", "var(--ds-focus-width)", { "outline-style": "solid" });
+
+async function tabTo(page, browserName, id) {
+  for (let count = 0; count < 40; count += 1) {
+    await page.keyboard.press(browserName === "webkit" ? "Alt+Tab" : "Tab");
+    if ((await page.evaluate(() => document.activeElement?.id)) === id) {
+      break;
+    }
+  }
+  expect(await page.evaluate(() => document.activeElement?.id)).toBe(id);
 }
 
 const style = (page, selector, property) =>
   page.locator(selector).first().evaluate((element, name) => getComputedStyle(element).getPropertyValue(name), property);
+
+/** The focused control keeps a solid outline of at least the token's width. */
+async function expectFocusOutline(page, selector) {
+  const width = await focusWidth(page);
+  // Guard against a vacuous comparison: a token that resolved to zero would let a missing outline pass.
+  expect(Number.parseFloat(width), "resolved --ds-focus-width").toBeGreaterThan(0);
+  expect(await style(page, selector, "outline-style"), "focus outline-style").toBe("solid");
+  expect(await style(page, selector, "outline-width"), "focus outline-width").toBe(width);
+}
 
 test.describe("static renderer consumer fixture", () => {
   test("loads only the staged export graph and its own stylesheets, without script", async ({ page }) => {
@@ -148,18 +182,29 @@ test.describe("static renderer consumer fixture", () => {
       await control.hover();
       expect(await style(page, "#default", "border-top-color")).toBe(accent);
 
-      for (let count = 0; count < 40; count += 1) {
-        await page.keyboard.press(browserName === "webkit" ? "Alt+Tab" : "Tab");
-        if ((await page.evaluate(() => document.activeElement?.id)) === "default") {
-          break;
-        }
-      }
-      expect(await page.evaluate(() => document.activeElement?.id)).toBe("default");
-      expect(await style(page, "#default", "outline-style")).toBe("solid");
-      expect(await style(page, "#default", "outline-width")).toBe(
-        await computed(page, "outline-width", "var(--ds-focus-width)"),
-      );
+      await tabTo(page, browserName, "default");
+      await expectFocusOutline(page, "#default");
     });
+
+    // The focus assertion must fail for a focus outline that is missing, undersized or
+    // incorrectly styled, and fail on the property that is wrong, not only pass for the
+    // shipped one. Each case is injected as an unlayered author rule so it outranks the
+    // layered design-system rules.
+    const OUTLINE_VIOLATIONS = [
+      ["no outline", "outline: none", /focus outline-style/],
+      ["a zero-width outline", "outline-width: 0", /focus outline-width/],
+      ["an undersized outline", "outline-width: 1px", /focus outline-width/],
+      ["a dashed outline", "outline-style: dashed", /focus outline-style/],
+      ["a dotted outline", "outline-style: dotted", /focus outline-style/],
+      ["a double outline", "outline-style: double", /focus outline-style/],
+    ];
+    for (const [name, declaration, property] of OUTLINE_VIOLATIONS) {
+      test(`the focus outline assertion fails for ${name}`, async ({ page, browserName }) => {
+        await page.addStyleTag({ content: `#default:focus-visible { ${declaration} !important; }` });
+        await tabTo(page, browserName, "default");
+        await expect(expectFocusOutline(page, "#default")).rejects.toThrow(property);
+      });
+    }
   });
 
   test.describe("consumer-owned overrides", () => {

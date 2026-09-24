@@ -1,0 +1,12 @@
+{
+  "name": "design-system-html-conformance",
+  "private": true,
+  "description": "Pinned contributor-only HTML conformance checks for generated representative pages.",
+  "type": "module",
+  "scripts": {
+    "validate": "find ../../fixtures/static-renderer/public -name '*.html' -print0 | xargs -0 html-validate --rule doctype-style:off --rule no-trailing-whitespace:off --rule prefer-button:off --rule no-implicit-button-type:off --rule aria-label-misuse:off"
+  },
+  "devDependencies": {
+    "html-validate": "9.4.0"
+  }
+}

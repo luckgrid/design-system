@@ -92,6 +92,12 @@ test.describe("print", () => {
     expect(await style(page, primary, "background-color")).toMatch(/^rgba\(0, 0, 0, 0\)$|^transparent$/);
     // The accent border still marks the primary action.
     expect(await style(page, primary, "border-top-color")).toBe(accent);
+    // Without its fill the primary action keeps a non-colour cue: strong weight.
+    expect(await style(page, primary, "font-weight")).toBe("700");
+    // Unavailable actions keep the dashed border in print.
+    for (const unavailable of ["#disabled", "#disabled-primary", "#unlinked"]) {
+      expect(await style(page, unavailable, "border-top-style"), unavailable).toBe("dashed");
+    }
     // A later state rule still outranks the print rule: a disabled primary action prints muted.
     const disabled = ".ds-action-primary:disabled";
     if ((await page.locator(disabled).count()) > 0) {

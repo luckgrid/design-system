@@ -121,6 +121,27 @@ test.describe("static renderer consumer fixture", () => {
       expect(await style(page, "#not-current", "font-weight")).not.toBe(strong);
     });
 
+    test("lists that carry a layout hook drop their markers and padding in the consumer stylesheet and keep the list role", async ({ page }) => {
+      for (const selector of ["#cluster", "#grid"]) {
+        await expect(page.locator(selector), selector).toHaveAttribute("role", "list");
+        expect(await style(page, selector, "list-style-type"), selector).toBe("none");
+        expect(await style(page, selector, "padding-inline-start"), selector).toBe("0px");
+        expect(await style(page, `${selector} > li`, "display"), selector).toBe("list-item");
+      }
+      // Ordinary lists keep the native presentation: the classless base is not reset.
+      const native = await page.evaluate(() => {
+        const list = document.createElement("ul");
+        list.innerHTML = "<li>one</li>";
+        document.body.append(list);
+        const style = getComputedStyle(list);
+        const result = [style.listStyleType, style.paddingInlineStart];
+        list.remove();
+        return result;
+      });
+      expect(native[0]).toBe("disc");
+      expect(Number.parseFloat(native[1])).toBeGreaterThan(0);
+    });
+
     test("hover and keyboard focus use the native states", async ({ page, browserName }) => {
       const accent = await computed(page, "color", "var(--ds-color-accent)");
       const control = page.locator("#default");

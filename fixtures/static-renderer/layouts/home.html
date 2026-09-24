@@ -1,7 +1,7 @@
 {{ define "main" }}
 <h1>{{ .Title }}</h1>
 {{ .Content }}
-<ul class="ds-grid">
+<ul class="ds-grid app-plain-list" role="list">
   {{- range site.RegularPages.ByWeight }}
   <li class="ds-surface ds-stack">
     <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>

@@ -27,6 +27,17 @@
     list-style: none;
   }
 
+  /*
+   * A layout hook arranges a list's items but leaves its markers and its
+   * inline-start padding to the consumer, as the layouts contract says. Removing
+   * the markers can stop Safari from exposing the element as a list, so the
+   * markup restores the native role with role="list".
+   */
+  .app-plain-list {
+    padding: 0;
+    list-style: none;
+  }
+
   /* Normal cascade override of the action primitive's shape. */
   .app-pill {
     border-radius: 999px;

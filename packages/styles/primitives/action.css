@@ -43,6 +43,7 @@
   :where(.ds-action.ds-action-primary) {
     background-color: transparent;
     color: var(--ds-color-text);
+    font-weight: var(--ds-weight-strong);
   }
 }
 
@@ -79,8 +80,13 @@
   font-weight: var(--ds-weight-strong);
 }
 
-/* Disabled: the native attribute on a <button>. */
+/*
+ * Disabled: the native attribute on a <button>. The dashed border is the
+ * non-colour cue, so the state survives print, forced-colors mode, and low
+ * contrast between the muted and body text.
+ */
 :where(.ds-action:disabled) {
+  border-style: dashed;
   border-color: var(--ds-color-border);
   background-color: var(--ds-color-surface);
   color: var(--ds-color-text-muted);
@@ -92,6 +98,7 @@
  * be activated. It is the native way to show an unavailable link action.
  */
 :where(a.ds-action:not(:any-link)) {
+  border-style: dashed;
   border-color: var(--ds-color-border);
   background-color: var(--ds-color-surface);
   color: var(--ds-color-text-muted);

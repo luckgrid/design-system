@@ -118,6 +118,7 @@ const PRIMITIVE_VALUES: Vocabulary = Vocabulary {
         "inline-flex",
         "center",
         "solid",
+        "dashed",
         "transparent",
         "none",
         "pointer",

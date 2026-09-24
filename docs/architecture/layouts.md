@@ -71,7 +71,10 @@ Hook: `.ds-cluster`.
 
 Use it for small inline groups whose count and width vary: tags, metadata,
 button groups, and navigation links. A `<ul>` or `<ol>` keeps its list
-semantics; remove its markers in consumer CSS if they are not wanted.
+semantics. A layout hook does not touch markers or the list's inline-start
+padding, and the two collide with a cluster's items, so a consumer that puts
+`.ds-cluster` or `.ds-grid` on a list removes `list-style` and the padding in its
+own CSS (see [List markers](#list-markers)).
 
 ### grid
 
@@ -182,6 +185,14 @@ one with its disposition and a reason code. None is a backlog commitment.
   left-to-right and right-to-left content.
 - **Semantics.** A hook changes only layout. It adds no role, and lists keep
   their list semantics.
+- <a id="list-markers"></a>**List markers.** Marker and padding removal belongs to
+  the consumer, not to a layout hook and not to a global reset: the classless
+  base keeps the native list presentation for ordinary content. A cluster or
+  grid on a `<ul>` or `<ol>` shows the browser's markers and padding beside its
+  items until the consumer sets `list-style: none` and `padding: 0` on that
+  list. Safari can stop exposing a list whose markers are removed as a list; add
+  `role="list"` to that element to restore the native role, and verify the
+  announcement with a screen reader.
 - **Reflow.** The fixture has no horizontal page scroll at 320 CSS pixels or at
   the width of a 1280-pixel window zoomed to 400%, including long unbroken
   words in stacks, clusters, and grid cells.

@@ -244,6 +244,17 @@ disposition and reason code against the inventory.
   fill, so it prints in body text with strong weight inside its accent border. The
   quiet variant keeps a transparent border, which forced-colors mode draws. axe does not detect a quiet action in running
   text; the release review checks placement.
+- **Forced-colors limitation.** Primary action emphasis is a presentational
+  hierarchy, not a distinct semantic state. Primary and default actions may
+  therefore appear visually identical when a browser or operating system
+  applies forced-colors rendering. Consumers must not rely exclusively on
+  primary color, fill, or contrast to communicate required meaning. Keep
+  functional distinctions available through appropriate labeling, grouping, and
+  semantic states. The native action identity, focus, current state, disabled
+  state, and unavailable-link behavior described above remain contractual.
+  This is a public-preview compatibility clarification: it documents a bounded
+  rendering limitation without changing the action hooks, states, declarations,
+  or API. It is not a universal high-contrast or Windows verification claim.
 - **Reduced motion.** The primitives add no motion.
 
 ## Classification and checks

@@ -212,11 +212,11 @@ internal	.github/ISSUE_TEMPLATE/missing-role-or-hook.yml
 internal	.github/ISSUE_TEMPLATE/portability-or-install-failure.yml
 internal	apps/ds-check/src/release.rs	scan-exempt:checker-owns-archive-privacy-marker-constants
 internal	docs/release.md
-internal	release/negative-probes.sh
+internal	release/negative-probes.sh	scan-exempt:negative-probes-carry-rejected-private-markers
 internal	release/reproduce.sh
 internal	release/verify-archive.sh
 internal	release/verify-packaged.sh
-internal	tests/browser/packaged/packaged.spec.mjs
+internal	tests/browser/specs/packaged.spec.mjs
 internal	tests/browser/playwright.packaged.config.mjs
 internal	tests/browser/probes/packaged-load.html
 internal	release/consumer-proof.sh

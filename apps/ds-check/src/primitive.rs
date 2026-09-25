@@ -569,7 +569,40 @@ fn check_declaration(kind: Kind, name: &str, value: &str) -> Result<(), String> 
             allowed.join(", ")
         ));
     }
-    base::check_value(&value.to_ascii_lowercase(), &PRIMITIVE_VALUES)
+    let value = value.to_ascii_lowercase();
+    base::check_value(&value, &PRIMITIVE_VALUES)?;
+    check_property_value(&property, value.trim())
+}
+
+/// The vocabulary above is shared by every property, so a keyword that is fine for
+/// one property (`none` for `text-decoration-line`, `transparent` for a background)
+/// would otherwise pass for another where it hides content or the native cue
+/// (`display: none`, `color: transparent`, `cursor: none`). These few properties
+/// accept only the values a primitive is contracted to use; a literal font weight
+/// is rejected because weight is a semantic role.
+fn check_property_value(property: &str, value: &str) -> Result<(), String> {
+    let accepted: Option<&[&str]> = match property {
+        "display" => Some(&["inline-flex"]),
+        "cursor" => Some(&["pointer", "not-allowed"]),
+        "border-style" => Some(&["solid", "dashed"]),
+        "text-decoration-line" => Some(&["none"]),
+        _ => None,
+    };
+    if let Some(accepted) = accepted
+        && !accepted.contains(&value)
+    {
+        return Err(format!(
+            "sets `{property}: {value}`; a primitive uses only {} for `{property}`",
+            accepted.join(" or ")
+        ));
+    }
+    if property == "color" && value.contains("transparent") {
+        return Err("sets a transparent `color`; text color comes from a semantic role".to_owned());
+    }
+    if property == "font-weight" && !value.starts_with("var(") {
+        return Err("sets a literal `font-weight`; weight comes from a semantic role".to_owned());
+    }
+    Ok(())
 }
 
 /// Heading of the primitives document section that states each contract.
@@ -1248,6 +1281,42 @@ rejected\tcard\tcovered-by-promoted
         }
     }
 
+    #[test]
+    fn property_values_stay_inside_the_primitive_contract() {
+        for (declaration, needle) in [
+            ("display: none;", "`display: none`"),
+            ("display: block;", "not a keyword"),
+            ("display: \\6e one;", "escaped code point"),
+            ("color: transparent;", "transparent `color`"),
+            ("color: \\74 ransparent;", "escaped code point"),
+            ("cursor: none;", "`cursor: none`"),
+            ("cursor: crosshair;", "not a keyword"),
+            ("border-style: none;", "`border-style: none`"),
+            ("border-style: hidden;", "not a keyword"),
+            ("font-weight: bold;", "not a keyword"),
+            ("font-weight: 700;", "literal `font-weight`"),
+            ("text-decoration-line: underline;", "not a keyword"),
+        ] {
+            let error = with_action_declaration(declaration).expect_err(declaration);
+            assert!(error.contains(needle), "{declaration}: {error}");
+        }
+        for declaration in [
+            "display: inline-flex;",
+            "cursor: pointer;",
+            "cursor: not-allowed;",
+            "border-style: dashed;",
+            "font-weight: var(--ds-weight-strong);",
+            "background-color: transparent;",
+            "border-color: transparent;",
+            "text-decoration-line: none;",
+        ] {
+            assert!(
+                with_action_declaration(declaration).is_ok(),
+                "{declaration}"
+            );
+        }
+    }
+
     fn action_with_print(rule: &str) -> String {
         ACTION.replace(
             ":where(.ds-action.ds-action-primary) { background-color: var(--ds-color-accent); }",
@@ -1450,6 +1519,33 @@ States: `[aria-current]`, `:disabled`, `:not(:any-link)`.
         ] {
             let error = validate_fixture(&bad, &manifest(), &layouts()).expect_err(&bad);
             assert!(error.contains(needle), "{needle}: {error}");
+        }
+    }
+
+    #[test]
+    fn fixture_rejects_inert_containers_and_class_character_references() {
+        for (bad, needle) in [
+            (
+                FIXTURE.replace(
+                    "<main>",
+                    "<main><template><a class=\"ds-action\"></a></template>",
+                ),
+                "<template>",
+            ),
+            (
+                FIXTURE.replace("<main>", "<main><script></script>"),
+                "<script>",
+            ),
+            (
+                FIXTURE.replace(
+                    "class=\"ds-action ds-action-primary\"",
+                    "class=\"ds-&#97;ction ds-action-primary\"",
+                ),
+                "character reference",
+            ),
+        ] {
+            let error = validate_fixture(&bad, &manifest(), &layouts()).expect_err(&bad);
+            assert!(error.contains(needle), "{bad}: {error}");
         }
     }
 }

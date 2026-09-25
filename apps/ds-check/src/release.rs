@@ -15,8 +15,7 @@ use std::path::{Path, PathBuf};
 
 use crate::static_renderer::sha256_hex;
 use crate::{
-    layout, lexical, primitive, relative_to, theme, tokens, tracked_files,
-    validate_relative_path,
+    layout, lexical, primitive, relative_to, theme, tokens, tracked_files, validate_relative_path,
 };
 
 const IDENTITY_FILE: &str = "IDENTITY.tsv";
@@ -311,8 +310,12 @@ pub fn run_inventory(
             ));
         }
     }
-    if !read(&root.join("README.md"))?.contains(LICENSE_ID) {
+    let readme = read(&root.join("README.md"))?;
+    if !readme.contains(LICENSE_ID) {
         return Err("README.md must state the MIT license".to_owned());
+    }
+    if !readme.contains(version) {
+        return Err(format!("README.md must name the release version {version}"));
     }
 
     // The inventory rows.

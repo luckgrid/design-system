@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, loadStylesheets, probeColor, test } from "../specs/support.mjs";
+import { expect, loadStylesheets, probeColor, test } from "./support.mjs";
 
 // The packaged-archive specs. Every stylesheet here is served from an UNPACKED release
 // archive outside the repository (server.mjs, DS_PACKAGED_ROOT). They prove the final

@@ -5,6 +5,8 @@ const baseURL = `http://127.0.0.1:${port}`;
 
 export default defineConfig({
   testDir: "./specs",
+  // The packaged-archive specs run only under playwright.packaged.config.mjs.
+  testIgnore: "**/packaged.spec.mjs",
   fullyParallel: true,
   forbidOnly: true,
   retries: 0,

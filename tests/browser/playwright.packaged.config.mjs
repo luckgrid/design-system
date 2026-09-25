@@ -11,7 +11,8 @@ if (!process.env.DS_PACKAGED_ROOT) {
 }
 
 export default defineConfig({
-  testDir: "./packaged",
+  testDir: "./specs",
+  testMatch: "packaged.spec.mjs",
   fullyParallel: true,
   forbidOnly: true,
   retries: 0,

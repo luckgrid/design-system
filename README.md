@@ -142,6 +142,9 @@ sh fixtures/static-renderer/build.sh
 sh fixtures/static-renderer/verify-toolchain-free.sh
 cargo run --locked -p design-system-check -- static-renderer \
   exports.tsv layouts.tsv primitives.tsv theme.tsv base.tsv fixtures/static-renderer
+cargo run --locked -p design-system-check -- inventory \
+  release/inventory.tsv release/identity.toml exports.tsv adapter-exports.tsv \
+  bootstrap-surfaces.tsv
 (cd tests/browser && npm ci && npx playwright install chromium firefox webkit && npx playwright test)
 ```
 
@@ -161,7 +164,7 @@ Repository paths are not API by default.
 | `public-preview` | Deliberately exposed but still moving. Currently the `core.css` entrypoint, its layer order, the semantic token roles in `tokens.tsv`, the theme default and `data-ds-scheme` hook in `theme.tsv`, the classless base defaults in `base.tsv`, the layout hooks in `layouts.tsv`, and the primitive hooks and states in `primitives.tsv`, together forming the hook vocabulary in `docs/architecture/hooks.md`. |
 | `internal` | Not API; may change or disappear. Every other path uses this class. |
 
-Product maturity and compatibility classification are separate. Experimental
+Product maturity and compatibility classification are separate. Preview
 project maturity does not make an internal path public.
 
 ## What this is not

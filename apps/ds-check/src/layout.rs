@@ -776,4 +776,34 @@ Hook: `.ds-grid`.
             assert!(error.contains(needle), "{bad}: {error}");
         }
     }
+
+    #[test]
+    fn fixture_rejects_inert_containers_and_class_character_references() {
+        let html = "<main><div class=\"ds-stack\"><p>a</p><ul class='ds-grid x'><li>b</li></ul></div></main>";
+        for (bad, needle) in [
+            (
+                html.replace(
+                    "<p>a</p>",
+                    "<template><p class=\"ds-stack\">a</p></template>",
+                ),
+                "<template>",
+            ),
+            (
+                html.replace("<p>a</p>", "<noscript><p>a</p></noscript>"),
+                "<noscript>",
+            ),
+            (html.replace("<p>a</p>", "<script></script>"), "<script>"),
+            (
+                html.replace("ds-stack", "ds-&#115;tack"),
+                "character reference",
+            ),
+            (
+                html.replace("ds-grid x", "ds-grid &amp;"),
+                "character reference",
+            ),
+        ] {
+            let error = validate_fixture(&bad, &manifest()).expect_err(&bad);
+            assert!(error.contains(needle), "{bad}: {error}");
+        }
+    }
 }

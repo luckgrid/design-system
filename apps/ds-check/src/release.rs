@@ -66,7 +66,7 @@ const REQUIRED_DOCS: [&str; 12] = [
 
 /// Wording the published browser-support statement must carry (S102 R1-R4 and the
 /// S101 amendment) and wording it must not carry.
-const SUPPORT_REQUIRED: [(&str, &str); 9] = [
+const SUPPORT_REQUIRED: [(&str, &str); 11] = [
     (
         "Chrome for Testing 123.0.6312.122",
         "R2 names Chrome for Testing",
@@ -87,6 +87,14 @@ const SUPPORT_REQUIRED: [(&str, &str); 9] = [
     (
         "Mozilla bug 187508",
         "R1 cites external documentation as such",
+    ),
+    (
+        "applies no forced palette",
+        "R4 states the Gecko 121 emulation limit",
+    ),
+    (
+        "WebKit forced-colors emulation",
+        "R4 states the WebKit emulation limit",
     ),
 ];
 const SUPPORT_FORBIDDEN: [(&str, &str); 3] = [

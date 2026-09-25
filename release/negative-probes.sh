@@ -78,6 +78,7 @@ fresh; append RELEASE.md '@VERSION@';                                   expect "
 fresh; append docs/browser-support.md 'Firefox follows the system keyboard-navigation setting'; expect "R1 unobserved generalization" "R1"
 fresh; sed 's/Chrome for Testing 123.0.6312.122/Chrome 123/g' "$work/docs/browser-support.md" > "$work/b.new"; mv "$work/b.new" "$work/docs/browser-support.md"; remanifest docs/browser-support.md; expect "R2 Chrome for Testing unnamed" "R2"
 fresh; sed 's/Windows Edge/Edge/g; s/Linux desktop/Linux/g' "$work/docs/browser-support.md" > "$work/b.new"; mv "$work/b.new" "$work/docs/browser-support.md"; remanifest docs/browser-support.md; expect "R3 unverified platforms unnamed" "R3"
+fresh; sed 's/applies no forced palette/applies a palette/' "$work/docs/browser-support.md" > "$work/b.new"; mv "$work/b.new" "$work/docs/browser-support.md"; remanifest docs/browser-support.md; expect "R4 Gecko 121 emulation limit dropped" "R4"
 fresh; append consumer/ds-consumer.sh 'cargo build';                    expect "consumer script runs cargo" "toolchain-free"
 
 fresh; sed 's/^MIT License/Apache License/' "$work/LICENSE" > "$work/l.new"; mv "$work/l.new" "$work/LICENSE"; remanifest LICENSE; expect "wrong license text" "MIT License"

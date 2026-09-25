@@ -56,6 +56,10 @@ sh release/verify-archive.sh dist/design-system-<version>.tar.gz --source .
 # Assemble the same commit from two independent clean clones and compare.
 sh release/reproduce.sh --source "$(pwd)" --commit "$(git rev-parse HEAD)" --rehearsal 1
 
+# After the reviewed pull request is squash-merged: the merged main commit must carry
+# exactly the reviewed tree, so the release is assembled from reviewed content.
+sh release/verify-integration.sh <reviewed-head-sha> <merged-main-sha>
+
 # Prove the verifier rejects what it must (31 mutation probes).
 sh release/negative-probes.sh <unpacked archive directory>
 
@@ -96,8 +100,8 @@ has been assembled and verified from a clean checkout of that exact commit:
 1. create the immutable tag `v<version>` on that commit and push it;
 2. create the GitHub Release for the tag and attach `design-system-<version>.tar.gz`,
    `SHA256SUMS`, and `ds-consumer.sh`;
-3. re-run `release/consumer-proof.sh` and `release/verify-archive.sh` against the
-   published assets.
+3. re-run `release/verify-archive.sh` and `release/consumer-proof.sh` against the
+   published assets (`DS_PROOF_SOURCE_A` and `DS_PROOF_SOURCE_B` take their https URLs).
 
 CI never tags or publishes. A rehearsal is never tagged or published.
 

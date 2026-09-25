@@ -10,8 +10,11 @@
 # path, or repository-relative import: the script under test is the one the archive ships
 # (consumer/ds-consumer.sh), extracted from the archive, not read from this repository.
 #
-# Run from anywhere; it changes only temporary directories. The archives are obtained
-# through a file:// source, the same code path as a local mirror.
+# Run from anywhere; it changes only temporary directories. By default the archives are
+# obtained through a file:// source, the same code path as a local mirror. To prove the
+# published assets, set DS_PROOF_SOURCE_A and DS_PROOF_SOURCE_B to their https:// URLs
+# (the archives named on the command line must be the same files, so their checksums
+# match); curl is then added to the PATH and nothing else changes.
 set -eu
 
 die() { printf 'consumer-proof: %s\n' "$*" >&2; exit 1; }
@@ -39,7 +42,15 @@ for tool in sh cat cp cmp cut dirname basename find grep gzip head ls mkdir mkte
   path=$(command -v "$tool" 2>/dev/null || true)
   case "$path" in /*) ln -s "$path" "$bin/$tool" ;; esac
 done
-for forbidden in cargo rustc rustup node nodejs npm npx pnpm yarn bun deno tailwindcss hugo curl; do
+source_a=${DS_PROOF_SOURCE_A:-file://$a}
+source_b=${DS_PROOF_SOURCE_B:-file://$b}
+case "$source_a$source_b" in
+  *https://*)
+    path=$(command -v curl 2>/dev/null || true)
+    [ -n "$path" ] || die "curl is needed for an https:// source"
+    ln -s "$path" "$bin/curl" ;;
+esac
+for forbidden in cargo rustc rustup node nodejs npm npx pnpm yarn bun deno tailwindcss hugo; do
   if PATH=$bin command -v "$forbidden" >/dev/null 2>&1; then die "$forbidden resolves on the restricted PATH"; fi
 done
 
@@ -55,7 +66,7 @@ printf 'p { margin: 0; }\n' > "$site/public/app.css"
 step() { printf '\n-- %s\n' "$*"; }
 
 step "pin A ($va) with its archive checksum"
-ds pin "$va" "$(digest "$a")" "file://$a"
+ds pin "$va" "$(digest "$a")" "$source_a"
 step "install A: obtain, checksum-verify, install"
 ds install public
 [ -f "$site/public/design-system/core.css" ] || die "core.css was not installed"
@@ -85,7 +96,7 @@ ds install public >/dev/null
 ds verify public
 
 step "upgrade: pin B ($vb), install, verify"
-ds pin "$vb" "$(digest "$b")" "file://$b"
+ds pin "$vb" "$(digest "$b")" "$source_b"
 ds install public
 ds verify public
 [ "$(sed -n 's/^version=//p' "$site/design-system.pin")" = "$vb" ] || die "the active pin is not B"
@@ -113,7 +124,7 @@ printf 'pre-Design-System state restored: %s file(s), identical to the start\n' 
 
 step "refuses to touch a directory it did not install"
 mkdir -p "$site/public/design-system"; printf 'mine\n' > "$site/public/design-system/mine.css"
-ds pin "$va" "$(digest "$a")" "file://$a"
+ds pin "$va" "$(digest "$a")" "$source_a"
 if ds install public > "$work/own.out" 2>&1; then die "install replaced a directory it did not create"; fi
 [ -f "$site/public/design-system/mine.css" ] || die "the consumer's own directory was damaged"
 printf 'refused: %s\n' "$(cat "$work/own.out")"

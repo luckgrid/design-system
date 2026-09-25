@@ -220,3 +220,4 @@ internal	tests/browser/specs/packaged.spec.mjs
 internal	tests/browser/playwright.packaged.config.mjs
 internal	tests/browser/probes/packaged-load.html
 internal	release/consumer-proof.sh
+internal	release/verify-integration.sh

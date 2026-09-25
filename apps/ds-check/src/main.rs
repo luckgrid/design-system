@@ -5,6 +5,7 @@ mod base;
 mod css;
 mod hooks;
 mod layout;
+mod lexical;
 mod primitive;
 mod static_renderer;
 mod tailwind;
@@ -18,7 +19,7 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
-const ALLOWED_ROOTS: [&str; 23] = [
+const ALLOWED_ROOTS: [&str; 25] = [
     ".github",
     ".gitignore",
     "apps",
@@ -29,7 +30,9 @@ const ALLOWED_ROOTS: [&str; 23] = [
     "fixtures",
     "docs",
     "layouts.tsv",
+    "LICENSE",
     "primitives.tsv",
+    "release",
     "Cargo.toml",
     "Cargo.lock",
     "rust-toolchain.toml",
@@ -547,7 +550,7 @@ fn validate_allowed_root(path: &Path) -> Result<(), String> {
 
 fn scan_supported_content(surface: &Surface, path: &Path, content: &str) -> Result<(), String> {
     for marker in FORBIDDEN_CONTENT_MARKERS {
-        if content.contains(marker) {
+        if lexical::contains_marker(content, marker) {
             return Err(format!(
                 "{} bootstrap surface {} contains forbidden marker '{marker}'",
                 surface.class,

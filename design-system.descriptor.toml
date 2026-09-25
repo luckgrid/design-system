@@ -5,8 +5,8 @@
 id = "design-system"
 kind = "workspace-source"
 title = "Design System"
-status = "experimental"
-summary = "Portable web-platform-first design system; experimental, with a public-preview core CSS entrypoint."
+status = "preview"
+summary = "Portable web-platform-first design system; MIT licensed, with public-preview CSS exports and a preview release candidate in preparation."
 
 system_space = "luckgrid"
 domain = "design-system"
@@ -40,9 +40,13 @@ browser = "npx playwright test (run in tests/browser)"
 core_css = "packages/styles/index.css"
 token_inventory = "tokens.tsv"
 
-# The repository remains intentionally unlicensed during pre-release
-# development. Public visibility is not a license grant. A license must be
-# selected and added before the first supported release candidate.
+[release]
+# The first supported candidate is a `preview`. Product maturity and per-surface
+# compatibility are separate axes; `release/identity.toml` is the identity authority.
+license = "MIT"
+maturity = "preview"
+identity = "release/identity.toml"
+inventory = "release/inventory.tsv"
 
 [capabilities]
 provides = ["bootstrap-boundary-check", "css-layer-contract-check", "token-authority-check", "core-css-entrypoint", "semantic-tokens"]

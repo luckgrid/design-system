@@ -196,3 +196,11 @@ internal	base.tsv
 internal	adapter-exports.tsv
 internal	theme.tsv
 internal	tokens.tsv
+internal	LICENSE
+internal	apps/ds-check/src/lexical.rs
+internal	release/RELEASE.md
+internal	release/assemble.sh
+internal	release/consumer/README.md
+internal	release/consumer/ds-consumer.sh
+internal	release/identity.toml
+internal	release/inventory.tsv

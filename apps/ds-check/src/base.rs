@@ -802,6 +802,7 @@ pub(crate) fn section<'a>(document: &'a str, heading: &str) -> Result<&'a str, S
 /// is proven on ordinary HTML alone.
 pub fn validate_fixture(html: &str, manifest: &Manifest) -> Result<usize, String> {
     let lower = html.to_ascii_lowercase();
+    crate::lexical::reject_inert_or_escaped_markup(&lower, "plain fixture")?;
     if has_attribute(&lower, "class") {
         return Err(
             "the plain fixture carries a class attribute; it proves the base on classless HTML"

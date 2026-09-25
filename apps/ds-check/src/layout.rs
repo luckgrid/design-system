@@ -390,6 +390,7 @@ pub fn validate_document(document: &str, manifest: &Manifest) -> Result<(), Stri
 /// Returns the number of hooked elements.
 pub fn validate_fixture(html: &str, manifest: &Manifest) -> Result<usize, String> {
     let lower = html.to_ascii_lowercase();
+    crate::lexical::reject_inert_or_escaped_markup(&lower, "layouts fixture")?;
     if !base::has_element(&lower, "main") {
         return Err(
             "the layouts fixture has no `main`; it places the layouts inside a consumer-owned page shell"

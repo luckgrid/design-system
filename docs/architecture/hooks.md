@@ -33,8 +33,8 @@ such as a variant class without its primitive's class, a `data-*` attribute, or
 a class that merely contains `ds-`, gets no Design System styling.
 
 No stylesheet uses `@scope`. A scope root would bound descendant selectors, but
-no hooked rule has one. At the accepted browser floor (Chromium 123, Firefox
-121, Safari 17.5), `@scope` is only progressive, so no rule that a hook needs
+no hooked rule has one. At the feature-derived browser floor (Chromium 123, Firefox
+121, Safari 17.5; verified browsers are in [Browser support](/docs/browser-support.md)), `@scope` is only progressive, so no rule that a hook needs
 may depend on it. A later module may use `@scope` only as an enhancement over a
 complete unscoped baseline, and only after its own reviewed decision. No build
 step lowers `@scope`, and none is claimed.

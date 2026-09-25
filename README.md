@@ -70,6 +70,10 @@ The repository currently provides:
   primitive hook and state, and a scoping fixture that checks each hook's reach
   against nested and lookalike markup;
 - browser contract tests in Chromium, Firefox, and WebKit under `tests/browser/`;
+- a draft [browser support statement](docs/browser-support.md) for the initial
+  preview: desktop Chromium/Chrome 123+ and Edge 123+ (macOS-verified) and
+  Firefox 121+ (qualified); Android and Safari browsers are unverified, not
+  excluded;
 - explicit compatibility classification in `bootstrap-surfaces.tsv`;
 - an optional `public-preview` Tailwind v4 adapter that maps the same public
   semantic roles through `@theme inline`, has no Preflight, and keeps provider

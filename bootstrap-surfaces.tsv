@@ -68,6 +68,7 @@ internal	docs/architecture/primitives.md
 internal	docs/architecture/theme.md
 internal	docs/architecture/tailwind.md
 internal	docs/architecture/tokens.md
+internal	docs/browser-support.md
 internal	exports.tsv
 internal	fixtures/README.md
 internal	fixtures/bootstrap-boundary/accepted-directory.tsv

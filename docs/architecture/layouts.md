@@ -107,8 +107,9 @@ arrangement.
 
 ## Browser support
 
-The layouts need no feature beyond the accepted browser floor (Chromium 123,
-Firefox 121, Safari 17.5):
+The layouts need no feature beyond the feature-derived browser floor (Chromium 123,
+Firefox 121, Safari 17.5). The floor is a design target; the browsers verified
+for the initial preview are stated in [Browser support](/docs/browser-support.md):
 
 | Feature | Disposition |
 |---|---|

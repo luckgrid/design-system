@@ -60,7 +60,7 @@ sh release/reproduce.sh --source "$(pwd)" --commit "$(git rev-parse HEAD)" --reh
 # exactly the reviewed tree, so the release is assembled from reviewed content.
 sh release/verify-integration.sh <reviewed-head-sha> <merged-main-sha>
 
-# Prove the verifier rejects what it must (31 mutation probes).
+# Prove the verifier rejects what it must (mutation probes).
 sh release/negative-probes.sh <unpacked archive directory>
 
 # Prove the packaged form: the whole browser suite, the Tailwind fixture, the static

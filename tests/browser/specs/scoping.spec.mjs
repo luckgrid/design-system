@@ -218,8 +218,10 @@ test.describe("scoping", () => {
       if (classes.length === 0) {
         // The theme attribute sits on the root element and reaches nothing else.
         attributeHooked += 1;
-        expect(rule.selector, "the theme attribute is on :root").toMatch(/^:root\[/);
-        expect(rule.selector, "no combinator beside the theme attribute").not.toMatch(/\]\s*[\s>+~]\s*\S/);
+        // The print rule lists the default and each hook value; every branch is the root alone.
+        for (const branch of rule.selector.split(",").map((part) => part.trim())) {
+          expect(branch, `${rule.selector}: the theme attribute is on :root`).toMatch(/^:root(\[[^\]]*\])?$/);
+        }
         expect(rule.layer, rule.selector).toMatch(/^ds\.tokens\./);
         continue;
       }
@@ -248,7 +250,8 @@ test.describe("scoping", () => {
       }
       expect(rule.layer, rule.selector).toMatch(/^ds\.(layouts|primitives)\.[a-z]+$/);
     }
-    expect(hooked).toBe(15);
+    // Fifteen unconditional hooked rules and the one print adaptation of the primary action.
+    expect(hooked).toBe(16);
     expect(attributeHooked).toBeGreaterThan(0);
   });
 

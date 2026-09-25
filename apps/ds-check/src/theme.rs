@@ -141,15 +141,18 @@ pub fn parse_manifest(text: &str) -> Result<Manifest, String> {
 struct Rule {
     selector: String,
     declarations: Vec<(String, String)>,
-    /// Whether the rule sits inside a group rule other than `@layer`.
+    /// Whether the rule sits inside a group rule other than `@layer` and
+    /// `@media print`.
     conditional: bool,
+    /// Whether the rule sits directly in an `@media print` group.
+    print: bool,
 }
 
 fn rules(file: &str, source: &str) -> Result<Vec<Rule>, String> {
     reject_selector_comments(file, source)?;
     let nodes = css::parse(source).map_err(|error| format!("stylesheet {file}: {error}"))?;
     let mut found = Vec::new();
-    collect(file, &nodes, false, &mut found)?;
+    collect(file, &nodes, false, false, &mut found)?;
     Ok(found)
 }
 
@@ -232,17 +235,31 @@ fn collect(
     file: &str,
     nodes: &[Node],
     conditional: bool,
+    print: bool,
     found: &mut Vec<Rule>,
 ) -> Result<(), String> {
     for node in nodes {
         match node {
-            Node::Group { name, children, .. } => {
-                collect(file, children, conditional || name != "layer", found)?;
+            Node::Group {
+                name,
+                prelude,
+                children,
+            } => {
+                if name == "media"
+                    && prelude.trim().eq_ignore_ascii_case("print")
+                    && !conditional
+                    && !print
+                {
+                    collect(file, children, conditional, true, found)?;
+                } else {
+                    collect(file, children, conditional || name != "layer", print, found)?;
+                }
             }
             Node::Style { prelude, body } => found.push(Rule {
                 selector: normalize_selector(prelude),
                 declarations: tokens::split_declarations(file, body)?,
                 conditional,
+                print,
             }),
             Node::Statement { .. } | Node::Opaque { .. } => {}
         }
@@ -702,7 +719,9 @@ pub fn validate_stylesheets(
 }
 
 /// The theme stylesheet holds exactly one unconditional rule per manifest row,
-/// each setting only `color-scheme` to the row's value.
+/// each setting only `color-scheme` to the row's value. It may also hold one
+/// `@media print` rule, which resolves every theme state to the light scheme so
+/// semantic `light-dark()` roles stay readable when a printer omits backgrounds.
 fn validate_theme_rules(file: &str, found: &[Rule], manifest: &Manifest) -> Result<(), String> {
     let mut expected: Vec<(String, String)> = vec![(":root".to_owned(), manifest.default.clone())];
     for value in &manifest.values {
@@ -714,6 +733,9 @@ fn validate_theme_rules(file: &str, found: &[Rule], manifest: &Manifest) -> Resu
 
     let mut seen = BTreeSet::new();
     for rule in found {
+        if rule.print {
+            continue;
+        }
         if rule.conditional {
             return Err(format!(
                 "{file} places `{}` inside a conditional group rule; the theme contract is unconditional and `light dark` already follows the preference",
@@ -762,6 +784,52 @@ fn validate_theme_rules(file: &str, found: &[Rule], manifest: &Manifest) -> Resu
     {
         return Err(format!(
             "{file} does not implement `{selector}`, which theme.tsv classifies"
+        ));
+    }
+    let mut printed = found.iter().filter(|rule| rule.print);
+    if let Some(rule) = printed.next() {
+        if printed.next().is_some() {
+            return Err(format!(
+                "{file} holds more than one `@media print` rule; the theme has one print rule"
+            ));
+        }
+        validate_print_rule(file, rule, &expected, manifest)?;
+    }
+    Ok(())
+}
+
+/// The print rule selects exactly the classified theme states, so every state
+/// resolves alike, and sets only `color-scheme: light`.
+fn validate_print_rule(
+    file: &str,
+    rule: &Rule,
+    expected: &[(String, String)],
+    manifest: &Manifest,
+) -> Result<(), String> {
+    let selected: BTreeSet<String> = rule.selector.split(',').map(normalize_selector).collect();
+    let classified: BTreeSet<String> = expected
+        .iter()
+        .map(|(selector, _)| selector.clone())
+        .collect();
+    if selected != classified {
+        return Err(format!(
+            "{file} `@media print` selects `{}`; it must select exactly the classified theme states: {}",
+            rule.selector,
+            classified
+                .iter()
+                .map(|selector| format!("`{selector}`"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
+    }
+    let light = "light";
+    let sets_light = matches!(
+        rule.declarations.as_slice(),
+        [(name, declared)] if is_color_scheme(name) && declared == light
+    );
+    if !manifest.values.iter().any(|value| value == light) || !sets_light {
+        return Err(format!(
+            "{file} `@media print` must contain exactly `{COLOR_SCHEME}: {light};`"
         ));
     }
     Ok(())
@@ -1127,6 +1195,45 @@ public-preview\tattribute\tdata-ds-scheme\tlight dark
             "[data-ds-scheme=\"dark\"]",
         );
         assert!(reject(&descendant, SEMANTIC).contains("does not classify"));
+    }
+
+    const PRINT: &str = "\
+@media print {
+  :root, :root[data-ds-scheme=\"light\"], :root[data-ds-scheme=\"dark\"] { color-scheme: light; }
+}
+";
+
+    fn accept_print(print: &str) {
+        validate_stylesheets(&sheets(&format!("{THEME}{print}"), SEMANTIC), &manifest())
+            .expect("print rule");
+    }
+
+    #[test]
+    fn the_theme_admits_one_light_print_rule() {
+        accept_print(PRINT);
+        let reordered = PRINT.replace(
+            ":root, :root[data-ds-scheme=\"light\"], :root[data-ds-scheme=\"dark\"]",
+            ":root[data-ds-scheme=\"dark\"], :root, :root[data-ds-scheme=\"light\"]",
+        );
+        accept_print(&reordered);
+    }
+
+    #[test]
+    fn the_theme_print_rule_is_bounded() {
+        let missing = PRINT.replace(", :root[data-ds-scheme=\"dark\"]", "");
+        assert!(reject(&format!("{THEME}{missing}"), SEMANTIC).contains("exactly the classified"));
+        let negated = PRINT.replace(":root, ", ":root:not([data-ds-scheme]), ");
+        assert!(reject(&format!("{THEME}{negated}"), SEMANTIC).contains("exactly the classified"));
+        let dark = PRINT.replace("color-scheme: light;", "color-scheme: dark;");
+        assert!(
+            reject(&format!("{THEME}{dark}"), SEMANTIC).contains("exactly `color-scheme: light;`")
+        );
+        let extra = PRINT.replace("color-scheme: light;", "color-scheme: light; color: red;");
+        assert!(reject(&format!("{THEME}{extra}"), SEMANTIC).contains("exactly"));
+        let twice = format!("{THEME}{PRINT}{PRINT}");
+        assert!(reject(&twice, SEMANTIC).contains("more than one"));
+        let other = PRINT.replace("@media print", "@media screen");
+        assert!(reject(&format!("{THEME}{other}"), SEMANTIC).contains("conditional"));
     }
 
     #[test]

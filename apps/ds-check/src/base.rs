@@ -47,7 +47,7 @@ const FUNCTIONS: [&str; 4] = ["var", "calc", "min", "max"];
 const UNITS: [&str; 4] = ["em", "ch", "lh", "%"];
 /// Keywords a base value may use. A named color is not a keyword here, so a
 /// color can only come from a role, `currentcolor`, or `transparent`.
-const KEYWORDS: [&str; 30] = [
+const KEYWORDS: [&str; 33] = [
     "inherit",
     "initial",
     "unset",
@@ -78,6 +78,10 @@ const KEYWORDS: [&str; 30] = [
     "italic",
     "block",
     "inline-block",
+    // Print adaptation only: code wraps and an open dialog returns to flow.
+    "visible",
+    "pre-wrap",
+    "static",
 ];
 
 /// The value vocabulary of the classless base.
@@ -263,14 +267,19 @@ pub fn validate_stylesheets(
     for (file, source) in modules.values() {
         theme::reject_selector_comments(file, source)?;
         let nodes = css::parse(source).map_err(|error| format!("stylesheet {file}: {error}"))?;
-        for node in &nodes {
-            let Node::Style { prelude, body } = node else {
-                return Err(format!(
-                    "{file} holds an at-rule; base modules hold unconditional style rules only"
-                ));
-            };
+        let rules = css::split_print(nodes).map_err(|_| {
+            format!(
+                "{file} holds an at-rule; base modules hold unconditional style rules and `@media print` rules only"
+            )
+        })?;
+        for css::FlatRule {
+            prelude,
+            body,
+            print,
+        } in &rules
+        {
             let selector = prelude.split_whitespace().collect::<Vec<_>>().join(" ");
-            for subject in check_selector(&selector, manifest)
+            for subject in check_selector_in(&selector, manifest, *print)
                 .map_err(|error| format!("{file} `{selector}`: {error}"))?
             {
                 used.insert(subject);
@@ -335,7 +344,18 @@ fn validate_entry(file: &str, source: &str) -> Result<(), String> {
 /// literally in lowercase, optionally followed by an allowlisted
 /// pseudo-element. Inside it, only element names, allowlisted pseudo-classes,
 /// and allowlisted attributes may appear.
+#[cfg(test)]
 fn check_selector(selector: &str, manifest: &Manifest) -> Result<Vec<String>, String> {
+    check_selector_in(selector, manifest, false)
+}
+
+/// As [`check_selector`]; `print` marks a selector inside `@media print`, where
+/// an open dialog may also be named literally as `dialog[open]`.
+fn check_selector_in(
+    selector: &str,
+    manifest: &Manifest,
+    print: bool,
+) -> Result<Vec<String>, String> {
     let mut subjects = Vec::new();
     for part in split_top_level(selector)? {
         let inner = where_argument(part)?;
@@ -384,10 +404,11 @@ fn check_selector(selector: &str, manifest: &Manifest) -> Result<Vec<String>, St
                 .iter()
                 .flatten()
                 .any(|simple| matches!(simple, Simple::Attribute(name) if name == "open"))
-                && (complex.len() != 1 || !is_details_open(&complex[0]))
+                && (complex.len() != 1
+                    || !(is_details_open(&complex[0]) || (print && is_dialog_open(&complex[0]))))
             {
                 return Err(
-                    "`[open]` is reserved for the literal native `details[open]` base refinement"
+                    "`[open]` is reserved for the literal native `details[open]` base refinement, and `dialog[open]` in `@media print`"
                         .to_owned(),
                 );
             }
@@ -408,6 +429,14 @@ fn is_details_open(compound: &[Simple]) -> bool {
         compound,
         [Simple::Type(element), Simple::Attribute(attribute)]
             if element == "details" && attribute == "open"
+    )
+}
+
+fn is_dialog_open(compound: &[Simple]) -> bool {
+    matches!(
+        compound,
+        [Simple::Type(element), Simple::Attribute(attribute)]
+            if element == "dialog" && attribute == "open"
     )
 }
 
@@ -1063,6 +1092,50 @@ excluded\tconsumer\tnav
     fn accepts_relative_units_and_calc() {
         with_rule(":where(a:any-link) { margin: calc(var(--ds-space-flow) - 0.5em) 0 1ch 50%; }")
             .expect("relative values");
+    }
+
+    #[test]
+    fn admits_only_print_media_groups() {
+        with_rule("@media print { :where(a:any-link) { color: inherit; } }").expect("print group");
+        for media in [
+            "@media screen { :where(a:any-link) { color: inherit; } }",
+            "@media print and (min-width: 40em) { :where(a:any-link) { color: inherit; } }",
+            "@media print { @supports (display: grid) { :where(a:any-link) { color: inherit; } } }",
+        ] {
+            let error = with_rule(media).expect_err(media);
+            assert!(error.contains("at-rule"), "{media}: {error}");
+        }
+    }
+
+    #[test]
+    fn a_print_rule_obeys_the_same_selector_and_value_rules() {
+        let selector =
+            with_rule("@media print { :where(a:any-link) :where(a) { color: inherit; } }")
+                .expect_err("selector");
+        assert!(!selector.is_empty(), "{selector}");
+        let value = with_rule("@media print { :where(a:any-link) { color: #000; } }")
+            .expect_err("hex color");
+        assert!(value.contains("hex color"), "{value}");
+        let empty = with_rule("@media print { :where(a:any-link) { } }").expect_err("empty");
+        assert!(empty.contains("declares nothing"), "{empty}");
+    }
+
+    #[test]
+    fn dialog_open_is_admitted_only_in_print() {
+        let open_manifest = parse_manifest(
+            "public-preview\tinteractive\tdetails\npublic-preview\tinteractive\tsummary\npublic-preview\tinteractive\tdialog",
+        )
+        .expect("open-state manifest");
+        assert_eq!(
+            check_selector_in(":where(dialog[open])", &open_manifest, true).expect("print"),
+            ["dialog"]
+        );
+        let error =
+            check_selector_in(":where(dialog[open])", &open_manifest, false).expect_err("screen");
+        assert!(error.contains("`[open]` is reserved"), "{error}");
+        let error =
+            check_selector_in(":where(summary[open])", &open_manifest, true).expect_err("other");
+        assert!(error.contains("`[open]` is reserved"), "{error}");
     }
 
     #[test]

@@ -68,6 +68,7 @@ internal	docs/architecture/primitives.md
 internal	docs/architecture/theme.md
 internal	docs/architecture/tailwind.md
 internal	docs/architecture/tokens.md
+internal	docs/browser-support.md
 internal	exports.tsv
 internal	fixtures/README.md
 internal	fixtures/bootstrap-boundary/accepted-directory.tsv
@@ -181,12 +182,16 @@ internal	tests/browser/specs/entrypoint.spec.mjs
 internal	tests/browser/specs/layer-ownership.spec.mjs
 internal	tests/browser/specs/layouts.spec.mjs
 internal	tests/browser/specs/primitives.spec.mjs
+internal	tests/browser/specs/print.spec.mjs
 internal	tests/browser/specs/scoping.spec.mjs
 internal	tests/browser/specs/support.mjs
 internal	tests/browser/specs/theme.spec.mjs
 internal	tests/browser/specs/static-renderer.spec.mjs
 internal	tests/browser/specs/tailwind.spec.mjs
 internal	tests/browser/specs/tokens.spec.mjs
+internal	tests/html-conformance/README.md
+internal	tests/html-conformance/package-lock.json
+internal	tests/html-conformance/package.json
 internal	base.tsv
 internal	adapter-exports.tsv
 internal	theme.tsv

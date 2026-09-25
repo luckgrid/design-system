@@ -53,7 +53,9 @@ relationship that this repository can document and test. Every other candidate i
   The base's single `:focus-visible` outline applies to every primitive
   unchanged.
 - **No query, no custom property.** No primitive uses a media query, container
-  query, `@supports`, or `@scope`, and none declares a custom property.
+  query, `@supports`, or `@scope`, and none declares a custom property. The one
+  exception is print: a rule inside `@media print` may adapt an existing hook or
+  state, follows the rule it adapts, and obeys every other check here.
   Spacing that should scale comes from the bounded fluid spacing roles, and
   the arrangement of children comes from the layouts, which are intrinsic. A
   consumer changes a primitive by setting the real property.
@@ -104,7 +106,7 @@ Kind: `ui-primitive`. Hooks: `.ds-action`, and the variants
 | `.ds-action-primary` | the one emphasized action in a group: `--ds-color-accent` fill and border, `--ds-color-on-accent` text |
 | `.ds-action-quiet` | no fill and a transparent border that keeps its width, so the box does not move on hover and forced-colors mode still draws it. At rest it has no border, fill, or underline, so use it only inside a navigation list or a toolbar group, where the grouping marks it as a control; never in running text |
 | `.ds-action-icon` | a square at the minimum target size with no padding. The consumer supplies the accessible name, for example with `aria-label` or visually hidden text |
-| States | `:hover` shows an accent border. `[aria-current]` (any value except an empty one, which is the ARIA default, or `"false"` in any case) shows the highlight fill, an accent border, and strong weight; the weight is the non-colour cue. `:disabled` on a `<button>` shows muted text and a not-allowed cursor, and the browser blocks activation. `:not(:any-link)` on an `<a>` with no `href` looks the same: the element is not a link, is not focusable, and cannot be activated |
+| States | `:hover` shows an accent border. `[aria-current]` (any value except an empty one, which is the ARIA default, or `"false"` in any case) shows the highlight fill, an accent border, and strong weight; the weight is the non-colour cue. `:disabled` on a `<button>` shows muted text, a dashed border, and a not-allowed cursor, and the browser blocks activation. `:not(:any-link)` on an `<a>` with no `href` looks the same: the element is not a link, is not focusable, and cannot be activated. An empty or `"false"` `aria-current` is not a state: it looks like the default action |
 | Order | a state rule follows the variants, so a disabled primary action looks disabled and a current quiet action shows its fill |
 | Keyboard and focus | native. A `<button>` activates on Enter and Space, a link on Enter. The base's `:focus-visible` outline is unchanged |
 | Not provided | a pressed toggle (`aria-pressed`), a critical or destructive emphasis, loading or busy state, and `aria-disabled`. `aria-disabled` needs script to block activation, so a consumer that uses it owns that script and its styling |
@@ -129,8 +131,10 @@ primitive.
 
 ## Browser support
 
-The primitives need no feature beyond the accepted browser floor (Chromium
-123, Firefox 121, Safari 17.5):
+The primitives need no feature beyond the feature-derived browser floor
+(Chromium 123, Firefox 121, Safari 17.5). The floor is a design target; the
+browsers verified for the initial preview are stated in
+[Browser support](/docs/browser-support.md):
 
 | Feature | Disposition |
 |---|---|
@@ -235,9 +239,24 @@ disposition and reason code against the inventory.
   text it cannot be told apart from the words around it. Use quiet link
   actions only inside a navigation list or a toolbar group, where the grouping
   and the target size mark each one as a control. The current state adds
-  strong weight. The quiet variant keeps a transparent border, which
-  forced-colors mode draws. axe does not detect a quiet action in running
+  strong weight. A disabled action and an unlinked anchor have a dashed border,
+  so they differ from an enabled action by border style as well as by muted text
+  (which is 2.56:1 against body text, too close to be the only cue); border style
+  survives print and forced-colors mode. In print, the primary action loses its
+  fill, so it prints in body text with strong weight inside its accent border. The
+  quiet variant keeps a transparent border, which forced-colors mode draws. axe does not detect a quiet action in running
   text; the release review checks placement.
+- **Forced-colors limitation.** Primary action emphasis is a presentational
+  hierarchy, not a distinct semantic state. Primary and default actions may
+  therefore appear visually identical when a browser or operating system
+  applies forced-colors rendering. Consumers must not rely exclusively on
+  primary color, fill, or contrast to communicate required meaning. Keep
+  functional distinctions available through appropriate labeling, grouping, and
+  semantic states. The native action identity, focus, current state, disabled
+  state, and unavailable-link behavior described above remain contractual.
+  This is a public-preview compatibility clarification: it documents a bounded
+  rendering limitation without changing the action hooks, states, declarations,
+  or API. It is not a universal high-contrast or Windows verification claim.
 - **Reduced motion.** The primitives add no motion.
 
 ## Classification and checks
@@ -251,8 +270,9 @@ fails when:
 - `primitives.css` does anything other than declare the sub-layer order and
   import one module per promoted primitive, in inventory order, or a module is
   missing or unexpected;
-- a module holds an at-rule, including a media query, container query,
-  `@supports`, or `@scope`;
+- a module holds an at-rule other than `@media print`, including any other
+  media query, container query, `@supports`, or `@scope`, or a print rule names
+  a selector the inventory does not derive or precedes its own rule;
 - a selector is anything other than the rules the inventory derives, in any
   spelling, or a rule is missing, repeated, or out of order;
 - a selector tests a `data-*` attribute;

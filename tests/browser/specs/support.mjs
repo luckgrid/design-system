@@ -99,27 +99,31 @@ export async function publishedRules(page, href) {
   return page.evaluate((target) => {
     const join = (parent, name) => (parent && name ? `${parent}.${name}` : parent || name || "");
     const found = [];
-    const walk = (rules, layer, sheetHref) => {
+    // `media` is the condition of the media group a rule sits in ("" when unconditional).
+    const walk = (rules, layer, sheetHref, media) => {
       for (const rule of rules) {
         const kind = rule.constructor.name;
         if (kind === "CSSImportRule") {
-          walk(rule.styleSheet.cssRules, join(layer, rule.layerName), rule.styleSheet.href);
+          walk(rule.styleSheet.cssRules, join(layer, rule.layerName), rule.styleSheet.href, media);
         } else if (kind === "CSSLayerBlockRule") {
-          walk(rule.cssRules, join(layer, rule.name), sheetHref);
+          walk(rule.cssRules, join(layer, rule.name), sheetHref, media);
         } else if (kind === "CSSStyleRule") {
           found.push({
             sheet: new URL(sheetHref).pathname,
             layer,
+            media,
             selector: rule.selectorText,
             properties: [...rule.style],
           });
+        } else if (kind === "CSSMediaRule") {
+          walk(rule.cssRules, layer, sheetHref, join(media, rule.conditionText));
         } else if (rule.cssRules) {
-          walk(rule.cssRules, layer, sheetHref);
+          walk(rule.cssRules, layer, sheetHref, media);
         }
       }
     };
     const sheet = [...document.styleSheets].find((candidate) => candidate.href?.endsWith(target));
-    walk(sheet.cssRules, "", sheet.href);
+    walk(sheet.cssRules, "", sheet.href, "");
     return found;
   }, href);
 }

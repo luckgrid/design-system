@@ -27,3 +27,17 @@
 :root[data-ds-scheme="dark"] {
   color-scheme: dark;
 }
+
+/*
+ * Printed pages must remain readable when the browser omits backgrounds.
+ * Keep the selected screen theme unchanged, but resolve semantic light-dark()
+ * roles to the light branch for print so dark-theme content does not become
+ * light text on a white sheet.
+ */
+@media print {
+  :root,
+  :root[data-ds-scheme="light"],
+  :root[data-ds-scheme="dark"] {
+    color-scheme: light;
+  }
+}

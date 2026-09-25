@@ -150,7 +150,12 @@ test.describe("primitives", () => {
     const rules = (await publishedRules(page, CORE_EXPORT)).filter((rule) =>
       rule.sheet.startsWith("/packages/styles/primitives"),
     );
-    expect(rules.map((rule) => rule.selector)).toEqual([
+    // The one environment group is print, and it only adapts an existing rule.
+    const printed = rules.filter((rule) => rule.media !== "");
+    expect(printed.map((rule) => [rule.media, rule.selector])).toEqual([
+      ["print", ":where(.ds-action.ds-action-primary)"],
+    ]);
+    expect(rules.filter((rule) => rule.media === "").map((rule) => rule.selector)).toEqual([
       ":where(.ds-surface)",
       ":where(.ds-action)",
       ":where(.ds-action.ds-action-primary)",
@@ -255,12 +260,22 @@ test.describe("primitives", () => {
       const notCurrent = await style(page, "#not-current");
       expect(notCurrent.background).toEqual(role.surface);
       expect(notCurrent.weight).toBe(role.body);
+      // aria-current="false" is not a state: it computes exactly like the default action.
+      const ordinary = await style(page, "#default");
+      for (const field of ["background", "border", "borderStyle", "borderWidth", "color", "weight", "cursor", "decoration"]) {
+        expect(notCurrent[field], field).toEqual(ordinary[field]);
+      }
       for (const selector of ["#disabled", "#disabled-primary", "#unlinked"]) {
         const unavailable = await style(page, selector);
         expect(unavailable.background, selector).toEqual(role.surface);
         expect(unavailable.border, selector).toEqual(role.border);
         expect(unavailable.color, selector).toEqual(role.muted);
         expect(unavailable.cursor, selector).toBe("not-allowed");
+        // The dashed border is the non-colour cue; enabled actions stay solid.
+        expect(unavailable.borderStyle, selector).toBe("dashed");
+      }
+      for (const selector of ["#default", "#primary", "#not-current", "#current"]) {
+        expect((await style(page, selector)).borderStyle, selector).toBe("solid");
       }
       // Hover is a pointer state: the border turns to the accent.
       await page.locator("#default").hover();

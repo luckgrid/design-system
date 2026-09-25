@@ -35,6 +35,19 @@
 }
 
 /*
+ * Printed pages commonly omit backgrounds, which would leave the on-accent
+ * label unreadable on white. Print the label in body text inside the accent
+ * border so it reads with or without printed backgrounds.
+ */
+@media print {
+  :where(.ds-action.ds-action-primary) {
+    background-color: transparent;
+    color: var(--ds-color-text);
+    font-weight: var(--ds-weight-strong);
+  }
+}
+
+/*
  * Quiet: no fill and no visible border until hovered. The border keeps its
  * width, so the box does not move, and forced-colors mode still draws it.
  */
@@ -67,8 +80,13 @@
   font-weight: var(--ds-weight-strong);
 }
 
-/* Disabled: the native attribute on a <button>. */
+/*
+ * Disabled: the native attribute on a <button>. The dashed border is the
+ * non-colour cue, so the state survives print, forced-colors mode, and low
+ * contrast between the muted and body text.
+ */
 :where(.ds-action:disabled) {
+  border-style: dashed;
   border-color: var(--ds-color-border);
   background-color: var(--ds-color-surface);
   color: var(--ds-color-text-muted);
@@ -80,6 +98,7 @@
  * be activated. It is the native way to show an unavailable link action.
  */
 :where(a.ds-action:not(:any-link)) {
+  border-style: dashed;
   border-color: var(--ds-color-border);
   background-color: var(--ds-color-surface);
   color: var(--ds-color-text-muted);

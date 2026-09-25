@@ -118,6 +118,7 @@ const PRIMITIVE_VALUES: Vocabulary = Vocabulary {
         "inline-flex",
         "center",
         "solid",
+        "dashed",
         "transparent",
         "none",
         "pointer",
@@ -400,17 +401,54 @@ pub fn validate_stylesheets(
         theme::reject_selector_comments(file, source)?;
         let expected = primitive.selectors();
         let mut position = 0;
-        for node in css::parse(source).map_err(|error| format!("stylesheet {file}: {error}"))? {
-            let Node::Style { prelude, body } = node else {
-                return Err(format!(
-                    "{file} holds an at-rule; primitives hold unconditional style rules only"
-                ));
-            };
+        let nodes = css::parse(source).map_err(|error| format!("stylesheet {file}: {error}"))?;
+        let rules = css::split_print(nodes).map_err(|_| {
+            format!(
+                "{file} holds an at-rule; primitives hold unconditional style rules and `@media print` rules only"
+            )
+        })?;
+        for css::FlatRule {
+            prelude,
+            body,
+            print,
+        } in rules
+        {
             let selector = prelude.split_whitespace().collect::<Vec<_>>().join(" ");
             if selector.contains("data-") {
                 return Err(format!(
                     "{file} `{selector}` tests a data-* attribute; primitive state comes from native and ARIA state"
                 ));
+            }
+            if print {
+                // A print rule adapts a rule that already ran: it names a
+                // classified selector and follows that selector's own rule, so
+                // every later state rule still outranks it.
+                match expected.iter().position(|candidate| *candidate == selector) {
+                    Some(found) if found < position => {}
+                    Some(_) => {
+                        return Err(format!(
+                            "{file} `{selector}` in `@media print` comes before its own rule; a print rule follows the rule it adapts"
+                        ));
+                    }
+                    None => {
+                        return Err(format!(
+                            "{file} `{selector}` in `@media print`: the {} rules select only {}, so each has zero specificity and styles no other hook or state",
+                            primitive.name,
+                            expected.join(", ")
+                        ));
+                    }
+                }
+                let declarations = tokens::split_declarations(file, &body)?;
+                if declarations.is_empty() {
+                    return Err(format!("{file} `{selector}` declares nothing"));
+                }
+                for (name, value) in &declarations {
+                    check_declaration(primitive.kind, name, value).map_err(|error| {
+                        format!("{file} `{selector}` in `@media print` {name}: {error}")
+                    })?;
+                }
+                summary.declarations += declarations.len();
+                continue;
             }
             match expected.iter().position(|candidate| *candidate == selector) {
                 Some(found) if found == position => {}
@@ -1207,6 +1245,49 @@ rejected\tcard\tcovered-by-promoted
             let error = with_action_declaration(declaration).expect_err(declaration);
             assert!(error.contains(needle), "{declaration}: {error}");
         }
+    }
+
+    fn action_with_print(rule: &str) -> String {
+        ACTION.replace(
+            ":where(.ds-action.ds-action-primary) { background-color: var(--ds-color-accent); }",
+            &format!(
+                ":where(.ds-action.ds-action-primary) {{ background-color: var(--ds-color-accent); }}\n{rule}"
+            ),
+        )
+    }
+
+    #[test]
+    fn a_print_rule_follows_the_rule_it_adapts() {
+        with_action(&action_with_print(
+            "@media print { :where(.ds-action.ds-action-primary) { color: var(--ds-color-text); } }",
+        ))
+        .expect("print rule after its own rule");
+
+        let early = ACTION.replace(
+            ":where(.ds-action) {",
+            "@media print { :where(.ds-action.ds-action-primary) { color: var(--ds-color-text); } }\n:where(.ds-action) {",
+        );
+        let error = with_action(&early).expect_err("print rule before its own rule");
+        assert!(error.contains("comes before its own rule"), "{error}");
+    }
+
+    #[test]
+    fn a_print_rule_styles_only_classified_selectors_and_values() {
+        let unknown = with_action(&action_with_print(
+            "@media print { :where(.ds-action.ds-action-loud) { color: var(--ds-color-text); } }",
+        ))
+        .expect_err("unclassified selector");
+        assert!(unknown.contains("`@media print`"), "{unknown}");
+        let value = with_action(&action_with_print(
+            "@media print { :where(.ds-action.ds-action-primary) { color: #000; } }",
+        ))
+        .expect_err("hex color");
+        assert!(value.contains("`@media print`"), "{value}");
+        let nested = with_action(&action_with_print(
+            "@media print { @supports (display: grid) { :where(.ds-action.ds-action-primary) { color: var(--ds-color-text); } } }",
+        ))
+        .expect_err("nested at-rule");
+        assert!(nested.contains("at-rule"), "{nested}");
     }
 
     #[test]

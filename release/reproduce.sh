@@ -5,7 +5,9 @@
 #       (--rehearsal <n> | --release) [--out <dir>]
 #
 # Each assembly runs in a fresh clone in its own temporary directory, so neither sees
-# the other's files or any local edit. The script then compares the tar checksum, the
+# the other's files or any local edit. Side b also runs under deliberately different
+# ambient settings (another time zone and locale, a hostile Git tar umask, and a GZIP
+# option) to prove none of them can change the archive. The script then compares the tar checksum, the
 # unpacked file trees, IDENTITY.tsv, and MANIFEST.tsv byte for byte, and reports every
 # field that legitimately differs.
 #
@@ -15,8 +17,8 @@
 #   - BUILD-ENV.txt tool_* lines, which record the tools that ran;
 #   - the temporary directory paths, which appear in no archive file.
 # The tar, MANIFEST.tsv, IDENTITY.tsv, and every archived file must be identical.
-# When both clones run on one machine the gzip wrapper is expected to match too, and
-# the script reports whether it did.
+# On one machine the gzip wrapper is expected to match too, and the script reports
+# whether it did.
 set -eu
 
 die() { printf 'reproduce: %s\n' "$*" >&2; exit 1; }
@@ -40,7 +42,12 @@ for side in a b; do
   git clone -q --no-hardlinks "$source_repo" "$work/clone-$side"
   git -C "$work/clone-$side" checkout -q --detach "$commit"
   [ "$(git -C "$work/clone-$side" rev-parse HEAD)" = "$commit" ] || die "clone $side is not at $commit"
-  ( cd "$work/clone-$side" && sh release/assemble.sh $mode_args --out "$work/out-$side" > "$work/assemble-$side.log" )
+  if [ "$side" = b ]; then
+    ( cd "$work/clone-b" && env TZ=Asia/Tokyo LC_ALL=C.UTF-8 GZIP=-1 GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=tar.umask GIT_CONFIG_VALUE_0=0077 \
+        sh release/assemble.sh $mode_args --out "$work/out-b" > "$work/assemble-b.log" )
+  else
+    ( cd "$work/clone-a" && sh release/assemble.sh $mode_args --out "$work/out-a" > "$work/assemble-a.log" )
+  fi
 done
 
 field() { sed -n "s/^$2=//p" "$work/out-$1/BUILD-ENV.txt"; }

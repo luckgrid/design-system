@@ -89,6 +89,8 @@ mkdir -p "$root"
 : > "$stage/.classes"
 grep -v '^[[:space:]]*#' release/inventory.tsv | grep -v '^[[:space:]]*$' | while IFS="$tab" read -r class kind archive source transform; do
   [ -f "$source" ] || die "inventory source is missing: $source"
+  # Only committed content may enter the archive: with a clean tree, a tracked file is HEAD's.
+  git ls-files --error-unmatch -- "$source" >/dev/null 2>&1 || die "inventory source is not tracked by Git: $source"
   mkdir -p "$root/$(dirname "$archive")"
   case "$transform" in
     none) cp "$source" "$root/$archive" ;;
@@ -120,12 +122,16 @@ chmod 644 "$root/MANIFEST.tsv"
 rm -f "$stage/.classes"
 
 # Deterministic tar through a scratch Git tree: sorted names, zero owner, commit-time mtimes.
+# The scratch repository ignores the caller's Git configuration (line-ending conversion,
+# tar umask, attributes) and the gzip wrapper ignores the GZIP environment variable, so
+# no local setting can change the bytes.
 scratch=$out/scratch.git
 git init -q --bare "$scratch"
-tree=$(cd "$stage" && GIT_DIR=$scratch GIT_WORK_TREE=$stage git -c core.filemode=true add -A -f . >/dev/null && GIT_DIR=$scratch GIT_WORK_TREE=$stage git write-tree)
-GIT_DIR=$scratch git archive --format=tar --mtime="$mtime" "$tree" > "$out/$name.tar"
+isolated() { env GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_NOSYSTEM=1 GIT_DIR="$scratch" "$@"; }
+tree=$(cd "$stage" && isolated GIT_WORK_TREE="$stage" git -c core.autocrlf=false -c core.filemode=true add -A -f . >/dev/null && isolated GIT_WORK_TREE="$stage" git write-tree)
+isolated git -c tar.umask=0002 archive --format=tar --mtime="$mtime" "$tree" > "$out/$name.tar"
 rm -rf "$scratch"
-gzip -n -9 -c "$out/$name.tar" > "$out/$name.tar.gz"
+GZIP= gzip -n -9 -c "$out/$name.tar" > "$out/$name.tar.gz"
 cp "$root/consumer/ds-consumer.sh" "$out/ds-consumer.sh"
 
 tar_sha=$(digest "$out/$name.tar")

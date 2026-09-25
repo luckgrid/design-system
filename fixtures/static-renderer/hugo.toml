@@ -1,0 +1,36 @@
+# Fixture-owned Hugo configuration. It is not a Design System export and not a
+# reusable renderer adapter. The exact renderer version is pinned in
+# HUGO_VERSION and enforced by build.sh and the CI job.
+baseURL = "/"
+title = "Static renderer fixture"
+languageCode = "en"
+relativeURLs = true
+canonifyURLs = false
+disableKinds = ["taxonomy", "term", "RSS", "sitemap", "robotsTXT", "404"]
+disableHugoGeneratorInject = true
+enableGitInfo = false
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+[markup.highlight]
+  codeFences = false
+
+# Only fixture-owned inputs are mounted. The staged public-export boundary is the
+# sole source of Design System CSS and is published beside the site.
+[module]
+  [[module.mounts]]
+    source = "content"
+    target = "content"
+  [[module.mounts]]
+    source = "layouts"
+    target = "layouts"
+  [[module.mounts]]
+    source = "static"
+    target = "static"
+  [[module.mounts]]
+    source = "consumer"
+    target = "static/consumer"
+  [[module.mounts]]
+    source = "stage/design-system"
+    target = "static/design-system"

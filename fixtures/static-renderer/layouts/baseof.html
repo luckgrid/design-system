@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="{{ site.Language.Locale }}"{{ with .Params.scheme }} data-ds-scheme="{{ . }}"{{ end }}>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
+    <link rel="stylesheet" href="{{ "design-system/core.css" | relURL }}">
+    <link rel="stylesheet" href="{{ "consumer/theme.css" | relURL }}">
+    <link rel="stylesheet" href="{{ "consumer/site.css" | relURL }}">
+  </head>
+  <body>
+    {{ partial "site-header.html" . }}
+    <main>
+      {{ block "main" . }}{{ end }}
+    </main>
+    {{ partial "site-footer.html" . }}
+  </body>
+</html>

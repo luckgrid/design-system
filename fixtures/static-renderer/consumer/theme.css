@@ -1,0 +1,35 @@
+/*
+ * Consumer-owned semantic theme for a fictional site, "Harbor Notes".
+ *
+ * It keeps its palette in its own --harbor-* properties and maps them onto
+ * public semantic roles from the consumer layer `app`, declared after `ds`. It
+ * touches no internal reference-tier value, uses no !important, and edits no
+ * Design System file. It sets no color-scheme: the Design System theme owns
+ * it, and data-ds-scheme on <html> selects light or dark.
+ */
+@layer app;
+
+@layer app {
+  :root {
+    --harbor-paper: oklch(98% 0.01 95);
+    --harbor-paper-deep: oklch(93% 0.02 95);
+    --harbor-ink: oklch(20% 0.02 250);
+    --harbor-ink-soft: oklch(46% 0.03 250);
+    --harbor-night: oklch(19% 0.03 250);
+    --harbor-night-raised: oklch(27% 0.035 250);
+    --harbor-mist: oklch(94% 0.01 250);
+    --harbor-mist-soft: oklch(76% 0.02 250);
+    --harbor-rust: oklch(48% 0.15 40);
+    --harbor-rust-bright: oklch(78% 0.13 55);
+    --harbor-font: "Harbor Serif", Georgia, serif;
+
+    --ds-color-canvas: light-dark(var(--harbor-paper), var(--harbor-night));
+    --ds-color-surface: light-dark(var(--harbor-paper-deep), var(--harbor-night-raised));
+    --ds-color-text: light-dark(var(--harbor-ink), var(--harbor-mist));
+    --ds-color-text-muted: light-dark(var(--harbor-ink-soft), var(--harbor-mist-soft));
+    --ds-color-accent: light-dark(var(--harbor-rust), var(--harbor-rust-bright));
+    --ds-color-on-accent: light-dark(var(--harbor-paper), var(--harbor-night));
+    --ds-font-body: var(--harbor-font);
+    --ds-radius-control: 0.125rem;
+  }
+}

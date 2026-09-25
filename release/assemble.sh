@@ -142,7 +142,7 @@ printf '%s  %s\n%s  %s\n' "$archive_sha" "$name.tar.gz" "$script_sha" "ds-consum
   printf 'identity=%s\nversion=%s\ntag=%s\nsource_commit=%s\nsource_tree=%s\n' "$mode" "$version" "$tag" "$commit" "$(git rev-parse HEAD^{tree})"
   printf 'mtime=%s\ntar_sha256=%s\narchive_sha256=%s\nds_consumer_sha256=%s\n' "$mtime" "$tar_sha" "$archive_sha" "$script_sha"
   printf 'tool_git=%s\ntool_gzip=%s\ntool_sh=%s\ntool_os=%s\n' \
-    "$(git --version)" "$(gzip --version 2>&1 | head -n 1)" "$(readlink /bin/sh 2>/dev/null || echo sh)" "$(uname -sm)"
+    "$(git --version)" "$(GZIP= gzip --version 2>&1 | head -n 1)" "$(readlink /bin/sh 2>/dev/null || echo sh)" "$(uname -sm)"
 } > "$out/BUILD-ENV.txt"
 
 printf 'assembled %s (%s)\n  tar     %s  %s\n  archive %s  %s\n' "$name" "$mode" "$tar_sha" "$name.tar" "$archive_sha" "$name.tar.gz"

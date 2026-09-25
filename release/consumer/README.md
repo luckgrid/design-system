@@ -34,7 +34,8 @@ build with Tailwind v4 need it; it is not part of the plain path.
 
 1. Download `design-system-@VERSION@.tar.gz` and `SHA256SUMS` from the release for
    tag `@TAG@`.
-2. Verify the archive: `shasum -a 256 -c SHA256SUMS` (or `sha256sum -c SHA256SUMS`).
+2. Verify the archive, checking only its own line of `SHA256SUMS`:
+   `grep 'design-system-@VERSION@.tar.gz' SHA256SUMS | shasum -a 256 -c -` (or `sha256sum -c -`).
 3. Unpack it: `tar -xzf design-system-@VERSION@.tar.gz`.
 4. Copy the CSS into your project: `cp -R design-system-@VERSION@/css/. your-project/design-system/`.
 5. Link `design-system/core.css` as shown above.

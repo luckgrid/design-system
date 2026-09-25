@@ -429,12 +429,15 @@ fn toml_string_values(config: &str, key: &str) -> Vec<String> {
 
 /// One staged file: path relative to the staged export root, and its source.
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct Staged {
-    relative: String,
-    source: PathBuf,
+pub(crate) struct Staged {
+    pub(crate) relative: String,
+    pub(crate) source: PathBuf,
 }
 
-fn derive_staged_graph(root: &Path, exports: &[crate::Export]) -> Result<Vec<Staged>, String> {
+pub(crate) fn derive_staged_graph(
+    root: &Path,
+    exports: &[crate::Export],
+) -> Result<Vec<Staged>, String> {
     let root = root
         .canonicalize()
         .map_err(|error| format!("resolve repository root: {error}"))?;

@@ -3,8 +3,11 @@
 A portable, multi-brand, web-platform-first design system: CSS-first,
 semantic-HTML-first, framework-agnostic, and independently versioned.
 
-> **Status: experimental.** There is no released CSS and no `public-stable`
-> surface yet. The first CSS entrypoint exists as a `public-preview` surface.
+> **Status: preview.** The first candidate release is version `0.1.0-preview.1`,
+> licensed MIT. Every consumer-facing surface is `public-preview`; **no surface is
+> `public-stable`.** Consume it from an immutable release archive, not from
+> repository paths. See [`release/consumer/README.md`](release/consumer/README.md)
+> and [`release/RELEASE.md`](release/RELEASE.md).
 
 ## What this is
 
@@ -70,10 +73,16 @@ The repository currently provides:
   primitive hook and state, and a scoping fixture that checks each hook's reach
   against nested and lookalike markup;
 - browser contract tests in Chromium, Firefox, and WebKit under `tests/browser/`;
-- a draft [browser support statement](docs/browser-support.md) for the initial
-  preview: desktop Chromium/Chrome 123+ and Edge 123+ (macOS-verified) and
-  Firefox 121+ (qualified); Android and Safari browsers are unverified, not
+- a published [browser support statement](docs/browser-support.md) for the initial
+  preview: the Chromium engine at 123+ (Chrome for Testing 123.0.6312.122 on macOS;
+  branded Chrome was not executed), Edge 123+ (macOS-verified), and Firefox 121+
+  (qualified). Windows desktop, Linux desktop, Windows Edge, Chrome Android,
+  Firefox Android, and Safari on macOS, iOS, and iPadOS are unverified, not
   excluded;
+- a release pipeline: `release/inventory.tsv` and `release/identity.toml` define the
+  candidate, `release/assemble.sh` builds a reproducible archive, and `ds-check
+  inventory` and `ds-check release` verify the source and the unpacked archive; see
+  [`docs/release.md`](docs/release.md);
 - explicit compatibility classification in `bootstrap-surfaces.tsv`;
 - an optional `public-preview` Tailwind v4 adapter that maps the same public
   semantic roles through `@theme inline`, has no Preflight, and keeps provider
@@ -161,13 +170,9 @@ project maturity does not make an internal path public.
 - Not a Tailwind plugin. Tailwind may later exist as an optional adapter.
 - Not a backend/service framework.
 - Not a general-purpose UI kit copied from one consumer.
-- Not yet a released CSS package or release artifact.
+- Not a package-registry release: the channel is an immutable source tag and a GitHub Release archive.
 
 ## License
 
-**This repository is currently unlicensed.** It is public and readable, but
-default copyright applies: public visibility is not permission to copy, modify,
-or redistribute the source.
-
-Open-source licensing is intended but deliberately deferred until before the
-first supported release candidate. No `LICENSE` file exists yet.
+Released under the [MIT License](LICENSE). Product maturity is `preview`: the
+license grants reuse rights, and does not make any surface stable.

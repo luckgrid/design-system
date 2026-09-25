@@ -1,0 +1,24 @@
+name: Accessibility issue
+description: An accessibility problem in the shipped CSS.
+labels: ["feedback: accessibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feedback is evidence to triage. Reporting a need does not by itself add,
+        promote, or guarantee any public API. Name the exact release version and
+        archive checksum you pinned.
+  - type: input
+    id: version
+    attributes:
+      label: Release version
+      description: The pinned version, for example 0.1.0-preview.1.
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: The problem and who it affects
+      description: Include the assistive technology, browser, platform, and the element or hook involved.
+    validations:
+      required: true

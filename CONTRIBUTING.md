@@ -1,7 +1,7 @@
 # Contributing
 
-The Design System is in experimental bootstrap and is currently unlicensed.
-Public visibility is not permission to reuse or redistribute the source.
+The Design System is a `preview` release under the [MIT License](LICENSE).
+Contributions are accepted under the same license.
 
 ## Toolchain
 

@@ -199,7 +199,7 @@ pub struct Manifest {
 }
 
 impl Manifest {
-    fn hooks(&self) -> BTreeSet<String> {
+    pub(crate) fn hooks(&self) -> BTreeSet<String> {
         self.primitives.iter().flat_map(Primitive::hooks).collect()
     }
 

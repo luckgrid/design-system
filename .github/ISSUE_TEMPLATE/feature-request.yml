@@ -1,0 +1,24 @@
+name: Feature request
+description: Anything else you would like the Design System to do.
+labels: ["feedback: feature-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feedback is evidence to triage. Reporting a need does not by itself add,
+        promote, or guarantee any public API. Name the exact release version and
+        archive checksum you pinned.
+  - type: input
+    id: version
+    attributes:
+      label: Release version
+      description: The pinned version, for example 0.1.0-preview.1.
+    validations:
+      required: true
+  - type: textarea
+    id: request
+    attributes:
+      label: What you would like and why
+      description: Describe the problem you are solving, not only the solution you have in mind.
+    validations:
+      required: true

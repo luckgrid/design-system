@@ -1,0 +1,24 @@
+name: Portability or install failure
+description: The pin, checksum, install, or link path did not work in your environment.
+labels: ["feedback: portability"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feedback is evidence to triage. Reporting a need does not by itself add,
+        promote, or guarantee any public API. Name the exact release version and
+        archive checksum you pinned.
+  - type: input
+    id: version
+    attributes:
+      label: Release version
+      description: The pinned version, for example 0.1.0-preview.1.
+    validations:
+      required: true
+  - type: textarea
+    id: failure
+    attributes:
+      label: What failed
+      description: The command you ran, the output, your operating system, and which shell tools you have.
+    validations:
+      required: true

@@ -22,10 +22,12 @@ with a private route.
 
 ## Scope
 
-The project is experimental and has no supported release yet. Reports are still
-welcome for repository tooling, workflow configuration, dependency and supply
-chain posture, and any future published artifacts.
+Reports are welcome for the published release archive, repository tooling,
+workflow configuration, and dependency and supply-chain posture.
 
-Because there is no released artifact, there is currently no security-fix
-backport or supported-version policy. One is owed before the first supported
-release candidate.
+## Supported versions
+
+Only the latest preview release is considered current. There is no backport
+policy for earlier preview releases; a fix ships in a new preview release. A
+vulnerability in a preview CSS artifact is fixed by publishing a new version that
+consumers pin, not by changing an existing tag.

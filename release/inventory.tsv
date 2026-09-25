@@ -7,40 +7,44 @@
 # archive; `ds-check release` verifies the unpacked archive against that manifest.
 #
 # Classes:
-#   public-preview  a compatibility surface consumers may depend on (CSS, surface tables)
-#   documentation   explanatory or legal text; carries no compatibility promise
+#   public-preview  a compatibility surface consumers may depend on: the CSS entrypoints and
+#                   the consumer script. Must equal the class in bootstrap-surfaces.tsv.
+#   internal        a stylesheet shipped only because an entrypoint imports it; its path
+#                   is not API. Must equal the class in bootstrap-surfaces.tsv.
+#   documentation   explanatory or legal text, and the machine-readable surface tables that
+#                   state the public vocabulary; carries no compatibility promise itself.
 # Kinds: css, surface, doc, license, tool
 # Transforms: none (byte-identical to the source), identity (substitute release identity
 #   placeholders), tailwind-core-import (rewrite the one repository-relative core import to ./core.css).
 #
 # The CSS layout is the staged public-export shape: each export under its declared name,
 # imported stylesheets beside it. No repository path survives into the archive.
-public-preview	css	css/base.css	packages/styles/base.css	none
-public-preview	css	css/base/content.css	packages/styles/base/content.css	none
-public-preview	css	css/base/document.css	packages/styles/base/document.css	none
-public-preview	css	css/base/forms.css	packages/styles/base/forms.css	none
-public-preview	css	css/base/interactive.css	packages/styles/base/interactive.css	none
+internal	css	css/base.css	packages/styles/base.css	none
+internal	css	css/base/content.css	packages/styles/base/content.css	none
+internal	css	css/base/document.css	packages/styles/base/document.css	none
+internal	css	css/base/forms.css	packages/styles/base/forms.css	none
+internal	css	css/base/interactive.css	packages/styles/base/interactive.css	none
 public-preview	css	css/core.css	packages/styles/index.css	none
-public-preview	css	css/layouts.css	packages/styles/layouts.css	none
-public-preview	css	css/layouts/cluster.css	packages/styles/layouts/cluster.css	none
-public-preview	css	css/layouts/grid.css	packages/styles/layouts/grid.css	none
-public-preview	css	css/layouts/stack.css	packages/styles/layouts/stack.css	none
-public-preview	css	css/primitives.css	packages/styles/primitives.css	none
-public-preview	css	css/primitives/action.css	packages/styles/primitives/action.css	none
-public-preview	css	css/primitives/surface.css	packages/styles/primitives/surface.css	none
-public-preview	css	css/tokens.css	packages/styles/tokens.css	none
-public-preview	css	css/tokens/reference.css	packages/styles/tokens/reference.css	none
-public-preview	css	css/tokens/semantic.css	packages/styles/tokens/semantic.css	none
-public-preview	css	css/tokens/theme.css	packages/styles/tokens/theme.css	none
+internal	css	css/layouts.css	packages/styles/layouts.css	none
+internal	css	css/layouts/cluster.css	packages/styles/layouts/cluster.css	none
+internal	css	css/layouts/grid.css	packages/styles/layouts/grid.css	none
+internal	css	css/layouts/stack.css	packages/styles/layouts/stack.css	none
+internal	css	css/primitives.css	packages/styles/primitives.css	none
+internal	css	css/primitives/action.css	packages/styles/primitives/action.css	none
+internal	css	css/primitives/surface.css	packages/styles/primitives/surface.css	none
+internal	css	css/tokens.css	packages/styles/tokens.css	none
+internal	css	css/tokens/reference.css	packages/styles/tokens/reference.css	none
+internal	css	css/tokens/semantic.css	packages/styles/tokens/semantic.css	none
+internal	css	css/tokens/theme.css	packages/styles/tokens/theme.css	none
 public-preview	css	css/tailwind.css	adapters/tailwind/index.css	tailwind-core-import
-public-preview	surface	surface/tailwind-projection.tsv	adapters/tailwind/projection.tsv	none
-public-preview	surface	surface/exports.tsv	exports.tsv	none
-public-preview	surface	surface/adapter-exports.tsv	adapter-exports.tsv	none
-public-preview	surface	surface/tokens.tsv	tokens.tsv	none
-public-preview	surface	surface/theme.tsv	theme.tsv	none
-public-preview	surface	surface/base.tsv	base.tsv	none
-public-preview	surface	surface/layouts.tsv	layouts.tsv	none
-public-preview	surface	surface/primitives.tsv	primitives.tsv	none
+documentation	surface	surface/tailwind-projection.tsv	adapters/tailwind/projection.tsv	none
+documentation	surface	surface/exports.tsv	exports.tsv	none
+documentation	surface	surface/adapter-exports.tsv	adapter-exports.tsv	none
+documentation	surface	surface/tokens.tsv	tokens.tsv	none
+documentation	surface	surface/theme.tsv	theme.tsv	none
+documentation	surface	surface/base.tsv	base.tsv	none
+documentation	surface	surface/layouts.tsv	layouts.tsv	none
+documentation	surface	surface/primitives.tsv	primitives.tsv	none
 documentation	license	LICENSE	LICENSE	none
 documentation	doc	README.md	release/consumer/README.md	identity
 documentation	doc	RELEASE.md	release/RELEASE.md	identity

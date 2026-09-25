@@ -7,6 +7,7 @@ mod hooks;
 mod layout;
 mod lexical;
 mod primitive;
+mod release;
 mod static_renderer;
 mod tailwind;
 mod theme;
@@ -112,7 +113,7 @@ struct Export {
     path: PathBuf,
 }
 
-const USAGE: &str = "usage: ds-check audit [styles-root]\n       ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check static-renderer <exports.tsv> <layouts.tsv> <primitives.tsv> <theme.tsv> <base.tsv> <fixture-dir>\n       ds-check tailwind <projection.tsv> <tokens.tsv> <adapter-exports.tsv> <bootstrap-surfaces.tsv> <adapter-dir> <generated.css>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>\n       ds-check hooks <layouts.tsv> <primitives.tsv> <theme.tsv> <exports.tsv> <hooks-doc.md> <scoping-fixture-dir>";
+const USAGE: &str = "usage: ds-check audit [styles-root]\n       ds-check inventory <inventory.tsv> <identity.toml> <exports.tsv> <adapter-exports.tsv> <bootstrap-surfaces.tsv>\n       ds-check release <unpacked-archive-dir> [source-root]\n       ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check static-renderer <exports.tsv> <layouts.tsv> <primitives.tsv> <theme.tsv> <base.tsv> <fixture-dir>\n       ds-check tailwind <projection.tsv> <tokens.tsv> <adapter-exports.tsv> <bootstrap-surfaces.tsv> <adapter-dir> <generated.css>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>\n       ds-check hooks <layouts.tsv> <primitives.tsv> <theme.tsv> <exports.tsv> <hooks-doc.md> <scoping-fixture-dir>";
 
 fn run(args: &[String]) -> Result<String, String> {
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
@@ -121,6 +122,27 @@ fn run(args: &[String]) -> Result<String, String> {
         [command, styles_root] if command == "audit" => audit::run(&root, Path::new(styles_root)),
         [command, manifest, fixture] if command == "check" => {
             run_check(&root, Path::new(manifest), Path::new(fixture))
+        }
+        [
+            command,
+            inventory,
+            identity,
+            exports,
+            adapter_exports,
+            manifest,
+        ] if command == "inventory" => release::run_inventory(
+            &root,
+            Path::new(inventory),
+            Path::new(identity),
+            Path::new(exports),
+            Path::new(adapter_exports),
+            Path::new(manifest),
+        ),
+        [command, archive] if command == "release" => {
+            release::run_release(Path::new(archive), None)
+        }
+        [command, archive, source] if command == "release" => {
+            release::run_release(Path::new(archive), Some(Path::new(source)))
         }
         [command, exports, manifest, fixture] if command == "layers" => run_layers(
             &root,

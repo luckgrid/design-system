@@ -81,10 +81,11 @@ fetch_archive() {
 }
 
 check_listing() {
+  dots=..
   tar -tzf "$1" > "$cache/listing.$$" || die "cannot list $1"
   while IFS= read -r entry; do
     case "$entry" in
-      /*|../*|*/../*|*/..) rm -f "$cache/listing.$$"; die "unsafe archive path: $entry" ;;
+      /*|"$dots"|"$dots"/*|*/"$dots"/*|*/"$dots") rm -f "$cache/listing.$$"; die "unsafe archive path: $entry" ;;
     esac
     case "$entry" in
       design-system-"$version"|design-system-"$version"/*) ;;

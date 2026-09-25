@@ -219,3 +219,4 @@ internal	release/verify-packaged.sh
 internal	tests/browser/packaged/packaged.spec.mjs
 internal	tests/browser/playwright.packaged.config.mjs
 internal	tests/browser/probes/packaged-load.html
+internal	release/consumer-proof.sh

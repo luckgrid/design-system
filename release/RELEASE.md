@@ -33,9 +33,11 @@ anything not listed in `MANIFEST.tsv` are not API.
 
 ## Browser support
 
-Read `docs/browser-support.md`. In short: desktop Chromium/Chrome 123+ and Edge 123+
-(verified on macOS at the floor version, using Chrome for Testing 123.0.6312.122 and
-Edge 123.0.2420.97), and Firefox 121+ with a stated qualification. Windows desktop,
+Read `docs/browser-support.md`. In short: desktop Chromium 123+ and Edge 123+
+(verified on macOS at the floor version; the executed floor browser was Chrome for
+Testing 123.0.6312.122, the exact Chromium engine but not branded Google Chrome, and
+branded Google Chrome 123 was not executed; Edge 123.0.2420.97 was executed), and
+Firefox 121+ with a stated qualification. Windows desktop,
 Linux desktop, Windows Edge, Chrome Android, Firefox Android, and Safari on macOS,
 iOS, and iPadOS are unverified, not excluded.
 

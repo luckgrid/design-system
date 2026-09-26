@@ -28,6 +28,8 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 work=$tmp/$name
 pass=0
+fail=0
+failures=
 
 fresh() { rm -rf "$tmp/$name"; cp -R "$src" "$tmp/$name"; }
 # Re-record one file's checksum and size so only the content rule can reject it.
@@ -37,14 +39,18 @@ remanifest() {
   sed "s|^[0-9a-f]\{64\}${tab}[0-9]*${tab}\(.*\)${tab}$1\$|$sum${tab}$size${tab}\1${tab}$1|" "$work/MANIFEST.tsv" > "$work/MANIFEST.new"
   mv "$work/MANIFEST.new" "$work/MANIFEST.tsv"
 }
+fail() { fail=$((fail + 1)); failures="$failures$1
+"; printf 'FAILED    %s\n' "$1" >&2; }
+# Every probe runs; a wrong outcome is recorded and summarised, never hides later probes.
 expect() { # <label> <substring> [extra ds-check args]
   label=$1; want=$2; shift 2
   if out=$("$DS_CHECK" release "$work" "$@" 2>&1); then
-    die "probe '$label' was ACCEPTED: $out"
+    fail "probe '$label' was ACCEPTED: $out"
+    return 0
   fi
   case "$out" in
     *"$want"*) pass=$((pass + 1)); printf 'rejected  %-44s %s\n' "$label" "$want" ;;
-    *) die "probe '$label' failed for the wrong reason (wanted '$want'): $out" ;;
+    *) fail "probe '$label' failed for the wrong reason (wanted '$want'): $out" ;;
   esac
 }
 append() { printf '%s\n' "$2" >> "$work/$1"; remanifest "$1"; }
@@ -84,8 +90,20 @@ fresh; append consumer/ds-consumer.sh 'cargo build';                    expect "
 fresh; sed 's/^MIT License/Apache License/' "$work/LICENSE" > "$work/l.new"; mv "$work/l.new" "$work/LICENSE"; remanifest LICENSE; expect "wrong license text" "MIT License"
 fresh; sed "s/^license${tab}MIT/license${tab}Apache-2.0/" "$work/IDENTITY.tsv" > "$work/i.new"; mv "$work/i.new" "$work/IDENTITY.tsv"; remanifest IDENTITY.tsv; expect "identity license" "license"
 fresh; sed "s/^maturity${tab}preview/maturity${tab}stable/" "$work/IDENTITY.tsv" > "$work/i.new"; mv "$work/i.new" "$work/IDENTITY.tsv"; remanifest IDENTITY.tsv; expect "stable maturity" "maturity"
-fresh; sed "s/^identity${tab}rehearsal/identity${tab}release/" "$work/IDENTITY.tsv" > "$work/i.new"; mv "$work/i.new" "$work/IDENTITY.tsv"; remanifest IDENTITY.tsv; expect "rehearsal claiming to be a release" "release identity"
+# Flip the identity kind and leave the version, tag, and commit claims of the original kind.
+# The checker must reject the inconsistent identity for either kind of archive.
+kind=$(sed -n "s/^identity${tab}//p" "$src/IDENTITY.tsv")
+case "$kind" in
+  rehearsal) flip=release ;;
+  release) flip=rehearsal ;;
+  *) die "unexpected identity kind '$kind' in IDENTITY.tsv" ;;
+esac
+fresh; sed "s/^identity${tab}$kind/identity${tab}$flip/" "$work/IDENTITY.tsv" > "$work/i.new"; mv "$work/i.new" "$work/IDENTITY.tsv"; remanifest IDENTITY.tsv; expect "$kind claiming to be a $flip" "$flip identity"
 
 fresh; append css/base.css '/* comment only */'; expect "edited stylesheet against source" "differs from" .
 
-printf 'all %s negative probes rejected as required\n' "$pass"
+if [ "$fail" -ne 0 ]; then
+  printf '%s probe(s) rejected as required, %s failed:\n%s' "$pass" "$fail" "$failures" >&2
+  exit 1
+fi
+printf 'all %s negative probes rejected as required (identity kind: %s)\n' "$pass" "$kind"

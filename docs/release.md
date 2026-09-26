@@ -35,6 +35,21 @@ compatibility stay separate: every consumer-facing surface is `public-preview`.
 | `LICENSE`, `README.md`, `RELEASE.md` | License, consumer instructions, release notes. |
 | `IDENTITY.tsv`, `MANIFEST.tsv` | Version, commit, maturity, license; sha256, size, class, and kind of every other file. |
 
+## Prerequisites
+
+Assembly needs `git`, POSIX shell tools, `tar`, `gzip`, and the Rust toolchain pinned in
+`rust-toolchain.toml`. `release/verify-packaged.sh` also needs Node 20 or later, the
+browser-test dependencies, and the pinned Hugo:
+
+```sh
+# Browser tests and the Playwright engines.
+(cd tests/browser && npm ci && npx playwright install chromium firefox webkit)
+
+# Hugo must be the exact version in fixtures/static-renderer/HUGO_VERSION. If `hugo` on
+# PATH is a version-manager shim, point HUGO_BIN at the real binary.
+export HUGO_BIN=/path/to/hugo
+```
+
 ## Commands
 
 All are run from the repository root of a clean checkout. Ordinary build, test, and

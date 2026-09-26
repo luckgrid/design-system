@@ -27,7 +27,9 @@ export file. The result, `stage/design-system/`, contains `core.css` and its
 import tree and no repository path. Hugo mounts it as `design-system/`, so pages
 load `design-system/core.css` and nothing else from the Design System. The
 staged tree and `stage/MANIFEST.tsv` (SHA-256 per file) are generated and
-ignored. The eventual release archive is expected to have the same shape.
+ignored. The release archive's `css/` directory has the same shape, and `DS_PACKAGED_CSS=<archive>/css`
+makes `stage.sh` (and `verify-toolchain-free.sh`) stage from an unpacked archive instead of the
+repository, so release verification renders this fixture from the packaged form.
 
 ## Commands
 

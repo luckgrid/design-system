@@ -1,6 +1,6 @@
 # Bootstrap architecture
 
-Status: experimental, internal bootstrap.
+Status: preview. This page describes how repository files are classified and how the release premise is enforced.
 
 The repository is a Rust-first contributor workspace whose frontend product
 remains CSS-first and semantic-HTML-first. Rust validates source and release
@@ -65,11 +65,10 @@ incomplete-inventory, and non-lint-inheriting cases.
 
 ## Release premise
 
-There is no supported release at bootstrap. The workspace version is `0.0.0` and
-product maturity is experimental. A future release candidate may use an
-immutable source tag plus a GitHub release/archive after the portable frontend
-contract and assurance work are accepted. Registry publication remains
-evidence-driven.
-
-The repository is intentionally unlicensed until a license is selected before
-the first supported release candidate.
+The first supported candidate is a `preview` release under the MIT License. The
+release is an immutable source tag plus a GitHub Release archive; no package
+registry is used, and a registry needs concrete consumer evidence and a recorded
+decision. `release/identity.toml` holds the version, tag, maturity, license, and
+channel, and `release/inventory.tsv` lists what the archive contains. The
+`docs/release.md` in the source repository describes assembly and verification. Product maturity and per-surface compatibility stay separate axes:
+every consumer-facing surface is `public-preview`, and none is `public-stable`.

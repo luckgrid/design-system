@@ -9,7 +9,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::{base, css, parse_exports, relative_to, tracked_files, validate_relative_path};
+use crate::{
+    base, css, lexical, parse_exports, relative_to, tracked_files, validate_relative_path,
+};
 
 const STAGE_DIR: &str = "stage/design-system";
 const STAGE_MANIFEST: &str = "stage/MANIFEST.tsv";
@@ -123,6 +125,7 @@ pub fn run(
         ));
     }
     reject_committed_output(&inputs)?;
+    reject_untracked_inputs(&fixture_root, &inputs)?;
     scan_inputs(&inputs)?;
     let pinned = validate_pin(&inputs)?;
     validate_mounts(&inputs)?;
@@ -132,6 +135,7 @@ pub fn run(
     let sheets = allowed_sheets(&exports, &inputs);
     let pages = read_pages(&fixture_root.join(PUBLIC_DIR))?;
     validate_public_design_system(&fixture_root.join(PUBLIC_DIR), &staged)?;
+    let generated = scan_generated(&fixture_root.join(PUBLIC_DIR))?;
     let linked = validate_pages(&pages, &sheets)?;
 
     let hooks = validate_hooks(
@@ -147,8 +151,8 @@ pub fn run(
         "static renderer fixture {}: hugo {pinned} pinned; {} staged file(s) match the declared \
 export graph byte for byte; {} page(s) link only {} declared stylesheet(s); {hooks}; \
 classless base covers {classless} owned subject(s) on one classless page; consumer semantic \
-theme and cascade overrides present; {} consumer input(s) free of private-path, unpublished-alias, \
-internal-module, Tailwind, script, and source-tree coupling",
+theme and cascade overrides present; {} consumer input(s) and {generated} generated file(s) free \
+of private-path, unpublished-alias, internal-module, Tailwind, script, and source-tree coupling",
         fixture.display(),
         stage_files,
         pages.len(),
@@ -189,10 +193,10 @@ pub fn scan_inputs(inputs: &[(String, String)]) -> Result<(), String> {
             continue;
         }
         let lower = content.to_ascii_lowercase();
-        for (marker, reason) in FORBIDDEN_INPUT {
-            if lower.contains(marker) {
-                return Err(format!("{name} contains `{marker}`: {reason}"));
-            }
+        scan_markers(name, &lower, &FORBIDDEN_INPUT)?;
+        if name.ends_with(".css") {
+            // Escapes and comment separators must not hide a marker.
+            scan_markers(name, &lexical::css_normalize(content), &FORBIDDEN_INPUT)?;
         }
         // The only Design System file a consumer may name is a declared export.
         for (index, _) in lower.match_indices(&format!("{PUBLISHED_PREFIX}/")) {
@@ -211,6 +215,15 @@ pub fn scan_inputs(inputs: &[(String, String)]) -> Result<(), String> {
     Ok(())
 }
 
+fn scan_markers(name: &str, text: &str, markers: &[(&str, &str)]) -> Result<(), String> {
+    for (marker, reason) in markers {
+        if text.contains(marker) {
+            return Err(format!("{name} contains `{marker}`: {reason}"));
+        }
+    }
+    Ok(())
+}
+
 fn scan_script(name: &str, content: &str) -> Result<(), String> {
     let code: String = content
         .lines()
@@ -224,6 +237,75 @@ fn scan_script(name: &str, content: &str) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+/// Fixture directories that hold only generated output and are ignored by Git.
+const GENERATED_ENTRIES: [&str; 4] = ["stage", "public", "resources", ".hugo_build.lock"];
+
+/// The fixture's tracked files must be every file Hugo could read from it. A file
+/// present on disk but untracked (or ignored) would be mounted and published
+/// without the tracked-file scan ever seeing it.
+fn reject_untracked_inputs(fixture_root: &Path, inputs: &[(String, String)]) -> Result<(), String> {
+    let tracked: BTreeSet<&str> = inputs.iter().map(|(name, _)| name.as_str()).collect();
+    let mut pending = vec![fixture_root.to_path_buf()];
+    while let Some(directory) = pending.pop() {
+        for entry in fs::read_dir(&directory)
+            .map_err(|error| format!("read {}: {error}", directory.display()))?
+        {
+            let path = entry.map_err(|error| error.to_string())?.path();
+            let relative = relative_to(fixture_root, &path).display().to_string();
+            let top = relative.split('/').next().unwrap_or("");
+            if GENERATED_ENTRIES.contains(&top) || relative.ends_with(".DS_Store") {
+                continue;
+            }
+            if path.is_dir() {
+                pending.push(path);
+            } else if !tracked.contains(relative.as_str()) {
+                return Err(format!(
+                    "{relative} is in the fixture directory but not tracked by Git; the scan only reads tracked files, so track it or remove it"
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// File types a rendered fixture site may contain outside the byte-compared
+/// design-system directory.
+const GENERATED_EXTENSIONS: [&str; 3] = ["html", "css", "svg"];
+
+/// Scan the rendered site with the same coupling markers as the inputs, and reject
+/// any file type the fixture is not meant to publish. This is the fixture's
+/// generated-artifact scan: input scanning alone cannot see what a mount or a
+/// layout emits. A rendered page legitimately carries `../` (relative URLs), so
+/// that one marker is not applied here; pages are separately confined to declared
+/// stylesheets by `validate_pages`.
+fn scan_generated(public: &Path) -> Result<usize, String> {
+    let mut scanned = 0;
+    for file in list_files(public)? {
+        if file.starts_with(&format!("{PUBLISHED_PREFIX}/")) {
+            continue;
+        }
+        let extension = file.rsplit_once('.').map_or("", |(_, extension)| extension);
+        if !GENERATED_EXTENSIONS.contains(&extension) {
+            return Err(format!(
+                "rendered output holds `{file}`, a file type the fixture does not publish"
+            ));
+        }
+        let content = read(&public.join(&file))?;
+        let lower = content.to_ascii_lowercase();
+        let markers: Vec<(&str, &str)> = FORBIDDEN_INPUT
+            .iter()
+            .copied()
+            .filter(|(marker, _)| *marker != "../")
+            .collect();
+        scan_markers(&file, &lower, &markers)?;
+        if extension == "css" {
+            scan_markers(&file, &lexical::css_normalize(&content), &markers)?;
+        }
+        scanned += 1;
+    }
+    Ok(scanned)
 }
 
 fn validate_pin(inputs: &[(String, String)]) -> Result<String, String> {
@@ -262,24 +344,34 @@ fn validate_mounts(inputs: &[(String, String)]) -> Result<(), String> {
         .find(|(name, _)| name == "hugo.toml")
         .ok_or("fixture has no hugo.toml")?
         .1;
-    let mut mounts = 0;
-    for line in config.lines() {
-        let line = line.trim();
-        if let Some(value) = line.strip_prefix("source") {
-            let value = value
-                .trim_start()
-                .trim_start_matches('=')
-                .trim()
-                .trim_matches('"');
-            if !ALLOWED_MOUNT_SOURCES.contains(&value) {
-                return Err(format!(
-                    "hugo.toml mounts `{value}`, which is not a fixture input"
-                ));
-            }
-            mounts += 1;
+    let sources = toml_string_values(config, "source");
+    for value in &sources {
+        if !ALLOWED_MOUNT_SOURCES.contains(&value.as_str()) {
+            return Err(format!(
+                "hugo.toml mounts `{value}`, which is not a fixture input"
+            ));
         }
     }
-    if mounts == 0 {
+    // Every mount must be accounted for as a `source` the check just verified: a
+    // mount table or inline table without one, or a `mounts` key spelled some
+    // other way, fails closed instead of publishing an unchecked directory.
+    let compact: String = config
+        .lines()
+        .filter(|line| !line.trim_start().starts_with('#'))
+        .flat_map(|line| {
+            line.chars()
+                .filter(|c| !c.is_whitespace() && *c != '"' && *c != '\'')
+        })
+        .collect();
+    let headers = compact.matches("[[module.mounts]]").count();
+    let inline_tables = compact.matches('{').count();
+    if headers + inline_tables != sources.len() {
+        return Err(
+            "hugo.toml declares a mount this check cannot account for; use [[module.mounts]] tables with a `source` each"
+                .to_owned(),
+        );
+    }
+    if sources.is_empty() {
         return Err(
             "hugo.toml declares no mounts; the staged boundary would not be published".to_owned(),
         );
@@ -287,14 +379,65 @@ fn validate_mounts(inputs: &[(String, String)]) -> Result<(), String> {
     Ok(())
 }
 
-/// One staged file: path relative to the staged export root, and its source.
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct Staged {
-    relative: String,
-    source: PathBuf,
+/// Every string assigned to `key` anywhere in a TOML document, whether the key is
+/// bare, `"quoted"`, or `'quoted'`, at a line start or inside an inline table.
+/// Comments are skipped; a value must be a basic or literal string.
+fn toml_string_values(config: &str, key: &str) -> Vec<String> {
+    let mut values = Vec::new();
+    for line in config.lines() {
+        let line = line.split('#').next().unwrap_or("");
+        let chars: Vec<char> = line.chars().collect();
+        let mut i = 0;
+        while i < chars.len() {
+            let boundary = i == 0 || matches!(chars[i - 1], '{' | ',' | ' ' | '\t');
+            let quoted = matches!(chars[i], '"' | '\'');
+            let start = if quoted { i + 1 } else { i };
+            let name: String = chars[start..].iter().take(key.len()).collect();
+            let after = start + key.len();
+            let closes = if quoted {
+                chars.get(after) == Some(&chars[i])
+            } else {
+                !chars
+                    .get(after)
+                    .is_some_and(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_'))
+            };
+            if boundary && name == key && closes {
+                let mut j = if quoted { after + 1 } else { after };
+                while chars.get(j).is_some_and(|c| c.is_whitespace()) {
+                    j += 1;
+                }
+                if chars.get(j) == Some(&'=') {
+                    j += 1;
+                    while chars.get(j).is_some_and(|c| c.is_whitespace()) {
+                        j += 1;
+                    }
+                    if let Some(&open) = chars.get(j).filter(|c| matches!(c, '"' | '\'')) {
+                        let value: String =
+                            chars[j + 1..].iter().take_while(|c| **c != open).collect();
+                        j += value.chars().count() + 2;
+                        values.push(value);
+                        i = j;
+                        continue;
+                    }
+                }
+            }
+            i += 1;
+        }
+    }
+    values
 }
 
-fn derive_staged_graph(root: &Path, exports: &[crate::Export]) -> Result<Vec<Staged>, String> {
+/// One staged file: path relative to the staged export root, and its source.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Staged {
+    pub(crate) relative: String,
+    pub(crate) source: PathBuf,
+}
+
+pub(crate) fn derive_staged_graph(
+    root: &Path,
+    exports: &[crate::Export],
+) -> Result<Vec<Staged>, String> {
     let root = root
         .canonicalize()
         .map_err(|error| format!("resolve repository root: {error}"))?;
@@ -586,8 +729,15 @@ fn resolve(page: &str, reference: &str) -> Option<String> {
 fn validate_pages(pages: &[Page], allowed: &BTreeSet<String>) -> Result<usize, String> {
     let mut linked = BTreeSet::new();
     for page in pages {
-        if page.tags.iter().any(|tag| tag.name == "script") {
-            return Err(format!("{} contains a script element", page.path));
+        if let Some(inert) = page
+            .tags
+            .iter()
+            .find(|tag| matches!(tag.name.as_str(), "script" | "template" | "noscript"))
+        {
+            return Err(format!(
+                "{} contains a {} element; its contents are not ordinary page content",
+                page.path, inert.name
+            ));
         }
         let mut sheets = Vec::new();
         for tag in &page.tags {
@@ -815,11 +965,10 @@ fn validate_consumer_overrides(inputs: &[(String, String)]) -> Result<(), String
         .iter()
         .filter(|(name, _)| name.starts_with(&format!("{CONSUMER_DIR}/")) && name.ends_with(".css"))
         .collect();
-    if css.iter().any(|(_, source)| {
-        strip_css_comments(source)
-            .to_ascii_lowercase()
-            .contains("!important")
-    }) {
+    if css
+        .iter()
+        .any(|(_, source)| lexical::has_important(&lexical::css_normalize(source)))
+    {
         return Err(
             "consumer stylesheets must override through layer order, not !important".to_owned(),
         );
@@ -844,19 +993,6 @@ fn validate_consumer_overrides(inputs: &[(String, String)]) -> Result<(), String
         );
     }
     Ok(())
-}
-
-fn strip_css_comments(source: &str) -> String {
-    let mut out = String::new();
-    let mut rest = source;
-    while let Some(start) = rest.find("/*") {
-        out.push_str(&rest[..start]);
-        rest = rest[start + 2..]
-            .split_once("*/")
-            .map_or("", |(_, tail)| tail);
-    }
-    out.push_str(rest);
-    out
 }
 
 /// SHA-256 of `bytes` as lowercase hex, so staged identity needs no external tool.
@@ -1178,5 +1314,141 @@ mod tests {
             ":root { --ds-color-accent: red; }".to_owned(),
         );
         assert!(validate_consumer_overrides(&[unlayered, site]).is_err());
+    }
+
+    #[test]
+    fn rejects_every_toml_mount_spelling_outside_the_fixture() {
+        let bad = "packages/styles";
+        for config in [
+            format!("[[module.mounts]]\nsource = \"{bad}\"\ntarget = \"static\"\n"),
+            format!("[[module.mounts]]\n\"source\" = \"{bad}\"\ntarget = \"static\"\n"),
+            format!("[[module.mounts]]\n'source' = '{bad}'\ntarget = \"static\"\n"),
+            format!("[[module.mounts]]\nsource='{bad}'\ntarget='static'\n"),
+            format!("[module]\nmounts = [{{ source = \"{bad}\", target = \"static\" }}]\n"),
+            format!("[module]\nmounts = [{{ \"source\" = \"{bad}\", target = \"static\" }}]\n"),
+            format!(
+                "[[module.mounts]]\nsource = \"content\"\ntarget = \"content\"\n[[module.mounts]]\n\"source\" = \"{bad}\"\ntarget = \"static\"\n"
+            ),
+        ] {
+            assert!(
+                validate_mounts(&input("hugo.toml", &config)).is_err(),
+                "{config}"
+            );
+        }
+        for config in [
+            "[[module.mounts]]\n\"source\" = \"stage/design-system\"\ntarget = \"static/design-system\"\n",
+            "[module]\nmounts = [{ source = \"content\", target = \"content\" }, { source = \"layouts\", target = \"layouts\" }]\n",
+            "[[module.\"mounts\"]]\nsource = \"static\"\ntarget = \"static\"\n",
+        ] {
+            assert!(
+                validate_mounts(&input("hugo.toml", config)).is_ok(),
+                "{config}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_mount_without_a_checked_source_fails_closed() {
+        let config = "[[module.mounts]]\nsource = \"content\"\ntarget = \"content\"\n[[module.mounts]]\ntarget = \"static\"\n";
+        assert!(validate_mounts(&input("hugo.toml", config)).is_err());
+        assert!(validate_mounts(&input("hugo.toml", "[module]\n")).is_err());
+    }
+
+    #[test]
+    fn escaped_css_spellings_are_rejected_in_consumer_inputs() {
+        for css in [
+            "@\\69mport \"x.css\";",
+            "@\\000069 mport url(x.css);",
+            ":root { --x: var(--ds-\\72 ef-blue-500); }",
+            ":root { --x: var(--ds-\\ref-blue-500); }",
+            "/* c */ @/**/import x;",
+        ] {
+            let result = scan_inputs(&input("consumer/x.css", css));
+            // The comment-split form is not an import token; the rest are.
+            if css.contains("/**/") {
+                assert!(result.is_ok(), "{css}");
+            } else {
+                assert!(result.is_err(), "{css}");
+            }
+        }
+    }
+
+    #[test]
+    fn spaced_and_escaped_important_is_rejected() {
+        let theme = (
+            "consumer/theme.css".to_owned(),
+            "@layer app { :root { --ds-color-accent: red; } }".to_owned(),
+        );
+        for declaration in [
+            "border-radius: 9px ! important;",
+            "border-radius: 9px !\\69mportant;",
+            "border-radius: 9px !/**/important;",
+            "border-radius: 9px!IMPORTANT;",
+        ] {
+            let site = (
+                "consumer/site.css".to_owned(),
+                format!("@layer app {{ .app-pill {{ {declaration} }} }}"),
+            );
+            assert!(
+                validate_consumer_overrides(&[theme.clone(), site]).is_err(),
+                "{declaration}"
+            );
+        }
+    }
+
+    #[test]
+    fn generated_output_is_scanned_and_type_restricted() {
+        let directory =
+            std::env::temp_dir().join(format!("ds-check-generated-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&directory);
+        fs::create_dir_all(directory.join("design-system")).unwrap();
+        fs::write(
+            directory.join("index.html"),
+            "<a href=\"../design-system/core.css\">",
+        )
+        .unwrap();
+        fs::write(
+            directory.join("design-system/core.css"),
+            "@import \"./x.css\";",
+        )
+        .unwrap();
+        assert_eq!(scan_generated(&directory), Ok(1));
+        fs::write(directory.join("app.js"), "1").unwrap();
+        assert!(scan_generated(&directory).is_err());
+        fs::remove_file(directory.join("app.js")).unwrap();
+        fs::write(directory.join("x.css"), "@\\69mport 'a';").unwrap();
+        assert!(scan_generated(&directory).is_err());
+        fs::remove_file(directory.join("x.css")).unwrap();
+        fs::write(directory.join("y.html"), "<p>packages/styles</p>").unwrap();
+        assert!(scan_generated(&directory).is_err());
+        fs::remove_dir_all(&directory).unwrap();
+    }
+
+    #[test]
+    fn untracked_fixture_files_are_rejected() {
+        let directory =
+            std::env::temp_dir().join(format!("ds-check-untracked-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&directory);
+        fs::create_dir_all(directory.join("static")).unwrap();
+        fs::create_dir_all(directory.join("public")).unwrap();
+        fs::write(directory.join("static/a.svg"), "").unwrap();
+        fs::write(directory.join("public/out.html"), "").unwrap();
+        let tracked = vec![("static/a.svg".to_owned(), String::new())];
+        assert!(reject_untracked_inputs(&directory, &tracked).is_ok());
+        fs::write(directory.join("static/hidden.js"), "").unwrap();
+        assert!(reject_untracked_inputs(&directory, &tracked).is_err());
+        fs::remove_dir_all(&directory).unwrap();
+    }
+
+    #[test]
+    fn rendered_pages_reject_inert_containers() {
+        let core = "<link rel=\"stylesheet\" href=\"./design-system/core.css\">";
+        for extra in ["<template></template>", "<noscript></noscript>"] {
+            let html = format!("{core}{extra}");
+            assert!(
+                validate_pages(&[page("index.html", &html)], &allowed()).is_err(),
+                "{extra}"
+            );
+        }
     }
 }

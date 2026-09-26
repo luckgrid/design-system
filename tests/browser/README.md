@@ -20,3 +20,13 @@ npx playwright test
 
 Probe stylesheets under `probes/` create controlled override and failure cases.
 Specs under `specs/` are organized by public contract.
+
+## Packaged mode
+
+Release verification runs this same suite against an **unpacked release archive**
+instead of `packages/styles`: set `DS_PACKAGED_ROOT` to the unpacked archive (it must
+be outside this repository) and `DS_PACKAGED_TAILWIND_OUTPUT` to the Tailwind output
+built from the archive's `tailwind.css`. `server.mjs` then serves every Design System
+stylesheet only from the archive, and `playwright.packaged.config.mjs` runs
+`specs/packaged.spec.mjs`, which check the real consumer load path and the `@import` layer-order race.
+`release/verify-packaged.sh` sets all of this up; see [docs/release.md](/docs/release.md).

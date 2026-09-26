@@ -1,7 +1,7 @@
 # CSS entrypoint and cascade contract
 
-Status: **public-preview**. The project is experimental and has no supported
-release yet. This page describes the first CSS surface consumers may use, and
+Status: **public-preview**. The product maturity is `preview`, and no surface is
+`public-stable`. This page describes the first CSS surface consumers may use, and
 what may still change.
 
 ## Entrypoint

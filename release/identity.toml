@@ -1,0 +1,21 @@
+# Release identity authority for the Design System candidate.
+#
+# One exact merged commit, one version, one immutable tag. Product maturity and
+# per-surface compatibility are separate axes: `maturity` is the whole product;
+# each artifact's class in inventory.tsv is its own compatibility statement.
+# `stable` and `1.0.0` need separate evidence and are not permitted here.
+#
+# The version below must equal `[workspace.package].version` in Cargo.toml. A
+# rehearsal build overrides the version at assembly time and can never carry a tag.
+
+[release]
+product = "design-system"
+version = "0.1.0-preview.1"
+tag = "v0.1.0-preview.1"
+maturity = "preview"
+license = "MIT"
+repository = "https://github.com/luckgrid/design-system"
+# Immutable source tag plus a GitHub Release archive. No package registry: a
+# registry needs concrete consumer evidence and a recorded decision.
+channel = "source-tag-and-github-release-archive"
+archive_format = "tar.gz"

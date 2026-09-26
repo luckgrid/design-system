@@ -1,0 +1,63 @@
+# Release artifact inventory: <class><TAB><kind><TAB><archive path><TAB><source path><TAB><transform>
+#
+# This file is the authored list of what the release archive contains. `ds-check inventory`
+# proves it against exports.tsv (every export and every stylesheet the exports import, and
+# nothing else), adapter-exports.tsv, the surface tables, and Git's tracked files.
+# `release/assemble.sh` expands it, adds checksums, and writes MANIFEST.tsv into the
+# archive; `ds-check release` verifies the unpacked archive against that manifest.
+#
+# Classes:
+#   public-preview  a compatibility surface consumers may depend on: the CSS entrypoints and
+#                   the consumer script. Must equal the class in bootstrap-surfaces.tsv.
+#   internal        a stylesheet shipped only because an entrypoint imports it; its path
+#                   is not API. Must equal the class in bootstrap-surfaces.tsv.
+#   documentation   explanatory or legal text, and the machine-readable surface tables that
+#                   state the public vocabulary; carries no compatibility promise itself.
+# Kinds: css, surface, doc, license, tool
+# Transforms: none (byte-identical to the source), identity (substitute release identity
+#   placeholders), tailwind-core-import (rewrite the one repository-relative core import to ./core.css).
+#
+# The CSS layout is the staged public-export shape: each export under its declared name,
+# imported stylesheets beside it. No repository path survives into the archive.
+internal	css	css/base.css	packages/styles/base.css	none
+internal	css	css/base/content.css	packages/styles/base/content.css	none
+internal	css	css/base/document.css	packages/styles/base/document.css	none
+internal	css	css/base/forms.css	packages/styles/base/forms.css	none
+internal	css	css/base/interactive.css	packages/styles/base/interactive.css	none
+public-preview	css	css/core.css	packages/styles/index.css	none
+internal	css	css/layouts.css	packages/styles/layouts.css	none
+internal	css	css/layouts/cluster.css	packages/styles/layouts/cluster.css	none
+internal	css	css/layouts/grid.css	packages/styles/layouts/grid.css	none
+internal	css	css/layouts/stack.css	packages/styles/layouts/stack.css	none
+internal	css	css/primitives.css	packages/styles/primitives.css	none
+internal	css	css/primitives/action.css	packages/styles/primitives/action.css	none
+internal	css	css/primitives/surface.css	packages/styles/primitives/surface.css	none
+internal	css	css/tokens.css	packages/styles/tokens.css	none
+internal	css	css/tokens/reference.css	packages/styles/tokens/reference.css	none
+internal	css	css/tokens/semantic.css	packages/styles/tokens/semantic.css	none
+internal	css	css/tokens/theme.css	packages/styles/tokens/theme.css	none
+public-preview	css	css/tailwind.css	adapters/tailwind/index.css	tailwind-core-import
+documentation	surface	surface/tailwind-projection.tsv	adapters/tailwind/projection.tsv	none
+documentation	surface	surface/exports.tsv	exports.tsv	none
+documentation	surface	surface/adapter-exports.tsv	adapter-exports.tsv	none
+documentation	surface	surface/tokens.tsv	tokens.tsv	none
+documentation	surface	surface/theme.tsv	theme.tsv	none
+documentation	surface	surface/base.tsv	base.tsv	none
+documentation	surface	surface/layouts.tsv	layouts.tsv	none
+documentation	surface	surface/primitives.tsv	primitives.tsv	none
+documentation	license	LICENSE	LICENSE	none
+documentation	doc	README.md	release/consumer/README.md	identity
+documentation	doc	RELEASE.md	release/RELEASE.md	identity
+documentation	doc	docs/browser-support.md	docs/browser-support.md	none
+documentation	doc	docs/architecture/README.md	docs/architecture/README.md	none
+documentation	doc	docs/architecture/base.md	docs/architecture/base.md	none
+documentation	doc	docs/architecture/bootstrap.md	docs/architecture/bootstrap.md	none
+documentation	doc	docs/architecture/css-entrypoint.md	docs/architecture/css-entrypoint.md	none
+documentation	doc	docs/architecture/css-toolchain.md	docs/architecture/css-toolchain.md	none
+documentation	doc	docs/architecture/hooks.md	docs/architecture/hooks.md	none
+documentation	doc	docs/architecture/layouts.md	docs/architecture/layouts.md	none
+documentation	doc	docs/architecture/primitives.md	docs/architecture/primitives.md	none
+documentation	doc	docs/architecture/tailwind.md	docs/architecture/tailwind.md	none
+documentation	doc	docs/architecture/theme.md	docs/architecture/theme.md	none
+documentation	doc	docs/architecture/tokens.md	docs/architecture/tokens.md	none
+public-preview	tool	consumer/ds-consumer.sh	release/consumer/ds-consumer.sh	none

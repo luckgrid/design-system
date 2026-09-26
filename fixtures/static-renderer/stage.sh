@@ -6,6 +6,10 @@
 # the stylesheets that export imports, laid out relative to the export file. No
 # repository path survives into it, so a consumer sees the same shape a release
 # archive will have. The consumer build reads only this tree.
+#
+# Release verification: when DS_PACKAGED_CSS names the css/ directory of an UNPACKED
+# release archive, the same staging reads the archive's core.css and the stylesheets it
+# imports instead of the repository source, so the fixture consumes the packaged form.
 set -eu
 
 fixture=fixtures/static-renderer
@@ -27,7 +31,12 @@ rm -rf "$stage"
 mkdir -p "$out"
 : > "$stage/MANIFEST.tsv"
 
-exports=$(grep -v '^[[:space:]]*#' exports.tsv | grep -v '^[[:space:]]*$' || true)
+if [ -n "${DS_PACKAGED_CSS:-}" ]; then
+  [ -f "$DS_PACKAGED_CSS/core.css" ] || die "DS_PACKAGED_CSS has no core.css"
+  exports=$(printf 'public-preview\tcore.css\t%s/core.css\n' "$DS_PACKAGED_CSS")
+else
+  exports=$(grep -v '^[[:space:]]*#' exports.tsv | grep -v '^[[:space:]]*$' || true)
+fi
 [ -n "$exports" ] || die "exports.tsv declares no export"
 
 printf '%s\n' "$exports" | while IFS="$tab" read -r class name source; do

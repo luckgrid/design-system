@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Packaged load path probe</title>
+    <!-- The real consumer load path: the packaged entrypoint first, then a stylesheet
+         that names ds.* children in reverse order. Harness-only. -->
+    <link rel="stylesheet" href="/design-system/core.css">
+    <link rel="stylesheet" href="/tests/browser/probes/ds-layers-reversed.css">
+  </head>
+  <body>
+    <main>
+      <p class="probe" id="probe">probe</p>
+    </main>
+  </body>
+</html>

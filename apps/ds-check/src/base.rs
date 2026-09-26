@@ -802,6 +802,7 @@ pub(crate) fn section<'a>(document: &'a str, heading: &str) -> Result<&'a str, S
 /// is proven on ordinary HTML alone.
 pub fn validate_fixture(html: &str, manifest: &Manifest) -> Result<usize, String> {
     let lower = html.to_ascii_lowercase();
+    crate::lexical::reject_inert_or_escaped_markup(&lower, "plain fixture")?;
     if has_attribute(&lower, "class") {
         return Err(
             "the plain fixture carries a class attribute; it proves the base on classless HTML"
@@ -1251,5 +1252,25 @@ excluded\tconsumer\tnav
             consumer.excluded,
             [("nav".to_owned(), "consumer".to_owned())]
         );
+    }
+
+    #[test]
+    fn fixture_rejects_inert_containers() {
+        let html = "<html><body><a href=\"#x\">x</a><pre><code>x</code></pre>\
+<input id=\"x\"><details><summary>x</summary></details><div popover id=\"p\">p</div></body></html>";
+        assert_eq!(validate_fixture(html, &manifest()), Ok(7));
+        // A subject present only inside an inert container is not fixture coverage.
+        let hidden = html.replace(
+            "<pre><code>x</code></pre>",
+            "<template><pre><code>x</code></pre></template>",
+        );
+        let error = validate_fixture(&hidden, &manifest()).expect_err("template");
+        assert!(error.contains("<template>"), "{error}");
+        let error = validate_fixture(
+            &html.replace("<input", "<noscript></noscript><input"),
+            &manifest(),
+        )
+        .expect_err("noscript");
+        assert!(error.contains("<noscript>"), "{error}");
     }
 }

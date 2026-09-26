@@ -1,12 +1,18 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Release verification only: runs the packaged-archive specs. Requires
+// DS_PACKAGED_ROOT (an unpacked release archive outside this repository); see
+// release/verify-packaged.sh, which sets it and starts this run.
 const port = Number(process.env.DS_BROWSER_PORT ?? 4173);
 const baseURL = `http://127.0.0.1:${port}`;
 
+if (!process.env.DS_PACKAGED_ROOT) {
+  throw new Error("DS_PACKAGED_ROOT is required for the packaged-archive specs");
+}
+
 export default defineConfig({
   testDir: "./specs",
-  // The packaged-archive specs run only under playwright.packaged.config.mjs.
-  testIgnore: "**/packaged.spec.mjs",
+  testMatch: "packaged.spec.mjs",
   fullyParallel: true,
   forbidOnly: true,
   retries: 0,

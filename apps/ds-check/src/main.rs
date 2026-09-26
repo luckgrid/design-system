@@ -5,7 +5,9 @@ mod base;
 mod css;
 mod hooks;
 mod layout;
+mod lexical;
 mod primitive;
+mod release;
 mod static_renderer;
 mod tailwind;
 mod theme;
@@ -18,7 +20,7 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 const ALLOWED_CLASSES: [&str; 2] = ["internal", "public-preview"];
-const ALLOWED_ROOTS: [&str; 23] = [
+const ALLOWED_ROOTS: [&str; 25] = [
     ".github",
     ".gitignore",
     "apps",
@@ -29,7 +31,9 @@ const ALLOWED_ROOTS: [&str; 23] = [
     "fixtures",
     "docs",
     "layouts.tsv",
+    "LICENSE",
     "primitives.tsv",
+    "release",
     "Cargo.toml",
     "Cargo.lock",
     "rust-toolchain.toml",
@@ -109,7 +113,7 @@ struct Export {
     path: PathBuf,
 }
 
-const USAGE: &str = "usage: ds-check audit [styles-root]\n       ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check static-renderer <exports.tsv> <layouts.tsv> <primitives.tsv> <theme.tsv> <base.tsv> <fixture-dir>\n       ds-check tailwind <projection.tsv> <tokens.tsv> <adapter-exports.tsv> <bootstrap-surfaces.tsv> <adapter-dir> <generated.css>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>\n       ds-check hooks <layouts.tsv> <primitives.tsv> <theme.tsv> <exports.tsv> <hooks-doc.md> <scoping-fixture-dir>";
+const USAGE: &str = "usage: ds-check audit [styles-root]\n       ds-check inventory <inventory.tsv> <identity.toml> <exports.tsv> <adapter-exports.tsv> <bootstrap-surfaces.tsv>\n       ds-check release <unpacked-archive-dir> [source-root]\n       ds-check check <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check layers <exports.tsv> <bootstrap-surfaces.tsv> <plain-fixture-dir>\n       ds-check static-renderer <exports.tsv> <layouts.tsv> <primitives.tsv> <theme.tsv> <base.tsv> <fixture-dir>\n       ds-check tailwind <projection.tsv> <tokens.tsv> <adapter-exports.tsv> <bootstrap-surfaces.tsv> <adapter-dir> <generated.css>\n       ds-check tokens <tokens.tsv> <exports.tsv> <tokens-doc.md> <consumer-dir>...\n       ds-check theme <theme.tsv> <exports.tsv> <theme-doc.md> <consumer-dir>...\n       ds-check base <base.tsv> <exports.tsv> <base-doc.md> <plain-fixture-dir>\n       ds-check layout <layouts.tsv> <exports.tsv> <layouts-doc.md> <layouts-fixture-dir>\n       ds-check primitive <primitives.tsv> <layouts.tsv> <exports.tsv> <primitives-doc.md> <primitives-fixture-dir>\n       ds-check hooks <layouts.tsv> <primitives.tsv> <theme.tsv> <exports.tsv> <hooks-doc.md> <scoping-fixture-dir>";
 
 fn run(args: &[String]) -> Result<String, String> {
     let root = env::current_dir().map_err(|error| format!("resolve repository root: {error}"))?;
@@ -118,6 +122,27 @@ fn run(args: &[String]) -> Result<String, String> {
         [command, styles_root] if command == "audit" => audit::run(&root, Path::new(styles_root)),
         [command, manifest, fixture] if command == "check" => {
             run_check(&root, Path::new(manifest), Path::new(fixture))
+        }
+        [
+            command,
+            inventory,
+            identity,
+            exports,
+            adapter_exports,
+            manifest,
+        ] if command == "inventory" => release::run_inventory(
+            &root,
+            Path::new(inventory),
+            Path::new(identity),
+            Path::new(exports),
+            Path::new(adapter_exports),
+            Path::new(manifest),
+        ),
+        [command, archive] if command == "release" => {
+            release::run_release(Path::new(archive), None)
+        }
+        [command, archive, source] if command == "release" => {
+            release::run_release(Path::new(archive), Some(Path::new(source)))
         }
         [command, exports, manifest, fixture] if command == "layers" => run_layers(
             &root,
@@ -547,7 +572,7 @@ fn validate_allowed_root(path: &Path) -> Result<(), String> {
 
 fn scan_supported_content(surface: &Surface, path: &Path, content: &str) -> Result<(), String> {
     for marker in FORBIDDEN_CONTENT_MARKERS {
-        if content.contains(marker) {
+        if lexical::contains_marker(content, marker) {
             return Err(format!(
                 "{} bootstrap surface {} contains forbidden marker '{marker}'",
                 surface.class,

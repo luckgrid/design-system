@@ -91,6 +91,36 @@ jobs:
       - name: Static renderer fixture
         run: cargo +1.98.1 run --locked -p design-system-check -- static-renderer exports.tsv layouts.tsv primitives.tsv theme.tsv base.tsv fixtures/static-renderer
 
+      - name: Release inventory, identity, and license
+        run: cargo +1.98.1 run --locked -p design-system-check -- inventory release/inventory.tsv release/identity.toml exports.tsv adapter-exports.tsv bootstrap-surfaces.tsv
+
+      # Release verification is credential-free and publishes nothing. These are
+      # rehearsal archives: marked as rehearsals throughout, never tagged.
+      - name: Assemble two rehearsal archives
+        run: |
+          sh release/assemble.sh --rehearsal 1 --out "$RUNNER_TEMP/rehearsal-a"
+          sh release/assemble.sh --rehearsal 2 --out "$RUNNER_TEMP/rehearsal-b"
+          cat "$RUNNER_TEMP/rehearsal-a/BUILD-ENV.txt"
+
+      - name: Verify the archive outside the repository
+        run: |
+          cargo +1.98.1 build --locked -p design-system-check
+          DS_CHECK="$PWD/target/debug/design-system-check" sh release/verify-archive.sh "$RUNNER_TEMP"/rehearsal-a/design-system-*.tar.gz --source .
+
+      - name: Reproduce from two clean clones
+        run: |
+          git branch -f ci-release-head HEAD
+          sh release/reproduce.sh --source "$GITHUB_WORKSPACE" --commit "$(git rev-parse HEAD)" --rehearsal 1
+
+      - name: Prove the release verifier rejects what it must
+        run: |
+          work=$(mktemp -d)
+          tar -xzf "$RUNNER_TEMP"/rehearsal-a/design-system-*.tar.gz -C "$work"
+          DS_CHECK="$PWD/target/debug/design-system-check" sh release/negative-probes.sh "$work"/design-system-*
+
+      - name: Independent static consumer proof
+        run: sh release/consumer-proof.sh "$RUNNER_TEMP"/rehearsal-a/design-system-*.tar.gz "$RUNNER_TEMP"/rehearsal-b/design-system-*.tar.gz
+
   browser:
     runs-on: ubuntu-latest
     defaults:
@@ -135,3 +165,13 @@ jobs:
 
       - name: Browser contract (Chromium, Firefox, WebKit)
         run: npx playwright test
+
+      - name: Install Rust 1.98.1
+        working-directory: ${{ github.workspace }}
+        run: rustup toolchain install 1.98.1 --profile minimal
+
+      - name: Packaged-form verification (rehearsal archive)
+        working-directory: ${{ github.workspace }}
+        run: |
+          sh release/assemble.sh --rehearsal 1 --out "$RUNNER_TEMP/rehearsal"
+          sh release/verify-packaged.sh "$RUNNER_TEMP"/rehearsal/design-system-*.tar.gz

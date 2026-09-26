@@ -33,7 +33,8 @@ for forbidden in cargo rustc rustup rustfmt node nodejs npm npx pnpm yarn bun de
   fi
 done
 
-run() { env -i PATH="$bin" HOME="$home" TMPDIR="$home" sh "$@"; }
+# DS_PACKAGED_CSS, when set, points the stage step at an unpacked release archive.
+run() { env -i PATH="$bin" HOME="$home" TMPDIR="$home" ${DS_PACKAGED_CSS:+DS_PACKAGED_CSS="$DS_PACKAGED_CSS"} sh "$@"; }
 run "$fixture/stage.sh"
 run "$fixture/build.sh"
 printf 'toolchain-free: staged and rendered with PATH limited to %s\n' "$(ls "$bin" | tr '\n' ' ')"

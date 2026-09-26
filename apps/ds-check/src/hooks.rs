@@ -654,6 +654,7 @@ fn backticked_one(cell: &str) -> Option<String> {
 /// primitive. Returns the number of hooked elements.
 pub fn validate_fixture(html: &str, vocabulary: &Vocabulary) -> Result<usize, String> {
     let lower = html.to_ascii_lowercase();
+    crate::lexical::reject_inert_or_escaped_markup(&lower, "scoping fixture")?;
     if !base::has_element(&lower, "main") {
         return Err(
             "the scoping fixture has no `main`; it places the hooks inside a consumer-owned page shell"
@@ -1113,6 +1114,30 @@ public-preview\tattribute\tdata-ds-scheme\tlight dark\n",
         ] {
             let error = validate_fixture(&bad, &vocabulary()).expect_err(&bad);
             assert!(error.contains(needle), "{needle}: {error}");
+        }
+    }
+
+    #[test]
+    fn fixture_rejects_inert_containers_and_class_character_references() {
+        for (bad, needle) in [
+            (
+                FIXTURE.replace(
+                    "<main>",
+                    "<main><template><i class=\"ds-card\"></i></template>",
+                ),
+                "<template>",
+            ),
+            (
+                FIXTURE.replace("<main>", "<main><noscript></noscript>"),
+                "<noscript>",
+            ),
+            (
+                FIXTURE.replace("ds-cluster", "ds-&#99;luster"),
+                "character reference",
+            ),
+        ] {
+            let error = validate_fixture(&bad, &vocabulary()).expect_err(&bad);
+            assert!(error.contains(needle), "{bad}: {error}");
         }
     }
 }

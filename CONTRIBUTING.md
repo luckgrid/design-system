@@ -1,7 +1,7 @@
 # Contributing
 
-The Design System is in experimental bootstrap and is currently unlicensed.
-Public visibility is not permission to reuse or redistribute the source.
+The Design System is a `preview` release under the [MIT License](LICENSE).
+Contributions are accepted under the same license.
 
 ## Toolchain
 
@@ -43,7 +43,15 @@ sh fixtures/static-renderer/build.sh
 sh fixtures/static-renderer/verify-toolchain-free.sh
 cargo run --locked -p design-system-check -- static-renderer \
   exports.tsv layouts.tsv primitives.tsv theme.tsv base.tsv fixtures/static-renderer
+cargo run --locked -p design-system-check -- inventory \
+  release/inventory.tsv release/identity.toml exports.tsv adapter-exports.tsv \
+  bootstrap-surfaces.tsv
 ```
+
+Release assembly and packaged-form verification are documented in
+[`docs/release.md`](docs/release.md). A change to a shipped file, the inventory, or the
+identity needs `release/verify-archive.sh` and `release/verify-packaged.sh` on a
+rehearsal archive built from your commit.
 
 The static-renderer fixture needs the exact Hugo version in
 `fixtures/static-renderer/HUGO_VERSION` and POSIX shell tools; it needs no Rust,

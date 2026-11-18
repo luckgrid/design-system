@@ -7,6 +7,11 @@ Start with [Architecture](architecture/README.md) for the CSS entrypoint,
 integration model, tokens, theme, base styles, layouts, primitives, hooks, and
 the optional Tailwind adapter.
 
+The [terminal UI research proposal](proposals/terminal-ui/README.md) explores
+cross-platform semantic roles, native Ratatui patterns, optional style adapters,
+and tests for future Rust terminal consumers. These pages are internal research,
+not supported consumer exports or current architecture decisions.
+
 For the browsers verified for the initial preview, and those that are not, see
 [Browser support](browser-support.md).
 

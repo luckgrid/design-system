@@ -4,7 +4,7 @@
 
 ## Existing source of truth
 
-The current CSS authority is [tokens.tsv](/tokens.tsv), [token architecture](/docs/architecture/tokens.md) and [theme](/docs/architecture/theme.md). Semantic `--ds-*` roles are public-preview; `--ds-ref-*` reference values are internal and **not** an override seam. Brand themes map to public roles. Light/dark color values can resolve through CSS `light-dark()` using the effective `color-scheme`; the documented browser contract is a root `data-ds-scheme` hook and system preference.
+The current CSS authority is [tokens.tsv](https://github.com/luckgrid/design-system/blob/main/tokens.tsv), [token architecture](https://github.com/luckgrid/design-system/blob/main/docs/architecture/tokens.md) and [theme](https://github.com/luckgrid/design-system/blob/main/docs/architecture/theme.md). Semantic `--ds-*` roles are public-preview; `--ds-ref-*` reference values are internal and **not** an override seam. Brand themes map to public roles. Light/dark color values can resolve through CSS `light-dark()` using the effective `color-scheme`; the documented browser contract is a root `data-ds-scheme` hook and system preference.
 
 Do **not** generate another authoritative source by copy/pasting resolved RGB values into unrelated apps. A terminal projection should reference role identity, and explicitly record how theme values were resolved. A stable shared source format and export compiler remain open questions.
 

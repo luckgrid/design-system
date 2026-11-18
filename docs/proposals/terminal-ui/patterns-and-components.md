@@ -1,6 +1,6 @@
 # TUI primitives, component contracts and interaction patterns
 
-**Status:** proposed catalog. **No component APIs or generic runtime are accepted.** The existing Design System's [primitive taxonomy](/docs/architecture/primitives.md) distinguishes a base primitive (`surface`), a UI primitive (`action`), and higher-level product patterns. Keep those distinctions here rather than labeling every terminal widget a primitive.
+**Status:** proposed catalog. **No component APIs or generic runtime are accepted.** The existing Design System's [primitive taxonomy](https://github.com/luckgrid/design-system/blob/main/docs/architecture/primitives.md) distinguishes a base primitive (`surface`), a UI primitive (`action`), and higher-level product patterns. Keep those distinctions here rather than labeling every terminal widget a primitive.
 
 ## Three levels of reuse
 

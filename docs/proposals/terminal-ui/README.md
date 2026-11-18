@@ -24,7 +24,7 @@ The questions are (1) what reusable contracts belong in Design System, (2) which
 
 ## Existing authorities that must not be silently changed
 
-- [Design tokens](/docs/architecture/tokens.md), [theme](/docs/architecture/theme.md), [primitives](/docs/architecture/primitives.md) and [layouts](/docs/architecture/layouts.md) define the current **web** contracts.
+- [Design tokens](https://github.com/luckgrid/design-system/blob/main/docs/architecture/tokens.md), [theme](https://github.com/luckgrid/design-system/blob/main/docs/architecture/theme.md), [primitives](https://github.com/luckgrid/design-system/blob/main/docs/architecture/primitives.md) and [layouts](https://github.com/luckgrid/design-system/blob/main/docs/architecture/layouts.md) define the current **web** contracts.
 - `tokens.tsv` describes public-preview semantic CSS roles and internal reference roles. `exports.tsv` declares the CSS export; `bootstrap-surfaces.tsv` classifies tracked files; `release/inventory.tsv` governs shipped artifacts.
 - The Design System explicitly has no promoted general-purpose component layer yet. A terminal pattern catalog does not retroactively promote web components.
 - These research files are **internal documentation**. They are deliberately absent from the immutable `0.1.0-preview.1` CSS release inventory and are not a Rust package, schema, hook, or public-preview surface.

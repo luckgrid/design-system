@@ -94,9 +94,6 @@ reviewed source change defines their contracts.
 
 ## Start here
 
-- [Proposed terminal UI research](docs/proposals/terminal-ui/README.md) records
-  cross-platform semantic contracts, Ratatui components, alternatives, evidence,
-  and staged prototype gates. It is internal planning, not part of the CSS release.
 - [Architecture](docs/README.md) explains the CSS entrypoint, cascade, tokens,
   theme, base styles, layouts, primitives, and public hooks.
 - [Styles source](packages/styles/README.md) maps those contracts to files.
@@ -104,6 +101,9 @@ reviewed source change defines their contracts.
   and the cases enforced by contributor checks.
 - [Browser tests](tests/README.md) describe the cross-engine assurance suite.
 - [Contributor tooling](apps/README.md) documents the repository-local checks.
+- [Proposed terminal UI research](docs/proposals/terminal-ui/README.md) records
+  cross-platform semantic contracts, Ratatui components, alternatives, evidence,
+  and staged prototype gates. It is internal planning, not part of the CSS release.
 
 ## Contributor checks
 

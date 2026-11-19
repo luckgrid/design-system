@@ -8,6 +8,19 @@ The current CSS authority is [tokens.tsv](https://github.com/luckgrid/design-sys
 
 Do **not** generate another authoritative source by copy/pasting resolved RGB values into unrelated apps. A terminal projection should reference role identity, and explicitly record how theme values were resolved. A stable shared source format and export compiler remain open questions.
 
+## In-repository precedent: the Tailwind adapter projection
+
+The repository already projects semantic roles to a second target and checks that projection mechanically. [`adapters/tailwind/projection.tsv`](https://github.com/luckgrid/design-system/blob/main/adapters/tailwind/projection.tsv) maps all 38 `public-preview` semantic `--ds-*` roles to Tailwind theme variables and explicitly excludes the 29 internal `--ds-ref-*` values, one row per role with a recorded disposition. `ds-check tailwind` verifies that table against `tokens.tsv`, `adapter-exports.tsv` and `bootstrap-surfaces.tsv`, so an added, removed or renamed role fails the check rather than drifting silently. See the [Tailwind adapter architecture](https://github.com/luckgrid/design-system/blob/main/docs/architecture/tailwind.md).
+
+A terminal projection should reuse this shape rather than invent a new one:
+
+- a `projection.tsv`-style table with one row per public role and a disposition such as `projected`, `reinterpreted` (e.g. spacing to cells) or `omitted` (e.g. font families), so the mapping candidate below becomes checkable data instead of prose;
+- internal `--ds-ref-*` rows recorded as excluded, exactly as the Tailwind table does;
+- a `ds-check` subcommand that fails when `tokens.tsv` and the terminal table disagree;
+- registration through `adapter-exports.tsv` and the existing `adapters/` directory if code is ever promoted.
+
+**Where the precedent stops.** The Tailwind adapter uses `@theme inline` so the browser keeps resolving live aliases, `light-dark()` and consumer overrides at runtime. A terminal has no CSS engine, so a terminal projection needs **resolved** color values per brand and scheme. That resolution step (the computed-browser fixture described below) is the genuinely new part, and the only part not already solved in this repository.
+
 ## Mapping candidate
 
 | Current semantic role | Terminal candidate | Transfer status / limits |
@@ -34,7 +47,7 @@ These mappings are **proposals**, not one-to-one transformations. No terminal ad
 
 ## Projection pipeline hypotheses
 
-**Preferred first experiment: typed Rust palette using role identities.** For a chosen brand and scheme, resolve the CSS public roles in a controlled browser fixture, export explicit RGB/theme fixture values for comparison, and load a typed terminal palette. Any generated snapshot is a *derivative fixture*, not the canonical token definition. Document regeneration and drift detection. Terminal-only style modifiers (bold, underline, reversed, border glyph) stay terminal-specific.
+**Preferred first experiment: typed Rust palette using role identities.** For a chosen brand and scheme, resolve the CSS public roles in a controlled browser fixture, export explicit RGB/theme fixture values for comparison, and load a typed terminal palette. Any generated snapshot is a *derivative fixture*, not the canonical token definition. Document regeneration, and implement drift detection the way the Tailwind projection does: a role table checked against `tokens.tsv` by `ds-check`. Terminal-only style modifiers (bold, underline, reversed, border glyph) stay terminal-specific.
 
 **Alternative A: declarative source-of-truth schema.** Define typed semantic tokens once, generate CSS and Rust projections. This could remove duplicate values but would relocate existing CSS authority and alter release validation. Requires separate ADR, migration plan, and proof that dynamic CSS semantics, consumer overrides and light/dark behavior are preserved. Do **not** assume it is a harmless refactor.
 

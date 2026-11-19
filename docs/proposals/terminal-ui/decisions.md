@@ -1,6 +1,6 @@
 # Decision register — proposals only
 
-**All entries are proposed, not accepted.** This file intentionally records choices, competing options, confidence and evidence needed to change status. The user asked to preserve research for later refinement, not to authorize a new implementation or public compatibility surface.
+**All entries are proposed, not accepted.** This file intentionally records choices, competing options, confidence and evidence needed to change status. Its purpose is to preserve research for later refinement; it does not authorize a new implementation or public compatibility surface.
 
 ## TUI-001 — One design language, separate renderers
 
@@ -12,7 +12,7 @@
 
 **Proposed:** Prove a typed Rust theme palette projected from public semantic role identities, retaining CSS token authority and release contracts. CSS-like terminal style parsers are research alternatives rather than mandatory dependencies.
 
-**Alternatives:** duplicate palette per app; generated platform-neutral schema replacing CSS authority; CSS runtime cascade. **Confidence:** medium, because exact value/source propagation through CSS overrides is unsolved. **Promotion gate:** live browser computed-token comparison; quantified drift; brand alias/scheme behavior; low-color tests.
+**Alternatives:** duplicate palette per app; generated platform-neutral schema replacing CSS authority; CSS runtime cascade. **Confidence:** medium, because exact value/source propagation through CSS overrides is unsolved. Role coverage and drift checking are *not* unsolved: the Tailwind adapter's `projection.tsv` and `ds-check tailwind` already provide that pattern, so only per-brand, per-scheme value resolution is new. **Promotion gate:** live browser computed-token comparison; quantified drift; brand alias/scheme behavior; low-color tests.
 
 ## TUI-003 — Patterns before component breadth
 
@@ -41,10 +41,10 @@
 ## Questions to answer in later sessions
 
 1. Should the longer-term authoritative source become a neutral typed schema generating CSS, or remain CSS with a validated Rust projection? What are the costs to current browser/theming contracts?
-2. What is the lowest stable pattern unit: documentation, theme/style helpers, a headless interaction controller, or full widgets? Which pairs can be demonstrated in two products?
+2. What is the lowest stable pattern unit: documentation, theme/style helpers, a headless interaction controller, or full widgets? Which pairs can be demonstrated in two products? Prior art: gpui-component splits unstyled behavior (`gpui-base`) from the styled layer, and ratcn splits paint-only widgets from optional event routing.
 3. How much cross-platform behavioral parity is useful when web uses native semantics and terminal uses manual focus/event routing?
 4. Which terminal emulators, platforms, accessibility tools and workbench/SSH configurations form the support matrix?
-5. Will a future GPUI desktop consumer actually exist? If not, avoid native-desktop adapter commitments.
+5. Will a future GPUI desktop consumer actually exist? If not, avoid native-desktop adapter commitments. If one does, compare Zed's `ui` crate and longbridge/gpui-component as the reference component layers.
 6. Can existing ratcn/ratatui components be used as dependencies, or does source-copy maintenance better fit audited/pinned releases?
 7. Who owns token generation and versioning if terminals add additional roles such as status/pending/focus border that current CSS tokens do not express?
 8. What explicit owner acceptance and new ADR format should mark these proposals as decided?

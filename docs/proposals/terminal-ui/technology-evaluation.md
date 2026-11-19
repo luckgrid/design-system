@@ -13,7 +13,7 @@ Fit for existing Rust terminal consumers; composability with Ratatui; ownership 
 | [Ratatui](https://ratatui.rs/) and [Style API](https://docs.rs/ratatui/latest/ratatui/style/struct.Style.html) | Rust terminal widgets, cell layout, `Color` / `Style` / modifiers, rendering backend and buffer tests | App must own semantic focus, input routing, state, accessible alternative output | Preferred low-level first proof |
 | [Crossterm](https://docs.rs/crossterm/) through [Ratatui backend](https://ratatui.rs/concepts/backends/) | Input, mouse/resize and terminal setup/teardown; existing Prompt-TUI plan prefers matching re-export | Incompatible duplicate versions can complicate terminal raw mode/events; confirm exact dependency tree | Pair with Ratatui and test lifecycle |
 | [ratatui-textarea](https://docs.rs/ratatui-textarea/) | Multi-line editing and cursor/selection/scroll support; planned Prompt-TUI candidate | Needs integration tests for Unicode, wrapping, undo and output model | Try direct before building editor |
-| [ratcn](https://ratcn.com/docs/introduction) / [ecosystem entry](https://ratatui.rs/ecosystem/ratcn/) | Themeable Ratatui components, split paint-only widgets and optional focus, hover, keyboard/mouse routing | Dependency vs source-copy maintenance, implementation-model coupling, version pinning | Evaluate on second interactive control |
+| [ratcn](https://ratcn.com/docs/introduction) / [ecosystem entry](https://ratatui.rs/ecosystem/ratcn/) | Themeable Ratatui components, split paint-only widgets and optional focus, hover, keyboard/mouse routing. Pre-1.0 (`0.0.x`); upstream states the API will break and recommends pinning an exact version. Distribution is source-copy first (`cargo ratcn add` copies component modules into the consumer). TextArea was withdrawn in an early preview and has since returned with documented limits (e.g. no undo/redo) | Source-copy means each consumer owns upgrades of copied modules; check the current component list and TextArea limits before any trial | Evaluate on second interactive control |
 | [tui-realm / tuirealm](https://github.com/veeso/tui-realm) | Message-oriented component/event model for a larger TUI | Larger application architecture commitment | Defer unless focus routing grows complex |
 | [Cursive](https://docs.rs/cursive/) | Alternative view/callback-based forms and lifecycle | Separate UI framework, cannot assume Ratatui widget reuse | Comparative experiment only |
 | [Bare Crossterm](https://docs.rs/crossterm/) | Lightweight for a tiny picker | Must build layout/selection/redraw and state ourselves | Avoid for multipane app |
@@ -22,9 +22,13 @@ The [Prompt-TUI Rust CLI/TUI review](https://github.com/luckgrid/wiki-nest/blob/
 
 ## CSS-like engines: proof of possibility, not CSS compatibility
 
-**[ratatui-style](https://docs.rs/ratatui-style/latest/ratatui_style/):** CSS-inspired stylesheet API, selectors, cascade and custom variables that computes Ratatui styling. Useful for exploring declarative style classes. Test exact API and parsing behavior; a terminal `Style` does not implement CSS layout, HTML intrinsic semantics, viewport-fluid sizing, `light-dark()`, arbitrary cascade layers or browser computed styles. Some selector operations may need tree context absent in one-shot matching. Do not promise it accepts `core.css`.
+**[ratatui-style](https://docs.rs/ratatui-style/latest/ratatui_style/):** CSS-inspired stylesheet API, selectors, cascade and custom variables that computes Ratatui styling. Useful for exploring declarative style classes. Its documented selector support is a pragmatic subset (compound `Type.class#id:pseudo` selectors, comma lists and `*`), so descendant/child combinators should not be assumed. Test exact API and parsing behavior; a terminal `Style` does not implement CSS layout, HTML intrinsic semantics, viewport-fluid sizing, `light-dark()`, arbitrary cascade layers or browser computed styles. Do not promise it accepts `core.css`.
 
 **[rdom-css / rdom-tui](https://docs.rs/rdom-css/latest/rdom_css/):** another experimental cross-renderer DOM/CSS subset direction; the parser/cascade can be studied, but adopting a DOM layer is a separate architectural commitment.
+
+**[Revue](https://github.com/hawk90/revue):** a Vue-style Rust TUI *framework* (retained mode, signals, CSS stylesheets with variables and selectors, an accessibility module). It is the most complete "CSS for terminals" data point, but it replaces Ratatui rather than composing with it, so it is a comparison reference for the CSS-like question, not a candidate dependency for existing Ratatui consumers.
+
+**[`ratatui-css`](https://docs.rs/ratatui-css/) (name reservation):** a crate name reserved under the Ratatui project for future CSS-inspired styling experiments. It ships no implementation today. Treat any real release as a reassessment trigger for the CSS-like engine question, because upstream support would change the maintenance calculus.
 
 **[Opaline](https://github.com/hyperb1iss/opaline):** token-based Rust theme engine with adapters for Ratatui, egui, iced, Crossterm and CSS among others. Strong reference for role mapping and theme loading; *does not* establish that existing Design System CSS semantics flow through automatically.
 
@@ -32,13 +36,17 @@ The [Prompt-TUI Rust CLI/TUI review](https://github.com/luckgrid/wiki-nest/blob/
 
 **Alternative evaluation:** benchmark a *tiny* typed role palette against a stylesheet-powered button/list prototype. Compare actual code required, startup time, binary impact, cascading/state behavior, accessibility cues, browser/CSS token drift, debugging, and license/dependency surfaces. Reject any “less code” conclusion without an end-to-end interaction.
 
-## Zed references: two different systems
+## Zed references: GPUI, Zed's own UI crate, and look-alikes
 
-**[zedcraftstudio/zed-ui](https://github.com/zedcraftstudio/zed-ui):** public README describes **React** components with CSS variables and a `ThemeProvider`, drawing on Base UI for complex accessible interactions. It is a source of component API, design token and accessibility-testing patterns, **not** the native UI renderer of Zed Editor. Do not describe it as made by the Zed Editor team absent corporate/project evidence. Its docs acknowledge early `0.0.x` stability and limited coverage; avoid assumptions about production maturity.
+"Zed UI" most usefully means **Zed's own [`ui` crate](https://github.com/zed-industries/zed/tree/main/crates/ui)**, whose crate documentation describes it as the UI primitives and components used to build all of Zed's interface. It is built on GPUI, so it is the primary reference for how a production native Rust application layers a component vocabulary (buttons, lists, labels, key-binding hints, selectable/disableable/clickable traits) over a GPU renderer. Study its traits and component boundaries alongside the matching GPUI concepts below; do not treat it as a reusable dependency, because it is an internal crate of the Zed editor.
 
 **[GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui):** the Rust, GPU-backed interface framework developed for Zed. It exposes styled elements and action/key dispatch, with CSS-inspired fluent API, but is not a standards-compliant browser CSS runtime or a TUI backend. Use it to study declarative composition, style calculation, component boundaries, input routing and entity/app-state ownership. The [GPUI examples](https://github.com/zed-industries/zed/tree/main/crates/gpui/examples) and [key dispatch](https://github.com/zed-industries/zed/blob/main/crates/gpui/docs/key_dispatch.md) are more probative than broad marketing comparisons.
 
+**[gpui-component](https://github.com/longbridge/gpui-component) (Longbridge):** a third-party GPUI component library (60+ components, theming) that powers a shipped commercial desktop app. Its documented layering separates GPUI (rendering), `gpui-base` (unstyled behavior and state, analogous to Base UI) and `gpui-component` (styled layer, analogous to shadcn). That headless/styled split is direct evidence for open question 2 in the [decision register](decisions.md) about the lowest stable pattern unit, and the most relevant GUI-side reference if a native desktop consumer enters scope.
+
 **[awesome-gpui](https://github.com/zed-industries/awesome-gpui):** curated ecosystem directory for native GPUI projects, not a framework or direct terminal UI component source. Search it for concrete adoption examples and maintenance concerns only if a native desktop consumer enters scope.
+
+**Name collisions:** several unrelated web projects use the name "Zed UI". One example is [zedcraftstudio/zed-ui](https://github.com/zedcraftstudio/zed-ui), a small early-stage React component library (CSS-variable tokens via a `ThemeProvider`) with no stated affiliation with Zed Industries. It is at most a minor web-component reference; do not cite it as "Zed UI" or attribute it to the Zed editor team.
 
 A future native desktop implementation may share role names and pattern specs; it should not be promised a single codebase with Ratatui, nor should “React-like” be treated as evidence that a terminal virtual DOM is appropriate.
 
@@ -47,7 +55,7 @@ A future native desktop implementation may share role names and pattern specs; i
 - [Legacy tui-rs](https://github.com/fdehau/tui-rs) and [old tui docs](https://docs.rs/tui/latest/tui/) are legacy background; new proposals should target maintained Ratatui.
 - [awesome-ratatui](https://github.com/ratatui/awesome-ratatui) is a discovery catalog, not independent performance/quality evidence.
 - [ratcn component docs](https://ratcn.com/docs/components/textarea) and [custom component design](https://ratcn.com/docs/concepts/custom-components) can guide focused component trials; source-copy and dependency installation have different upgrade obligations.
-- [NO_COLOR](https://no-color.org/), terminal capability differences and evolving [Ratatui accessibility discussions](https://github.com/ratatui/ratatui/issues/2610) reinforce that accessibility claims require real evidence. A plain CLI interface is an important fallback, not proof of full AT support.
+- [NO_COLOR](https://no-color.org/), terminal capability differences and evolving [Ratatui accessibility discussions](https://github.com/ratatui/ratatui/issues/2610) reinforce that accessibility claims require real evidence. In that discussion, maintainers note that terminals do not expose their content through accessibility APIs, so screen-reader support needs an out-of-band channel. Current experiments take that route: [tui-a11y](https://docs.rs/tui-a11y/) serves an app-declared tree over AT-SPI via AccessKit (Linux only; Ratatui is a dev-dependency), and FrankenTUI's [ftui-a11y](https://docs.rs/ftui-a11y/) defines an accessibility tree for a separate, non-Ratatui TUI kernel. A plain CLI interface is an important fallback, not proof of full AT support.
 - Terminal rendering can be fast, but **no benchmarks** of these libraries have been conducted for this proposal; do not rank by guessed startup, redraw or binary size.
 
 ## Preliminary ranking by responsibility
@@ -56,7 +64,25 @@ A future native desktop implementation may share role names and pattern specs; i
 - **Input/lifecycle:** matching Crossterm backend, app-owned event policy.
 - **Editing:** direct textarea trial, ratcn if interaction-control reuse is demonstrated.
 - **Theme:** typed palette first; Opaline design reference; ratatui-style CSS-like experiment.
-- **Cross-renderer architecture:** docs/contracts first; gronke/GPUI research only.
+- **Cross-renderer architecture:** docs/contracts first; gronke/GPUI, Zed's `ui` crate and gpui-component research only.
+
+## Versions observed at this research cut
+
+Versions are what public registries showed on 2026-11-18 and are recorded so a later session can detect drift. They are **not** pins or approved dependencies; re-check before any trial.
+
+| Project | Observed version | Note |
+| --- | --- | --- |
+| ratatui | 0.30.0 | renderer baseline |
+| ratcn | 0.0.3 (release) | pre-1.0, API breaks expected, source-copy distribution |
+| ratatui-style | 0.2.0 | CSS cascade subset |
+| ratatui-css | 0.0.0 | name reservation only |
+| opaline | 0.4.1 | token theme engine, multi-adapter |
+| rdom-css | 0.6.1 | parser for rdom-tui |
+| revue | 2.74.0 | separate framework, comparison only |
+| tui-a11y | 0.1.0 | experimental, Linux AT-SPI |
+| gpui-component | 0.4.x on crates.io (git main is current) | GPUI-native, GUI only |
+
+`ratatui-textarea`, Crossterm, tui-realm and Cursive versions were not recorded in this cut.
 - **CLI commands and exports:** consumer-owned; not a Design System component concern.
 
 See [source ledger](sources.md) for evidence scope and [verification plan](verification-and-roadmap.md) for next experiments.

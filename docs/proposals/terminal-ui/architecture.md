@@ -63,7 +63,7 @@ An HTML button's native activation semantics and terminal key-press routing are 
 
 ## Potential workspace placement (illustrative, not a commitment)
 
-Documentation remains here. If prototyping earns code, consider an **optional** Rust crate in `packages/terminal/` or `adapters/ratatui/` with its own feature flags, examples, tests and consumer boundaries. Do not add these paths before a reviewed decision. Avoid giving external consumers access to internal `packages/styles/tokens/reference.css` values.
+Documentation remains here. If prototyping earns code, consider an **optional** Rust crate in `adapters/ratatui/` with its own feature flags, examples, tests and consumer boundaries. `adapters/` is preferred over `packages/terminal/` because the repository already places the optional [Tailwind adapter](https://github.com/luckgrid/design-system/blob/main/docs/architecture/tailwind.md) there and registers adapter outputs in `adapter-exports.tsv`; a terminal adapter should follow the same registration, projection-table and `ds-check` pattern (see [token projection](tokens-and-themes.md#in-repository-precedent-the-tailwind-adapter-projection)). Do not add these paths before a reviewed decision. Avoid giving external consumers access to internal `packages/styles/tokens/reference.css` values.
 
 See [decisions](decisions.md), [patterns](patterns-and-components.md) and [roadmap](verification-and-roadmap.md).
 

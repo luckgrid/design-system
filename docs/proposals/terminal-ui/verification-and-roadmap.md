@@ -14,6 +14,7 @@
 ### M1 — Token and terminal capability proof
 
 - In a separate implementation PR, prototype an internal role-ID-to-`Color` mapping using typed Rust structs. Compare browser **computed** defaults and a brand override in light/dark schemes.
+- Model the role mapping on the existing Tailwind adapter: a projection table covering every public role with a disposition, internal reference roles recorded as excluded, and a `ds-check` subcommand that validates the table against `tokens.tsv` (see [token projection](tokens-and-themes.md#in-repository-precedent-the-tailwind-adapter-projection)).
 - Contrast after quantization, test dark/light terminal defaults, RGB/256/16/mono, `NO_COLOR` and no TTY. Document unsupported CSS roles.
 - Make sample fixture regeneration deterministic; prove a deliberate token-role change fails a stale projection test.
 - **Done when:** no second token authority is silently created, fallbacks remain legible, release CSS bytes unchanged. **Stop:** decide whether schema, projection or CSS-style engine deserves deeper evaluation.
@@ -75,7 +76,7 @@ No test matrix row is a current PASS; these are future gates.
 | Multi-app coupling | a shared controller can own too much consumer state | stable event contracts and consumer-owned data/side effects |
 | Release contract confusion | draft docs read as published API | internal classification, source-only linking, separate preview proposal |
 | Dependency breakage | Ratatui/Crossterm and components may diverge | pin/test exact versions, MSRV and feature audit |
-| Misattributed ecosystem provenance | “Zed UI” may be confused with Zed/GPUI | separate sources, maintainers and implementations in docs |
+| Misattributed ecosystem provenance | “Zed UI” can mean Zed's own GPUI-based `ui` crate or unrelated web libraries with the same name | cite Zed's `crates/ui` as the Zed UI reference; keep look-alike projects labelled as unaffiliated |
 
 ## Handoff workflow for next session
 
@@ -89,7 +90,7 @@ No test matrix row is a current PASS; these are future gates.
 
 - Does documentation imply a new token authority without a deterministic mapping mechanism?
 - Is the first shared pattern truly product-neutral, or just Prompt-TUI's layout extracted?
-- Are source citations and repository affiliations correct, especially Zed UI versus GPUI?
+- Are source citations and repository affiliations correct, especially Zed's own `ui` crate versus GPUI, gpui-component and unaffiliated "Zed UI" projects?
 - Does any proposed test misrepresent what terminal accessibility or NO_COLOR can guarantee?
 - Could the design be achieved with existing Ratatui primitives and no new runtime?
 - Is the CSS release/archive boundary still exact and unchanged?

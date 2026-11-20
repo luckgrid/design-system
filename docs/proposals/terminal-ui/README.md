@@ -21,6 +21,7 @@ The questions are (1) what reusable contracts belong in Design System, (2) which
 6. [Decision register](decisions.md): proposal-level decisions, alternatives, questions and evidence needed to promote them.
 7. [Source ledger](sources.md): inspected evidence, direct project links, limits and reassessment triggers.
 8. [Discovery record](discovery-2026-11-18.md): session provenance and handoff context.
+9. [Review record](review-2026-11-20.md): the pre-merge review pass, its corrections and rechecked versions.
 
 ## Existing authorities that must not be silently changed
 
@@ -29,6 +30,7 @@ The questions are (1) what reusable contracts belong in Design System, (2) which
 - The Design System explicitly has no promoted general-purpose component layer yet. A terminal pattern catalog does not retroactively promote web components.
 - These research files are **internal documentation**. They are deliberately absent from the immutable `0.1.0-preview.1` CSS release inventory and are not a Rust package, schema, hook, or public-preview surface.
 - The planned interfaces are **examples**, not normative Rust traits or stable wire formats.
+- Links to Prompt-TUI's plans in `luckgrid/wiki-nest` and to `luckgrid/workstation` point to Luckgrid repositories that are not public yet, so readers without access get a 404. These pages restate what the proposal takes from them; the links are for maintainers with access.
 
 ## Scope and ownership
 

@@ -21,7 +21,7 @@ The resulting recommendation is to extend the Design System **conceptually** wit
 
 ## Record relationships
 
-- [Overview](README.md), [architecture](architecture.md), [token projection](tokens-and-themes.md), [patterns](patterns-and-components.md), [technologies](technology-evaluation.md), [decision register](decisions.md), [roadmap](verification-and-roadmap.md), [sources](sources.md).
+- [Overview](README.md), [architecture](architecture.md), [token projection](tokens-and-themes.md), [patterns](patterns-and-components.md), [technologies](technology-evaluation.md), [decision register](decisions.md), [roadmap](verification-and-roadmap.md), [sources](sources.md), [pre-merge review](review-2026-11-20.md).
 - External project planning remains in [Prompt-TUI](https://github.com/luckgrid/wiki-nest/tree/main/prompt-tui) and [Workstation](https://github.com/luckgrid/workstation); this record is not a migration of those projects.
 
 ## Suggested next-session kickoff

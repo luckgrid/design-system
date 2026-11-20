@@ -69,6 +69,16 @@ internal	docs/architecture/theme.md
 internal	docs/architecture/tailwind.md
 internal	docs/architecture/tokens.md
 internal	docs/browser-support.md
+internal	docs/proposals/terminal-ui/README.md
+internal	docs/proposals/terminal-ui/architecture.md
+internal	docs/proposals/terminal-ui/decisions.md
+internal	docs/proposals/terminal-ui/discovery-2026-11-18.md
+internal	docs/proposals/terminal-ui/patterns-and-components.md
+internal	docs/proposals/terminal-ui/review-2026-11-20.md
+internal	docs/proposals/terminal-ui/sources.md
+internal	docs/proposals/terminal-ui/technology-evaluation.md
+internal	docs/proposals/terminal-ui/tokens-and-themes.md
+internal	docs/proposals/terminal-ui/verification-and-roadmap.md
 internal	exports.tsv
 internal	fixtures/README.md
 internal	fixtures/bootstrap-boundary/accepted-directory.tsv

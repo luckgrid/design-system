@@ -101,6 +101,9 @@ reviewed source change defines their contracts.
   and the cases enforced by contributor checks.
 - [Browser tests](tests/README.md) describe the cross-engine assurance suite.
 - [Contributor tooling](apps/README.md) documents the repository-local checks.
+- [Proposed terminal UI research](docs/proposals/terminal-ui/README.md) records
+  cross-platform semantic contracts, Ratatui components, alternatives, evidence,
+  and staged prototype gates. It is internal planning, not part of the CSS release.
 
 ## Contributor checks
 
